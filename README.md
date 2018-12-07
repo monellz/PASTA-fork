@@ -1,9 +1,7 @@
-ParTI!
+SpTenBench
 ------
 
-(Notice: For the code used in [Optimizing sparse tensor times matrix on GPUs](https://www.sciencedirect.com/science/article/pii/S0743731518305161), please go to branch [JPDC](https://github.com/hpcgarage/ParTI/tree/jpdc).)
-
-A Parallel Tensor Infrastructure (ParTI!), is to support fast essential sparse tensor operations and tensor decompositions on multicore CPU and GPU architectures. These basic tensor operations are critical to the overall performance of tensor analysis algorithms (such as tensor decomposition). ParTI! is formerly known as SpTOL. 
+Sparse Tensor Benchmarks (SpTenBench) provides essential sparse tensor operations from various real-world applications for multicore CPU and GPU architectures. These tensor operations are critical to the overall performance of tensor analysis algorithms (such as tensor decompositions). 
 
 
 ## Supported sparse tensor operations:
@@ -16,8 +14,6 @@ A Parallel Tensor Infrastructure (ParTI!), is to support fast essential sparse t
 * Sparse tensor-times-dense matrix (SpTTM) [CPU, Multicore, GPU]
 * Sparse matricized tensor times Khatri-Rao product (SpMTTKRP) [CPU, Multicore, GPU]
 * Sparse tensor matricization [CPU]
-* Sparse CANDECOMP/PARAFAC decomposition
-* Sparse Tucker decomposition (refer to branch JPDC)
 
 
 ## Supported sparse tensor formats:
@@ -34,10 +30,6 @@ A Parallel Tensor Infrastructure (ParTI!), is to support fast essential sparse t
 
 - [CUDA SDK](https://developer.nvidia.com/cuda-downloads) [Required for GPU algorithms]
 
-- [OpenBLAS](http://www.openblas.net) (Or an alternative BLAS and Lapack library) [Required for tensor decomposition]
-
-- [MAGMA](http://icl.cs.utk.edu/magma/) [Optional]
-
 
 ## Build:
 
@@ -49,22 +41,7 @@ A Parallel Tensor Infrastructure (ParTI!), is to support fast essential sparse t
 
 4. Check `build/tests` for testing programs, for basic functionality
 
-5. Check `build/examples` for example programs including MTTKRP, TTM, CP decomposition
-
-
-## Build MATLAB interface (Not ready for new functions):
-
-1. `cd matlab`
-
-2. export LD_LIBRARY_PATH=../build:$LD_LIBRARY_PATH
-
-3. Type `make` to build all functions into MEX library.
-
-4. matlab
-
-    1. In matlab environment, type `addpath(pwd)`
-   
-    2. Play with ParTI MATLAB inferface.
+5. Check `build/examples` for example programs including MTTKRP, TTM
     
 
 ## Build docs:
@@ -138,46 +115,6 @@ Please refer to `GettingStarted.md` for more general cases. Only some major func
       * -t NTHREADS, --nt=NT (1:default)
       * --help
 
-
-
-**_CPD_**: 
-1. COO-CPD (CPU, Multicore)
-
-    * Usage: ./build/examples/cpd [options], Options:
-      * -i INPUT, --input=INPUT (.tns file)
-      * -o OUTPUT, --output=OUTPUT (output file name)
-      * -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)
-      * -r RANK (CPD rank, 16:default)
-      * OpenMP options: 
-      * -t NTHREADS, --nt=NT (1:default)
-      * -u use_reduce, --ur=use_reduce (use privatization or not)
-      * --help
-
-2. COO-CPD (GPU)
-
-    * Usage: ./build/examples/cpd_gpu [options], Options:
-      * -i INPUT, --input=INPUT (.tns file)
-      * -o OUTPUT, --output=OUTPUT (output file name)
-      * -d CUDA_DEV_ID, --cuda-dev-id=CUDA_DEV_ID (>=0:GPU device id)
-      * -r RANK (CPD rank, 16:default)
-      * GPU options: 
-      * -p IMPL_NUM, --impl-num=IMPL_NUM (11, 12, 15, where 15 should be the best case)v
-      * --help
-
-
-2. HiCOO-CPD (CPU, Multicore)
-
-    * Usage: ./build/examples/cpd_hicoo [options], Options:
-      * -i INPUT, --input=INPUT (.tns file)
-      * -o OUTPUT, --output=OUTPUT (output file name)
-      * -b BLOCKSIZE, --blocksize=BLOCKSIZE (in bits) (required)
-      * -k KERNELSIZE, --kernelsize=KERNELSIZE (in bits) (required)
-      * -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)
-      * -r RANK (CPD rank, 16:default)
-      * OpenMP options: 
-      * -t NTHREADS, --nt=NT (1:default)
-      * --help
-
     
 **_TTM_**: 
 1. COO-TTM (CPU, Multicore, GPU)
@@ -201,20 +138,6 @@ Please refer to `GettingStarted.md` for more general cases. Only some major func
     * mode: specify tensor mode, e.g. (0, or 1, or 2) for third-order tensors
     * cuda_dev_id: -1, or 0, 1, ... -1: sequential code; 0, or other possible integer: GPU devide id. [Optinal, -1 by default]
 
-**_Tucker Decomposition_**
-1. COO-Tucker (CPU, GPU)
-
-    The code is in the `jpdc` branch, which is a complete different and imcompatible codebase in C++.
-
-    * Usage: ./build/examples/tucker --dev device [options] tsr R1 R2 ... dimorder1 dimorder2 ...
-    * device: CPU core ID or GPU ID, obtain with ./build/examples/detect_devices (Currently multicore CPU is not implemented)
-    * tsr: input sparse tensor
-    * R1, R2, ...: the shape of expected output core tensor
-    * dimorder1, dimorder2, ...: the order of the TTM chain operation
-    * Options:
-    * -o, --output: output the core tensor into a text file
-    * -d, --dense-format: print the result to screen in dense format, instead of sparse format
-    * -l, --limit: limit how much result to print to screen
 
 <br/>The algorithms and details are described in the following publications.
 
@@ -231,20 +154,19 @@ Please refer to `GettingStarted.md` for more general cases. Only some major func
 
 ## Citation
 ```
-@misc{parti,
-author="Jiajia Li, Yuchen Ma, Richard Vuduc",
-title="{ParTI!} : A Parallel Tensor Infrastructure",
-month="Oct",
+@misc{sptenbench,
+author="Jiajia Li, Ang Li, Kevin Barker",
+title="{SpTenBench} : Sparse Tensor Benchmarks",
+month="Dec",
 year="2018",
-url="https://github.com/hpcgarage/ParTI"
+url="https://gitlab.com/tensorworld/SpTenBench"
 }
 ```
 
 ## Contributiors
 
 * Jiajia Li (Contact: jiajia.li@pnnl.gov)
-* Yuchen Ma (Contact: m13253@hotmail.com)
 
 ## License
 
-ParTI! is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+SpTenBench is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

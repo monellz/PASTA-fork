@@ -72,10 +72,6 @@ extern "C" {
 #include "includes/sptensors.h"
 /* Semi-sparse tensor functions */
 #include "includes/ssptensors.h"
-/* Kruskal tensor functions */
-#include "includes/ktensors.h"
-/* CPD functions */
-#include "includes/cpds.h"
 
 
 #ifdef __cplusplus
