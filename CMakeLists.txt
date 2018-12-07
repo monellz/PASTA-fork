@@ -32,12 +32,6 @@ option(USE_OPENMP "Use OPENMP" ON)
 option(USE_CUDA "Use NVIDIA CUDA library" OFF)
 option(USE_MPI "Use MPI" OFF)
 
-# Check for libraries
-option(USE_LAPACK "Use LAPACK library" ON)
-option(USE_BLAS "Use LAPACK library" ON)
-option(USE_OpenBLAS "Use OpenBLAS library" OFF)
-option(USE_MAGMA "Use MAGMA library" OFF)
-option(USE_MKL "Use Intel MKL library" OFF)
 
 # Check for debug mode
 if (DEFINED DEBUG)
@@ -103,83 +97,6 @@ endif()
 
 
 
-
-if(USE_BLAS)
-    find_package(BLAS)
-    add_definitions(-DPARTI_USE_BLAS)
-    include_directories(${BLAS_INCLUDE_DIRS})
-    link_libraries(${BLAS_LIBRARIES})
-    if(${BLAS_FOUND})
-      message("FOUND BLAS LIBS: " ${BLAS_LIBRARIES})
-    else()
-      message(FATAL_ERROR "Could not find BLAS library. Set path in build.config.")
-    endif()
-endif()
-
-if(USE_LAPACK)
-    find_package(LAPACK)
-    add_definitions(-DPARTI_USE_LAPACK)
-    include_directories(${LAPACK_INCLUDE_DIRS})
-    link_libraries(${LAPACK_LIBRARIES})
-    if(${LAPACK_FOUND})
-      message("FOUND LAPACK LIBS: " ${LAPACK_LIBRARIES})
-    else()
-      message(FATAL_ERROR "Could not find LAPACK library. Set path in build.config.")
-    endif()
-    # find_library(
-    #     LAPACK_LIBRARIES
-    #     NAMES lapack
-    #     PATHS ${LAPACK_DIR}
-    #     NO_DEFAULT_PATH
-    # )
-    # add_definitions(-DPARTI_USE_LAPACK)
-    # include_directories("${LAPACK_DIR}/LAPACKE/include" "${LAPACK_DIR}/CBLAS/include")
-    # link_libraries("${LAPACK_DIR}/libcblas.a" "${LAPACK_DIR}/liblapack.a" "${LAPACK_DIR}/liblapacke.a" "${LAPACK_DIR}/librefblas.a" "${LAPACK_DIR}/libtmglib.a")
-    # link_libraries(lapack blas)
-endif()
-
-if(USE_MAGMA)
-    find_library(
-        MAGMA_LIBRARIES
-        NAMES magma
-        PATHS ${MAGMA_DIR}
-        NO_DEFAULT_PATH
-    )
-    add_definitions(-DPARTI_USE_MAGMA)
-    # get_filename_component(MAGMA_LIBDIR "${MAGMA_LIBRARIES}" DIRECTORY)
-    # include_directories("${MAGMA_LIBDIR}/../include")
-    # link_libraries(${MAGMA_LIBRARIES})
-    get_filename_component(MAGMA_LIBDIR "${MAGMA_DIR}/lib" DIRECTORY)
-    include_directories("${MAGMA_DIR}/include")
-    link_directories("${MAGMA_DIR}/lib")
-    link_libraries(magma) # not linking mkl libraries
-endif()
-
-if(USE_OpenBLAS)
-    find_package(OpenBLAS REQUIRED)
-    add_definitions(-DPARTI_USE_OpenBLAS)
-    include_directories(${OpenBLAS_INCLUDE_DIRS})
-    link_libraries(${OpenBLAS_LIBRARIES})
-endif()
-
-if(USE_MKL)
-    # find_package(MKL REQUIRED)
-    find_library(
-        MKL_LIBRARIES
-        NAMES mkl
-        PATHS ${MKL_DIR}
-        NO_DEFAULT_PATH
-    )
-    add_definitions(-DPARTI_USE_MKL)
-    # include_directories(${MKL_INCLUDE_DIRS})
-    # link_libraries(${MKL_LIBRARIES})
-    get_filename_component(MKL_LIBDIR "${MKL_DIR}/lib/intel64" DIRECTORY)
-    include_directories("${MKL_DIR}/include")
-    link_directories("${MKL_DIR}/lib")
-endif()
-
-
-
 # A bug in FindCUDA module forces us to put "include_directories" before "cuda_add_library".
 # So we cannot use "target_include_directories" for target-wise include tracking.
 include_directories("include")
@@ -215,5 +132,5 @@ if(BUILD_STATIC)
     set_target_properties(ParTI_s PROPERTIES C_STANDARD 99)
 endif()
 
-add_subdirectory("examples")
+add_subdirectory("benchmarks")
 add_subdirectory("tests")
