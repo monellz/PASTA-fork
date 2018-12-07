@@ -1,0 +1,14 @@
+sftp-config.json
+*.DS_Store
+build/
+docs/latex
+build.config
+.tags*
+*.ptx
+*.mex*
+
+timing-results/
+
+tmp*
+out*
+tags
