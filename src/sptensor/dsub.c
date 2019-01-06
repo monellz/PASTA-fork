@@ -25,7 +25,7 @@
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
+int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
 
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
@@ -104,7 +104,7 @@ int sptSparseTensorSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSp
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    spt_SparseTensorCollectZeros(Z);
+    sptSparseTensorCollectZeros(Z);
     /* Sort the indices */
     sptSparseTensorSortIndex(Z, 1);
     

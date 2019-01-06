@@ -21,24 +21,35 @@
 
 /**
  * Element wise add two sparse tensors
- * @param[out] Z the result of X+Y, should be uninitialized
+ * @param[out] Z the result of X.+Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorAdd(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
+int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero) {
+
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
 
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Add", "shape mismatch");
     }
+    sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
-        if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Add", "shape mismatch");
+        if(Y->ndims[i] > X->ndims[i]) {
+            max_ndims[i] = Y->ndims[i];
+        } else {
+            max_ndims[i] = X->ndims[i];
         }
     }
 
-    sptNewSparseTensor(Z, X->nmodes, X->ndims);
+    sptStartTimer(timer);
+    sptNewSparseTensor(Z, X->nmodes, max_ndims);
+    free(max_ndims);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptNewSparseTensor");
 
+    sptStartTimer(timer);
     /* Add elements one by one, assume indices are ordered */
     sptNnzIndex i, j;
     int result;
@@ -101,12 +112,18 @@ int sptSparseTensorAdd(sptSparseTensor *Z, const sptSparseTensor *X, const sptSp
         ++Z->nnz;
         ++j;
     }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu  SpTns DotAdd");
+
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    spt_SparseTensorCollectZeros(Z);
-    /* Sort the indices */
-    sptSparseTensorSortIndex(Z, 1);
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Z);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
     return 0;
 }

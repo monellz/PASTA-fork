@@ -24,7 +24,7 @@
  * @param[in]  a the input scalar
  * @param[in]  X the input X
  */
-int sptSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
+int sptSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
 {
     sptAssert(a != 0.0);
 
@@ -41,7 +41,7 @@ int sptSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
     #pragma omp parallel for schedule(static)
 #endif
     for(sptNnzIndex i = 0; i < Z->nnz; ++i) {
-        Z->values.data[i] *= a;
+        Z->values.data[i] += a;
     }
     sptStopTimer(timer);
 #ifdef PARTI_USE_OPENMP

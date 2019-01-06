@@ -28,7 +28,7 @@ extern "C" {
 
 double spt_SparseTensorNorm(const sptSparseTensor *X);
 int spt_SparseTensorCompareIndices(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2);
-void spt_SparseTensorCollectZeros(sptSparseTensor *tsr);
+void sptSparseTensorCollectZeros(sptSparseTensor *tsr);
 int spt_DistSparseTensor(sptSparseTensor * tsr,
     int const nthreads,
     sptNnzIndex * const dist_nnzs,

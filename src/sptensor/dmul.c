@@ -78,7 +78,7 @@ int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor *X, const sp
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    spt_SparseTensorCollectZeros(Z);
+    sptSparseTensorCollectZeros(Z);
     /* Sort the indices */
     sptSparseTensorSortIndex(Z, 1);
     

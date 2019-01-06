@@ -628,7 +628,6 @@ void sptSparseTensorSortIndex(sptSparseTensor *tsr, int force) {
  */
 int spt_SparseTensorCompareIndices(const sptSparseTensor *tsr1, sptNnzIndex loc1, const sptSparseTensor *tsr2, sptNnzIndex loc2) {
     sptIndex i;
-    assert(tsr1->nmodes == tsr2->nmodes);
     for(i = 0; i < tsr1->nmodes; ++i) {
         sptIndex eleind1 = tsr1->inds[i].data[loc1];
         sptIndex eleind2 = tsr2->inds[i].data[loc2];

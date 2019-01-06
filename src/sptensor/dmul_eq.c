@@ -22,11 +22,11 @@
 /**
  * Element wise multiply two sparse tensors, with exactly the same nonzero
  * distribution.
- * @param[out] Z the result of X*Y, should be uninitialized
+ * @param[out] Z the result of X.*Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
+int sptSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero) {
     sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
@@ -43,25 +43,31 @@ int sptSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const 
     }
     sptNnzIndex nnz = X->nnz;
 
-    sptCopySparseTensor(Z, X, 1);
-
     sptTimer timer;
     sptNewTimer(&timer, 0);
+
     sptStartTimer(timer);
-
-    for(i=0; i< nnz; ++i)
-        Z->values.data[i] = X->values.data[i] * Y->values.data[i];
-
+    sptCopySparseTensor(Z, X, 1);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CPU  SpTns DotMul");
-    sptFreeTimer(timer);
+    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+
+    sptStartTimer(timer);
+    for(i=0; i< nnz; ++i)
+        Z->values.data[i] *= Y->values.data[i];
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu SpTns DotMul");
 
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    spt_SparseTensorCollectZeros(Z);
-    /* Sort the indices */
-    sptSparseTensorSortIndex(Z, 1);
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Z);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
+    sptFreeTimer(timer);
+    printf("\n");
     
     return 0;
 }

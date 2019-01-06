@@ -26,7 +26,7 @@
  * move them to the end of the array, then truncate the array.
  * Orders are not kept, call sptSparseTensorSortIndex after this.
  */
-void spt_SparseTensorCollectZeros(sptSparseTensor *tsr) {
+void sptSparseTensorCollectZeros(sptSparseTensor *tsr) {
     sptNnzIndex i =  0;
     sptNnzIndex nnz = tsr->nnz;
     sptIndex mode;

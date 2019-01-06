@@ -21,26 +21,26 @@
 #include "sptensor.h"
 
 /**
- * OpenMP parallelized element-wise multiplication of two sparse tensors, with exactly the same nonzero
+ * OpenMP parallelized element-wise subtraction of two sparse tensors, with exactly the same nonzero
  * distribution.
- * @param[out] Z the result of X.*Y, should be uninitialized
+ * @param[out] Z the result of X.+Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero) 
+int sptOmpSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero)
 {
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "shape mismatch");
     }
     for(sptIndex i = 0; i < X->nmodes; ++i) {
         if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(Y->nnz != X->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "nonzero distribution mismatch");
     }
     sptNnzIndex nnz = X->nnz;
 
@@ -57,9 +57,9 @@ int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, con
     for(sptNnzIndex i = 0; i < nnz; ++ i)
         Z->values.data[i] = X->values.data[i] * Y->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns DotMul");
+    sptPrintElapsedTime(timer, "Omp SpTns DotSub");
 
-    /* Check whether elements become zero after adding.
+    /* Check whether elements become zero after subtraction.
        If so, fill the gap with the [nnz-1]'th element.
     */
     sptStartTimer(timer);

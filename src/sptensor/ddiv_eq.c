@@ -15,32 +15,32 @@
     License along with ParTI!.
     If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef PARTI_USE_OPENMP
 
 #include <ParTI.h>
 #include "sptensor.h"
 
 /**
- * OpenMP parallelized element-wise multiplication of two sparse tensors, with exactly the same nonzero
+ * Element wise divide two sparse tensors, with exactly the same nonzero
  * distribution.
- * @param[out] Z the result of X.*Y, should be uninitialized
+ * @param[out] Z the result of X.+Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero) 
+int sptSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero)
 {
+    sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDiv", "shape mismatch");
     }
-    for(sptIndex i = 0; i < X->nmodes; ++i) {
+    for(i = 0; i < X->nmodes; ++i) {
         if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDiv", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(Y->nnz != X->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDiv", "nonzero distribution mismatch");
     }
     sptNnzIndex nnz = X->nnz;
 
@@ -53,18 +53,17 @@ int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, con
     sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
-    #pragma omp parallel for
-    for(sptNnzIndex i = 0; i < nnz; ++ i)
-        Z->values.data[i] = X->values.data[i] * Y->values.data[i];
+    for(i=0; i< nnz; ++i)
+        Z->values.data[i] += Y->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns DotMul");
+    sptPrintElapsedTime(timer, "Cpu SpTns DotDiv");
 
-    /* Check whether elements become zero after adding.
+    /* Check whether elements become zero after division.
        If so, fill the gap with the [nnz-1]'th element.
     */
     sptStartTimer(timer);
     if(collectZero == 1) {
-        sptSparseTensorCollectZeros(Z); // TODO: Sequential
+        sptSparseTensorCollectZeros(Z);
     }
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
@@ -73,5 +72,3 @@ int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, con
     
     return 0;
 }
-
-#endif

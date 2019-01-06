@@ -20,8 +20,14 @@
 #include "sptensor.h"
 
 
+/**
+ * OpenMP parallelized element-wise addition of two sparse tensors
+ * @param[out] Z the result of X.+Y, should be uninitialized
+ * @param[in]  X the input X
+ * @param[in]  Y the input Y
+ */
 /* TODO: bug. */
-int sptSparseTensorAddOMP(sptSparseTensor *Y, sptSparseTensor *X, int const nthreads) {
+int sptOmpSparseTensorDotAdd(sptSparseTensor *Y, sptSparseTensor *X, int const nthreads) {
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP SpTns Add", "shape mismatch");
@@ -146,7 +152,7 @@ int sptSparseTensorAddOMP(sptSparseTensor *Y, sptSparseTensor *X, int const nthr
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    spt_SparseTensorCollectZeros(Y);
+    sptSparseTensorCollectZeros(Y);
     /* Sort the indices */
     sptSparseTensorSortIndex(Y, 1);
 
