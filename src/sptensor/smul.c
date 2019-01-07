@@ -37,18 +37,11 @@ int sptSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
     sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
-#ifdef PARTI_USE_OPENMP
-    #pragma omp parallel for schedule(static)
-#endif
     for(sptNnzIndex i = 0; i < Z->nnz; ++i) {
         Z->values.data[i] *= a;
     }
     sptStopTimer(timer);
-#ifdef PARTI_USE_OPENMP
-    sptPrintElapsedTime(timer, "Omp SpTns MulScalar");
-#else
     sptPrintElapsedTime(timer, "Cpu SpTns MulScalar");
-#endif
     sptFreeTimer(timer);
     printf("\n");
 

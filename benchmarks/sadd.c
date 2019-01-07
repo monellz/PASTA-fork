@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptSparseTensorAddScalar(&Z, &X, a) == 0);
+        sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
 #endif
     }
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
                 nthreads = omp_get_num_threads();
             }
             printf("nthreads: %d\n", nthreads);
-            sptAssert(sptSparseTensorAddScalar(&Z, &X, a) == 0);
+            sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
         }
 #endif
     }

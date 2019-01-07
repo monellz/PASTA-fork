@@ -27,9 +27,6 @@ void print_usage(char ** argv) {
     printf("Options: -i INPUT, --input=INPUT (.tns file)\n");
     printf("         -o OUTPUT, --output=OUTPUT (output file name)\n");
     printf("         -m MODE, --mode=MODE (default -1: loop all modes, or specify a mode, e.g., 0 or 1 or 2 for third-order tensors.)\n");
-    printf("         -s sortcase, --sortcase=SORTCASE (0:default,1,2,3,4. Different tensor sorting.)\n");
-    printf("         -b BLOCKSIZE, --blocksize=BLOCKSIZE (in bits) (only for sortcase=3)\n");
-    printf("         -k KERNELSIZE, --kernelsize=KERNELSIZE (in bits) (only for sortcase=3)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
     printf("         OpenMP options: \n");
@@ -39,6 +36,9 @@ void print_usage(char ** argv) {
     printf("\n");
 }
 
+/**
+ * Benchmark Matriced Tensor Times Khatri-Rao Product (MTTKRP), tensor in COO format, matrices are dense.
+ */
 int main(int argc, char ** argv) {
     FILE *fi = NULL, *fo = NULL;
     sptSparseTensor X;
@@ -52,16 +52,6 @@ int main(int argc, char ** argv) {
     int nthreads;
     int use_reduce = 1; // Need to choose from two omp parallel approaches
     int nt = 1;
-    /* sortcase:
-     * = 0 : the same with the old COO code.
-     * = 1 : best case. Sort order: [mode, (ordered by increasing dimension sizes)]
-     * = 2 : worse case. Sort order: [(ordered by decreasing dimension sizes)]
-     * = 3 : Z-Morton ordering (same with HiCOO format order)
-     * = 4 : random shuffling.
-     */
-    int sortcase = 0;
-    sptElementIndex sb_bits;
-    sptElementIndex sk_bits;
     printf("niters: %d\n", niters);
 
     if(argc <= 3) { // #Required arguments
@@ -75,9 +65,6 @@ int main(int argc, char ** argv) {
             {"input", required_argument, 0, 'i'},
             {"mode", required_argument, 0, 'm'},
             {"output", optional_argument, 0, 'o'},
-            {"bs", required_argument, 0, 'b'},
-            {"ks", required_argument, 0, 'k'},
-            {"sortcase", optional_argument, 0, 's'},
             {"dev-id", optional_argument, 0, 'd'},
             {"rank", optional_argument, 0, 'r'},
             {"nt", optional_argument, 0, 't'},
@@ -86,7 +73,7 @@ int main(int argc, char ** argv) {
             {0, 0, 0, 0}
         };
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:b:k:s:d:r:t:u:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:m:o:d:r:t:u:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -103,15 +90,6 @@ int main(int argc, char ** argv) {
             break;
         case 'm':
             sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
-            break;
-        case 'b':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
-            break;
-        case 'k':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sk_bits);
-            break;
-        case 's':
-            sscanf(optarg, "%d", &sortcase);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
@@ -135,11 +113,11 @@ int main(int argc, char ** argv) {
 
     printf("mode: %"PARTI_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
-    printf("sortcase: %d\n", sortcase);
 
     /* Load a sparse tensor from file as it is */
     sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
     fclose(fi);
+    sptSparseTensorStatus(&X, stdout);
 
     sptIndex nmodes = X.nmodes;
     U = (sptMatrix **)malloc((nmodes+1) * sizeof(sptMatrix*));
@@ -158,7 +136,6 @@ int main(int argc, char ** argv) {
     sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
     sptIndex stride = U[0]->stride;
 
-    sptIndex * mode_order = (sptIndex*) malloc(X.nmodes * sizeof(*mode_order));
     sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
 
     if (mode == PARTI_INDEX_MAX) {
@@ -167,41 +144,6 @@ int main(int argc, char ** argv) {
             /* Reset U[nmodes] */
             U[nmodes]->nrows = X.ndims[mode];
             sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
-
-            /* Sort sparse tensor */
-            memset(mode_order, 0, X.nmodes * sizeof(*mode_order));
-            switch (sortcase) {
-                case 0:
-                    sptSparseTensorSortIndex(&X, 1);
-                    break;
-                case 1:
-                    sptGetBestModeOrder(mode_order, mode, X.ndims, X.nmodes);
-                    sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
-                    break;
-                case 2:
-                    sptGetWorstModeOrder(mode_order, mode, X.ndims, X.nmodes);
-                    sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
-                    break;
-                case 3:
-                    /* Pre-process tensor, the same with the one used in HiCOO.
-                     * Only difference is not setting kptr and kschr in this function.
-                     */
-                    sptSparseTensorMixedOrder(&X, sb_bits, sk_bits, nt);
-                    break;
-                case 4:
-                    // sptGetBestModeOrder(mode_order, 0, X.ndims, X.nmodes);
-                    sptGetRandomShuffleElements(&X);
-                    break;
-                default:
-                    printf("Wrong sortcase number, reset by -s. \n");
-            }
-            if(sortcase != 0) {
-                printf("mode_order:\n");
-                sptDumpIndexArray(mode_order, X.nmodes, stdout);
-            }
-
-            sptSparseTensorStatus(&X, stdout);
-
 
             /* Set zeros for temporary copy_U, for mode-"mode" */
             char * bytestr;
@@ -218,31 +160,16 @@ int main(int argc, char ** argv) {
                 free(bytestr);
             }
 
-            switch (sortcase) {
-            case 0:
-            case 3:
-            case 4:
-                mats_order[0] = mode;
-                for(sptIndex i=1; i<nmodes; ++i)
-                    mats_order[i] = (mode+i) % nmodes;
-                break;
-            case 1: // Reverse of mode_order except the 1st one
-                mats_order[0] = mode;
-                for(sptIndex i=1; i<nmodes; ++i)
-                    mats_order[i] = mode_order[nmodes - i];
-                break;
-            case 2: // Totally reverse of mode_order
-                for(sptIndex i=0; i<nmodes; ++i)
-                    mats_order[i] = mode_order[nmodes - i];
-                break;
-            }
-
+            mats_order[0] = mode;
+            for(sptIndex i=1; i<nmodes; ++i)
+                mats_order[i] = (mode+i) % nmodes;
 
             /* For warm-up caches, timing not included */
             if(dev_id == -2) {
                 nthreads = 1;
                 sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
             } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
                 printf("nt: %d\n", nt);
                 if(use_reduce == 1) {
                     printf("sptOmpMTTKRP_Reduce:\n");
@@ -251,6 +178,7 @@ int main(int argc, char ** argv) {
                     printf("sptOmpMTTKRP:\n");
                     sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
                 }
+#endif
             }
 
             
@@ -264,6 +192,7 @@ int main(int argc, char ** argv) {
                     nthreads = 1;
                     sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
                 } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
                     if(use_reduce == 1) {
                         sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
                     } else {
@@ -271,6 +200,7 @@ int main(int argc, char ** argv) {
                         // printf("sptOmpMTTKRP_Lock:\n");
                         // sptAssert(sptOmpMTTKRP_Lock(&X, U, mats_order, mode, nt, lock_pool) == 0);
                     }
+#endif
                 }
             }
 
@@ -303,39 +233,6 @@ int main(int argc, char ** argv) {
         } // End nmodes
 
     } else {
-        /* Sort sparse tensor */
-        memset(mode_order, 0, X.nmodes * sizeof(*mode_order));
-        switch (sortcase) {
-            case 0:
-                sptSparseTensorSortIndex(&X, 1);
-                break;
-            case 1:
-                sptGetBestModeOrder(mode_order, mode, X.ndims, X.nmodes);
-                sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
-                break;
-            case 2:
-                sptGetWorstModeOrder(mode_order, mode, X.ndims, X.nmodes);
-                sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
-                break;
-            case 3:
-                /* Pre-process tensor, the same with the one used in HiCOO.
-                 * Only difference is not setting kptr and kschr in this function.
-                 */
-                sptSparseTensorMixedOrder(&X, sb_bits, sk_bits, nt);
-                break;
-            case 4:
-                // sptGetBestModeOrder(mode_order, 0, X.ndims, X.nmodes);
-                sptGetRandomShuffleElements(&X);
-                break;
-            default:
-                printf("Wrong sortcase number, reset by -s. \n");
-        }
-        if(sortcase != 0) {
-            printf("mode_order:\n");
-            sptDumpIndexArray(mode_order, X.nmodes, stdout);
-        }
-
-        sptSparseTensorStatus(&X, stdout);
 
         /* Set zeros for temporary copy_U, for mode-"mode" */
         char * bytestr;
@@ -353,30 +250,16 @@ int main(int argc, char ** argv) {
         }
 
         sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
-        switch (sortcase) {
-        case 0:
-        case 3:
-        case 4:
-            mats_order[0] = mode;
-            for(sptIndex i=1; i<nmodes; ++i)
-                mats_order[i] = (mode+i) % nmodes;
-            break;
-        case 1: // Reverse of mode_order except the 1st one
-            mats_order[0] = mode;
-            for(sptIndex i=1; i<nmodes; ++i)
-                mats_order[i] = mode_order[nmodes - i];
-            break;
-        case 2: // Totally reverse of mode_order
-            for(sptIndex i=0; i<nmodes; ++i)
-                mats_order[i] = mode_order[nmodes - i];
-            break;
-        }
+        mats_order[0] = mode;
+        for(sptIndex i=1; i<nmodes; ++i)
+            mats_order[i] = (mode+i) % nmodes;
 
         /* For warm-up caches, timing not included */
         if(dev_id == -2) {
             nthreads = 1;
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
             printf("nt: %d\n", nt);
             if(use_reduce == 1) {
                 printf("sptOmpMTTKRP_Reduce:\n");
@@ -385,6 +268,7 @@ int main(int argc, char ** argv) {
                 printf("sptOmpMTTKRP:\n");
                 sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
             }
+#endif
         }
 
         
@@ -398,11 +282,13 @@ int main(int argc, char ** argv) {
                 nthreads = 1;
                 sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
             } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
                 if(use_reduce == 1) {
                     sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
                 } else {
                     sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
                 }
+#endif
             }
         }
 
@@ -423,7 +309,6 @@ int main(int argc, char ** argv) {
 
         if(fo != NULL) {
             sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
-            fclose(fo);
         }
 
     } // End execute a specified mode
@@ -444,7 +329,6 @@ int main(int argc, char ** argv) {
     }
     sptFreeSparseTensor(&X);
     free(mats_order);
-    free(mode_order);
     sptFreeMatrix(U[nmodes]);
     free(U);
 

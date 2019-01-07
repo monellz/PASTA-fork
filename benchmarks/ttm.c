@@ -48,6 +48,10 @@ static int spt_LoadMatrixTranspose(sptMatrix *X, FILE *f) {
     return 0;
 }
 
+
+/**
+ * Benchmark COO tensor times a dense matrix.
+ */
 int main(int argc, char const *argv[]) {
     FILE *fX, *fU;
     sptSparseTensor X;

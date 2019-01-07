@@ -15,7 +15,7 @@
     License along with ParTI!.
     If not, see <http://www.gnu.org/licenses/>.
 */
-
+#ifdef PARTI_USE_OPENMP
 #include <ParTI.h>
 
 /**
@@ -24,7 +24,7 @@
  * @param[in]  a the input scalar
  * @param[in]  X the input X
  */
-int sptSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
+int sptOmpSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
 {
     sptAssert(a != 0.0);
 
@@ -37,13 +37,15 @@ int sptSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
     sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
+    #pragma omp parallel for schedule(static)
     for(sptNnzIndex i = 0; i < Z->nnz; ++i) {
-        Z->values.data[i] += a;
+        Z->values.data[i] *= a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns MulScalar");
+    sptPrintElapsedTime(timer, "Omp SpTns MulScalar");
     sptFreeTimer(timer);
     printf("\n");
 
     return 0;
 }
+#endif

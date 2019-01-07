@@ -115,6 +115,7 @@ int sptSetKernelPointers(
 /* Sparse tensor unary operations */
 int sptSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
 int sptSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
+int sptOmpSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
 
 /* Sparse tensor binary operations */
 int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
