@@ -27,7 +27,7 @@
  */
 int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero) 
 {
-    /* Ensure X and Y are in same shape */
+    /* Ensure X and Y are in same number of dimensions */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Add", "shape mismatch");
     }

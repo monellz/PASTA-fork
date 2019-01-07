@@ -27,7 +27,7 @@
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *Y, sptSparseTensor *X, int collectZero, int nthreads) 
+int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTensor *Y, int collectZero, int nthreads) 
 {
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
@@ -47,7 +47,7 @@ int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *Y, sptSparseTe
 
     /* Allocate output tensor Z */
     sptStartTimer(timer);
-    sptAssert(sptNewSparseTensor(Z, Y->nmodes, max_ndims) == 0);
+    sptAssert(sptNewSparseTensor(Z, X->nmodes, max_ndims) == 0);
     free(max_ndims);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "sptNewSparseTensor");
@@ -56,36 +56,41 @@ int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *Y, sptSparseTe
     sptStartTimer(timer);
     sptNnzIndex * dist_nnzs_X = (sptNnzIndex*)malloc((nthreads+1)*sizeof(sptNnzIndex));
     sptNnzIndex * dist_nnzs_Y = (sptNnzIndex*)malloc((nthreads+1)*sizeof(sptNnzIndex));
-    sptIndex * dist_nrows_Y = (sptIndex*)malloc(nthreads*sizeof(sptIndex));
+    sptIndex * dist_nrows_X = (sptIndex*)malloc(nthreads*sizeof(sptIndex));
 
-    spt_DistSparseTensor(Y, nthreads, dist_nnzs_Y, dist_nrows_Y);
-    spt_DistSparseTensorFixed(X, nthreads, dist_nrows_Y, dist_nnzs_X);
+    spt_DistSparseTensor(X, nthreads, dist_nnzs_X, dist_nrows_X);
+    spt_DistSparseTensorFixed(Y, nthreads, dist_nrows_X, dist_nnzs_Y);
+    for(sptIndex i = 0; i < nthreads; ++ i)
+        if(dist_nrows_X[i] == 0) {
+            printf("Error: Reduce nthreads to remove 0 rows allocation or put the larger tensor first.\n");
+            exit(1);
+        }
 
-    printf("dist_nnzs_Y:\n");
-    for(int i=0; i<nthreads + 1; ++i) {
-        printf("%zu ", dist_nnzs_Y[i]);
-    }
-    printf("\n");
-    printf("dist_nrows_Y:\n");
-    for(int i=0; i<nthreads; ++i) {
-        printf("%u ", dist_nrows_Y[i]);
-    }
-    printf("\n");
     printf("dist_nnzs_X:\n");
     for(int i=0; i<nthreads + 1; ++i) {
         printf("%zu ", dist_nnzs_X[i]);
     }
     printf("\n");
+    printf("dist_nrows_X:\n");
+    for(int i=0; i<nthreads; ++i) {
+        printf("%u ", dist_nrows_X[i]);
+    }
+    printf("\n");
+    printf("dist_nnzs_Y:\n");
+    for(int i=0; i<nthreads + 1; ++i) {
+        printf("%zu ", dist_nnzs_Y[i]);
+    }
+    printf("\n");
     fflush(stdout);
 
-    free(dist_nrows_Y);
+    free(dist_nrows_X);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Distribute two input tensors");
 
 
     sptStartTimer(timer);
     /* Build a private arrays to append values. */
-    sptNnzIndex nnz_gap = llabs((long long) Y->nnz - (long long) X->nnz);
+    sptNnzIndex nnz_gap = llabs((long long) X->nnz - (long long) Y->nnz);
     sptNnzIndex increase_size = 0;
     if(nnz_gap == 0) increase_size = 10;
     else increase_size = nnz_gap;
@@ -197,7 +202,7 @@ int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *Y, sptSparseTe
     */
     sptStartTimer(timer);
     if(collectZero == 1) {
-        sptSparseTensorCollectZeros(Y);
+        sptSparseTensorCollectZeros(Z);
     }
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");

@@ -33,7 +33,7 @@ static void print_usage(char ** argv) {
 }
 
 /**
- * Benchmark element-wise COO tensor multiplication. 
+ * Benchmark element-wise COO tensor subtraction. 
  * Require two tensors has the same number of dimensions, but could have different shapes and nonzero distributions.
  */
 int main(int argc, char *argv[]) {
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
             sptFreeSparseTensor(&Z);
         }
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorDotMul(&Z, &X, &Y, collectZero) == 0);
+            sptAssert(sptSparseTensorDotSub(&Z, &X, &Y, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
             #pragma omp parallel
@@ -135,12 +135,12 @@ int main(int argc, char *argv[]) {
                 nthreads = omp_get_num_threads();
             }
             printf("\nnthreads: %d\n", nthreads);
-            sptAssert(sptOmpSparseTensorDotMul(&Z, &X, &Y, collectZero, nthreads) == 0);
+            sptAssert(sptOmpSparseTensorDotSub(&Z, &X, &Y, collectZero, nthreads) == 0);
 #endif
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CooDotMul");
+    sptPrintElapsedTime(timer, "CooDotSub");
     sptFreeTimer(timer);
 
     if(fZ != NULL) {

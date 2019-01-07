@@ -21,32 +21,44 @@
 
 /**
  * Element wise subtract two sparse tensors
- * @param[out] Z the result of X-Y, should be uninitialized
+ * @param[out] Z the result of X.-Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
+int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero)
+{
 
-    /* Ensure X and Y are in same shape */
+    /* Ensure X and Y are in same number of dimensions */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Sub", "shape mismatch");
     }
+    sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
-        if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Sub", "shape mismatch");
+        if(Y->ndims[i] > X->ndims[i]) {
+            max_ndims[i] = Y->ndims[i];
+        } else {
+            max_ndims[i] = X->ndims[i];
         }
     }
 
-    sptNewSparseTensor(Z, X->nmodes, X->ndims);
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
 
-    /* Add elements one by one, assume indices are ordered */
+    sptStartTimer(timer);
+    sptNewSparseTensor(Z, X->nmodes, max_ndims);
+    free(max_ndims);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptNewSparseTensor");
+
+    sptStartTimer(timer);
+    /* Subtract elements one by one, assume indices are ordered */
     sptNnzIndex i, j;
     int result;
     i = 0;
     j = 0;
     while(i < X->nnz && j < Y->nnz) {
         int compare = spt_SparseTensorCompareIndices(X, i, Y, j);
-        if(compare > 0) {
+        if(compare > 0) {  // X[i] > Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], Y->inds[mode].data[j]);
                 spt_CheckError(result, "SpTns Sub", NULL);
@@ -56,7 +68,7 @@ int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sp
 
             ++Z->nnz;
             ++j;
-        } else if(compare < 0) {
+        } else if(compare < 0) {  // X[i] < Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
                 spt_CheckError(result, "SpTns Sub", NULL);
@@ -66,7 +78,7 @@ int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sp
 
             ++Z->nnz;
             ++i;
-        } else {
+        } else {  // X[i] == Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
                 spt_CheckError(result, "SpTns Sub", NULL);
@@ -91,7 +103,7 @@ int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sp
         ++i;
     }
     /* Append remaining elements of Y to Z */
-    while(i < X->nnz) {
+    while(j < Y->nnz) {
         for(sptIndex mode = 0; mode < Y->nmodes; ++mode) {
             result = sptAppendIndexVector(&Z->inds[mode], Y->inds[mode].data[j]);
             spt_CheckError(result, "SpTns Sub", NULL);
@@ -101,12 +113,18 @@ int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sp
         ++Z->nnz;
         ++j;
     }
-    /* Check whether elements become zero after adding.
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu  SpTns DotSub");
+
+    /* Check whether elements become zero after subtraction.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    sptSparseTensorCollectZeros(Z);
-    /* Sort the indices */
-    sptSparseTensorSortIndex(Z, 1);
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Z);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
     
     return 0;
 }

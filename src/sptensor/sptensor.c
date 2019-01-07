@@ -181,7 +181,6 @@ int spt_DistSparseTensorFixed(sptSparseTensor * tsr,
             spt_CheckError(SPTERR_VALUE_ERROR, "SpTns Dist", "tensor unsorted on mode-0");
         }
     }
-    printf("tid: %d\n", tid);
     if(tid < nthreads - 1) {
         ++ tid;
         dist_nnzs[tid] = dist_nnzs[tid - 1] + tmp_nnzs;

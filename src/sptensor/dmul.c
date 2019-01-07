@@ -21,66 +21,61 @@
 
 /**
  * Element wise multiply two sparse tensors
- * @param[out] Z the result of X*Y, should be uninitialized
+ * @param[out] Z the result of X.*Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
- *
- * The name "DotMul" comes from the MATLAB operator ".*". This function is not
- * for "inner product" or "outer product".
  */
-int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y) {
-    sptNnzIndex i, j;
-    int result;
-    /* Ensure X and Y are in same shape */
+int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero) 
+{
+    /* Ensure X and Y are in same number of dimensions */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Mul", "shape mismatch");
     }
-    for(i = 0; i < X->nmodes; ++i) {
-        if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "shape mismatch");
+    sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
+    for(sptIndex i = 0; i < X->nmodes; ++i) {
+        if(Y->ndims[i] > X->ndims[i]) {
+            max_ndims[i] = Y->ndims[i];
+        } else {
+            max_ndims[i] = X->ndims[i];
         }
     }
 
-    sptNewSparseTensor(Z, X->nmodes, X->ndims);
-
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
 
-    /* Multiply elements one by one, assume indices are ordered */
+    sptStartTimer(timer);
+    sptNewSparseTensor(Z, X->nmodes, max_ndims);
+    free(max_ndims);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptNewSparseTensor");
+
+    sptStartTimer(timer);
+    /* Multiple elements one by one, assume indices are ordered */
+    sptNnzIndex i, j;
+    int result;
     i = 0;
     j = 0;
     while(i < X->nnz && j < Y->nnz) {
         int compare = spt_SparseTensorCompareIndices(X, i, Y, j);
-
-        if(compare > 0) {
+        if(compare > 0) {  // X[i] > Y[j]
             ++j;
-        } else if(compare < 0) {
+        } else if(compare < 0) {  // X[i] < Y[j]
             ++i;
-        } else {
+        } else {  // X[i] == Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
-                spt_CheckError(result, "SpTns DotMul", NULL);
+                spt_CheckError(result, "SpTns Mul", NULL);
             }
             result = sptAppendValueVector(&Z->values, X->values.data[i] * Y->values.data[j]);
-            spt_CheckError(result, "SpTns DotMul", NULL);
+            spt_CheckError(result, "SpTns Mul", NULL);
 
             ++Z->nnz;
             ++i;
             ++j;
         }
     }
-
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CPU  SpTns DotMul");
-    sptFreeTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu  SpTns DotMul");
 
-    /* Check whether elements become zero after adding.
-       If so, fill the gap with the [nnz-1]'th element.
-    */
-    sptSparseTensorCollectZeros(Z);
-    /* Sort the indices */
-    sptSparseTensorSortIndex(Z, 1);
-    
     return 0;
 }
