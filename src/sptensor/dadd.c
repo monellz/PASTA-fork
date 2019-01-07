@@ -25,11 +25,8 @@
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero) {
-
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
-
+int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero) 
+{
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Add", "shape mismatch");
@@ -42,6 +39,9 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const s
             max_ndims[i] = X->ndims[i];
         }
     }
+
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
 
     sptStartTimer(timer);
     sptNewSparseTensor(Z, X->nmodes, max_ndims);

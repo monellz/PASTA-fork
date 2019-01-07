@@ -109,37 +109,40 @@ double SparseTensorFrobeniusNormSquared(sptSparseTensor const * const spten)
 
 
 int spt_DistSparseTensor(sptSparseTensor * tsr,
-    int const nthreads,
-    sptNnzIndex * const dist_nnzs,
+    int nthreads,
+    sptNnzIndex * dist_nnzs,
     sptIndex * dist_nrows) {
 
     sptNnzIndex global_nnz = tsr->nnz;
     sptNnzIndex aver_nnz = global_nnz / nthreads;
-    memset(dist_nnzs, 0, nthreads*sizeof(sptNnzIndex));
+    memset(dist_nnzs, 0, (nthreads + 1) * sizeof(sptNnzIndex));
     memset(dist_nrows, 0, nthreads*sizeof(sptIndex));
 
     sptSparseTensorSortIndex(tsr, 0);
     sptIndex * ind0 = tsr->inds[0].data;
 
-    int ti = 0;
-    dist_nnzs[0] = 1;
+    int tid = 0;
+    sptNnzIndex tmp_nnzs = 1;
+    dist_nnzs[0] = 0;
     dist_nrows[0] = 1;
     for(sptNnzIndex x=1; x<global_nnz; ++x) {
         if(ind0[x] == ind0[x-1]) {
-            ++ dist_nnzs[ti];
+            ++ tmp_nnzs;
         } else if (ind0[x] > ind0[x-1]) {
-            if(dist_nnzs[ti] < aver_nnz || ti == nthreads-1) {
-                ++ dist_nnzs[ti];
-                ++ dist_nrows[ti];
+            if(tmp_nnzs < aver_nnz || tid == nthreads-1) {
+                ++ tmp_nnzs;
+                ++ dist_nrows[tid];
             } else {
-                ++ ti;
-                ++ dist_nnzs[ti];
-                ++ dist_nrows[ti];
+                ++ tid;
+                dist_nnzs[tid] = dist_nnzs[tid - 1] + tmp_nnzs;
+                ++ dist_nrows[tid];
+                tmp_nnzs = 1;
             }
         } else {
             spt_CheckError(SPTERR_VALUE_ERROR, "SpTns Dist", "tensor unsorted on mode-0");
         }
     }
+    dist_nnzs[nthreads] = global_nnz;
 
     return 0;
 
@@ -147,33 +150,48 @@ int spt_DistSparseTensor(sptSparseTensor * tsr,
 
 
 int spt_DistSparseTensorFixed(sptSparseTensor * tsr,
-    int const nthreads,
-    sptNnzIndex * const dist_nnzs,
-    sptNnzIndex * dist_nrows) {
+    int nthreads,
+    sptIndex * dist_nrows,
+    sptNnzIndex * dist_nnzs) 
+{
 
-    sptNnzIndex global_nnz = tsr->nnz;
-    sptNnzIndex aver_nnz = global_nnz / nthreads;
-    memset(dist_nnzs, 0, nthreads*sizeof(sptNnzIndex));
+    memset(dist_nnzs, 0, (nthreads + 1) * sizeof(sptNnzIndex));
 
     sptSparseTensorSortIndex(tsr, 0);
     sptIndex * ind0 = tsr->inds[0].data;
 
-    int ti = 0;
-    dist_nnzs[0] = 1;
-    for(sptNnzIndex x=1; x<global_nnz; ++x) {
+    int tid = 0;
+    sptIndex tmp_nrows = 1;
+    sptNnzIndex tmp_nnzs = 1;
+    dist_nnzs[0] = 0;
+    for(sptNnzIndex x=1; x<tsr->nnz; ++x) {
         if(ind0[x] == ind0[x-1]) {
-            ++ dist_nnzs[ti];
+            ++ tmp_nnzs;
         } else if (ind0[x] > ind0[x-1]) {
-            if(dist_nnzs[ti] < aver_nnz || ti == nthreads-1) {
-                ++ dist_nnzs[ti];
+            if(tmp_nrows + 1 <= dist_nrows[tid]) {
+                ++ tmp_nnzs;
+                ++ tmp_nrows;
             } else {
-                ++ ti;
-                ++ dist_nnzs[ti];
+                ++ tid;
+                dist_nnzs[tid] = dist_nnzs[tid - 1] + tmp_nnzs;
+                tmp_nrows = 1;
+                tmp_nnzs = 1;
             }
         } else {
             spt_CheckError(SPTERR_VALUE_ERROR, "SpTns Dist", "tensor unsorted on mode-0");
         }
     }
+    printf("tid: %d\n", tid);
+    if(tid < nthreads - 1) {
+        ++ tid;
+        dist_nnzs[tid] = dist_nnzs[tid - 1] + tmp_nnzs;
+        sptAssert(dist_nnzs[tid] == tsr->nnz);
+        while(tid < nthreads) {
+            ++ tid;
+            dist_nnzs[tid] = dist_nnzs[tid - 1];
+        }
+    }
+    dist_nnzs[nthreads] = tsr->nnz;
 
     return 0;
 }
@@ -197,4 +215,107 @@ void sptSparseTensorShuffleIndices(sptSparseTensor *tsr, sptIndex ** map_inds) {
         }
     }
     
+}
+
+
+/**
+ * Locate the beginning of the block/kernel containing the coordinates
+ * @param tsr    a pointer to a sparse tensor
+ * @return out_item     the beginning indices of this block
+ */
+static int sptLocateBeginCoord(
+    sptIndex * out_item,
+    sptSparseTensor *tsr,
+    const sptIndex * in_item,
+    const sptElementIndex bits)
+{
+    sptIndex nmodes = tsr->nmodes;
+    
+    for(sptIndex m=0; m<nmodes; ++m) {
+        out_item[m] = in_item[m] >> bits;
+    }
+
+    return 0;
+}
+
+/**
+ * Compare two specified coordinates.
+ * @param tsr    a pointer to a sparse tensor
+ * @return      1, z == item; otherwise, 0.
+ */
+static int sptEqualWithTwoCoordinates(
+    const sptIndex * item1,
+    const sptIndex * item2,
+    const sptIndex nmodes)
+{
+    sptIndex i1, i2;
+    for(sptIndex m=0; m<nmodes; ++m) {
+        i1 = item1[m];
+        i2 = item2[m];
+        if(i1 != i2) {
+            return 0;
+            break;
+        }
+    }
+    return 1;
+}
+
+
+/**
+ * Record mode pointers for kernel rows, from a sorted tensor.
+ * @param kptr  a vector of kernel pointers
+ * @param tsr    a pointer to a sparse tensor
+ * @return      mode pointers
+ */
+int sptSetKernelPointers(
+    sptNnzIndexVector *kptr,
+    sptSparseTensor *tsr, 
+    const sptElementIndex sk_bits)
+{
+    sptIndex nmodes = tsr->nmodes;
+    sptNnzIndex nnz = tsr->nnz;
+    sptNnzIndex k = 0;  // count kernels
+    sptNnzIndex knnz = 0;   // #Nonzeros per kernel
+    int result = 0;
+    result = sptAppendNnzIndexVector(kptr, 0);
+    spt_CheckError(result, "HiSpTns Convert", NULL);
+
+    sptIndex * coord = (sptIndex *)malloc(nmodes * sizeof(*coord));
+    sptIndex * kernel_coord = (sptIndex *)malloc(nmodes * sizeof(*kernel_coord));
+    sptIndex * kernel_coord_prior = (sptIndex *)malloc(nmodes * sizeof(*kernel_coord_prior));
+
+    /* Process first nnz to get the first kernel_coord_prior */
+    for(sptIndex m=0; m<nmodes; ++m) 
+        coord[m] = tsr->inds[m].data[0];    // first nonzero indices
+    result = sptLocateBeginCoord(kernel_coord_prior, tsr, coord, sk_bits);
+    spt_CheckError(result, "HiSpTns Convert", NULL);
+
+    for(sptNnzIndex z=0; z<nnz; ++z) {
+        for(sptIndex m=0; m<nmodes; ++m) 
+            coord[m] = tsr->inds[m].data[z];
+        result = sptLocateBeginCoord(kernel_coord, tsr, coord, sk_bits);
+        spt_CheckError(result, "HiSpTns Convert", NULL);
+
+        if(sptEqualWithTwoCoordinates(kernel_coord, kernel_coord_prior, nmodes) == 1) {
+            ++ knnz;
+        } else {
+            ++ k;
+            result = sptAppendNnzIndexVector(kptr, knnz + kptr->data[k-1]);
+            spt_CheckError(result, "HiSpTns Convert", NULL);
+            for(sptIndex m=0; m<nmodes; ++m) 
+                kernel_coord_prior[m] = kernel_coord[m];
+            knnz = 1;
+        }
+    }
+    sptAssert(k < kptr->len);
+    sptAssert(kptr->data[kptr->len-1] + knnz == nnz);
+
+    /* Set the last element for kptr */
+    sptAppendNnzIndexVector(kptr, nnz); 
+
+    free(coord);
+    free(kernel_coord);
+    free(kernel_coord_prior);
+
+    return 0;
 }

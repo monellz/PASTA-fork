@@ -21,7 +21,7 @@
 #include <getopt.h>
 #include <ParTI.h>
 
-void print_usage(char ** argv) {
+static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -X INPUT (.tns file)\n");
     printf("         -a INPUT (a scalar)\n");

@@ -21,11 +21,12 @@
 #include <getopt.h>
 #include <ParTI.h>
 
-void print_usage(char ** argv) {
+static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -X INPUT (.tns file)\n");
     printf("         -Y INPUT (.tns file)\n");
     printf("         -Z OUTPUT (output file name)\n");
+    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -c collectZero (0:default; 1)\n");
     printf("         --help\n");
     printf("\n");
@@ -40,6 +41,8 @@ int main(int argc, char *argv[]) {
     int collectZero = 0;
     FILE *fX = NULL, *fY = NULL, *fZ = NULL;
     sptSparseTensor X, Y, Z;
+    int dev_id = -2;
+    int nthreads;
 
     if(argc < 3) {
         print_usage(argv);
@@ -50,6 +53,7 @@ int main(int argc, char *argv[]) {
         {"Xinput", required_argument, 0, 'X'},
         {"Yinput", required_argument, 0, 'Y'},
         {"Zoutput", optional_argument, 0, 'Z'},
+        {"dev-id", optional_argument, 0, 'd'},
         {"collectZero", optional_argument, 0, 'c'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
@@ -57,7 +61,7 @@ int main(int argc, char *argv[]) {
     int c;
     for(;;) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "X:Y:Z:c:", long_options, &option_index);
+        c = getopt_long(argc, argv, "X:Y:Z:d:c:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -84,6 +88,13 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
             break;
+        case 'd':
+            sscanf(optarg, "%d", &dev_id);
+            if(dev_id < -2 || dev_id >= 0) {
+                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+                exit(1);
+            }
+            break;
         case '?':   /* invalid option */
         case 'h':
         default:
@@ -91,6 +102,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
+    printf("dev_id: %d\n", dev_id);
     printf("collectZero: %d\n", collectZero); fflush(stdout);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
@@ -114,7 +126,18 @@ int main(int argc, char *argv[]) {
         if(i > 0) {
             sptFreeSparseTensor(&Z);
         }
-        sptAssert(sptSparseTensorDotAdd(&Z, &X, &Y, collectZero) == 0);
+        if(dev_id == -2) {
+            sptAssert(sptSparseTensorDotAdd(&Z, &X, &Y, collectZero) == 0);
+        } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
+            #pragma omp parallel
+            {
+                nthreads = omp_get_num_threads();
+            }
+            printf("\nnthreads: %d\n", nthreads);
+            sptAssert(sptOmpSparseTensorDotAdd(&Z, &X, &Y, collectZero, nthreads) == 0);
+#endif
+        }
     }
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "CooDotAdd");

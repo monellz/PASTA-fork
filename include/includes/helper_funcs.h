@@ -29,10 +29,6 @@ void spt_Panic(const char *file, unsigned line, const char *expr);
  */
 #define sptAssert(expr) ((expr) ? (void) 0 : spt_Panic(__FILE__, __LINE__, #expr))
 
-/* Helper function for pure C module */
-int sptCudaSetDevice(int device);
-int sptCudaGetLastError(void);
-
 /* Timer functions, using either CPU or GPU timer */
 int sptNewTimer(sptTimer *timer, int use_cuda);
 int sptStartTimer(sptTimer timer);

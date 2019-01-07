@@ -19,6 +19,7 @@
 #include <ParTI.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "../error/error.h"
 
 
@@ -43,6 +44,15 @@ int sptNewValueVector(sptValueVector *vec, sptNnzIndex len, sptNnzIndex cap) {
     vec->data = malloc(cap * sizeof *vec->data);
     spt_CheckOSError(!vec->data, "ValVec New");
     memset(vec->data, 0, cap * sizeof *vec->data);
+    return 0;
+}
+
+
+int sptRandomizeValueVector(sptValueVector *vec) {
+    for(sptNnzIndex i = 0; i < vec->len; ++ i) {
+        srand(time(NULL) + i);
+        vec->data[i] = sptRandomValue();
+    }
     return 0;
 }
 

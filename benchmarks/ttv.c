@@ -16,7 +16,6 @@ static void print_usage(char ** argv) {
     printf("         -o OUTPUT, --output=OUTPUT (output file name)\n");
     printf("         -m MODE, --mode=MODE (specify a mode, e.g., 0 (default) or 1 or 2 for third-order tensors.)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
-    printf("         -r RANK (the number of matrix columns, 16:default)\n");
     printf("         OpenMP options: \n");
     printf("         -t NTHREADS, --nt=NT (1:default)\n");
     printf("         --help\n");
@@ -31,10 +30,9 @@ int main(int argc, char ** argv)
 {
     FILE *fi = NULL, *fo = NULL;
     sptSparseTensor X;
-    sptSemiSparseTensor Y;
-    sptMatrix U;
+    sptSparseTensor Y;
+    sptValueVector V;
     sptIndex mode = 0;
-    sptIndex R = 16;
     int dev_id = -2;
     int niters = 5;
     int nthreads = 1;
@@ -50,7 +48,6 @@ int main(int argc, char ** argv)
         {"mode", optional_argument, 0, 'm'},
         {"output", optional_argument, 0, 'o'},
         {"dev-id", optional_argument, 0, 'd'},
-        {"rank", optional_argument, 0, 'r'},
         {"nt", optional_argument, 0, 't'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
@@ -58,7 +55,7 @@ int main(int argc, char ** argv)
     int c;
     for(;;) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:d:r:t:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:m:o:d:t:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -79,9 +76,6 @@ int main(int argc, char ** argv)
         case 'd':
             sscanf(optarg, "%d", &dev_id);
             break;
-        case 'r':
-            sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
-            break;
         case 't':
             sscanf(optarg, "%d", &nthreads);
             break;
@@ -99,13 +93,13 @@ int main(int argc, char ** argv)
     sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
     fclose(fi);
 
-    sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    sptAssert(sptRandomizeMatrix(&U) == 0);
+    sptAssert(sptNewValueVector(&V, X.ndims[mode], X.ndims[mode]) == 0);
+    sptAssert(sptRandomizeValueVector(&V) == 0);
 
     /* For warm-up caches, timing not included */
     int result;
     if(dev_id == -2) {
-        sptAssert(sptSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
+        sptAssert(sptSparseTensorMulVector(&Y, &X, &V, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -113,7 +107,7 @@ int main(int argc, char ** argv)
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptOmpSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
+        sptAssert(sptOmpSparseTensorMulVector(&Y, &X, &V, mode) == 0);
 #endif
     }  
 
@@ -123,28 +117,25 @@ int main(int argc, char ** argv)
 
     for(int i = 0; i < niters; i++) {
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
+            sptAssert(sptSparseTensorMulVector(&Y, &X, &V, mode) == 0);
         } else if(dev_id == -1) {
     #ifdef PARTI_USE_OPENMP
-            sptAssert(sptOmpSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
+            sptAssert(sptOmpSparseTensorMulVector(&Y, &X, &V, mode) == 0);
     #endif
         }
     }
 
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooTtm");
+    sptPrintAverageElapsedTime(timer, niters, "Average CooTtv");
     sptFreeTimer(timer);
 
     if(fo != NULL) {
-        sptSparseTensor Y_coo;
-        sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
-        sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
-        sptFreeSparseTensor(&Y_coo);        
+        sptAssert(sptDumpSparseTensor(&Y, 1, fo) == 0);      
     }
 
-    sptFreeSemiSparseTensor(&Y);
+    sptFreeSparseTensor(&Y);
     sptFreeSparseTensor(&X);
-    sptFreeMatrix(&U);
+    sptFreeValueVector(&V);
 
     return 0;
 }

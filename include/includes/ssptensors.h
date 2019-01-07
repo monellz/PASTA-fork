@@ -47,5 +47,4 @@ int sptSemiSparseTensorSetIndices(sptSemiSparseTensor *dest, sptNnzIndexVector *
  * Output: sparse tensor Y[I][J][R] (e.g. n=2)
  */
 int sptSemiSparseTensorMulMatrix(sptSemiSparseTensor *Y, const sptSemiSparseTensor *X, const sptMatrix *U, sptIndex mode);
-int sptCudaSemiSparseTensorMulMatrix(sptSemiSparseTensor *Y, const sptSemiSparseTensor *X, const sptMatrix *U, sptIndex mode);
 #endif

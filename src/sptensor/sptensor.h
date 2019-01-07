@@ -30,13 +30,13 @@ double spt_SparseTensorNorm(const sptSparseTensor *X);
 int spt_SparseTensorCompareIndices(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2);
 void sptSparseTensorCollectZeros(sptSparseTensor *tsr);
 int spt_DistSparseTensor(sptSparseTensor * tsr,
-    int const nthreads,
-    sptNnzIndex * const dist_nnzs,
+    int nthreads,
+    sptNnzIndex * dist_nnzs,
     sptIndex * dist_nrows);
 int spt_DistSparseTensorFixed(sptSparseTensor * tsr,
-    int const nthreads,
-    sptNnzIndex * const dist_nnzs,
-    sptNnzIndex * dist_nrows);
+    int nthreads,
+    sptIndex * dist_nrows,
+    sptNnzIndex * dist_nnzs);
 int spt_GetSubSparseTensor(sptSparseTensor *dest, const sptSparseTensor *tsr, const sptIndex limit_low[], const sptIndex limit_high[]);
 
 

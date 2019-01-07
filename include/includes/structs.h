@@ -120,35 +120,6 @@ typedef struct {
 } sptSparseTensor;
 
 
-/**
- * Sparse tensor type, Hierarchical COO format (HiCOO)
- */
-typedef struct {
-    /* Basic information */
-    sptIndex            nmodes;      /// # modes
-    sptIndex            *sortorder;  /// the order in which the indices are sorted
-    sptIndex            *ndims;      /// size of each mode, length nmodes
-    sptNnzIndex         nnz;         /// # non-zeros
-
-    /* Parameters */
-    sptElementIndex       sb_bits;         /// block size by nnz
-    sptElementIndex       sk_bits;         /// kernel size by nnz
-    sptElementIndex       sc_bits;         /// chunk size by blocks
-
-    /* Scheduling information */
-    sptNnzIndexVector         kptr;      /// Nonzero kernel pointers in 1-D array, indexing blocks. sptIndexVector may be enough
-    sptIndexVector            **kschr;    /// Kernel scheduler
-    sptIndex                  *nkiters;
-    sptNnzIndexVector         cptr;      /// Chunk pointers to evenly split or combine blocks in a group, indexing blocks. sptIndexVector may be enough
-
-    /* Index data arrays */
-    sptNnzIndexVector         bptr;      /// Block pointers to all nonzeros
-    sptBlockIndexVector       *binds;    /// Block indices within each group
-    sptElementIndexVector     *einds;    /// Element indices within each block 
-    sptValueVector            values;      /// non-zero values, length nnz
-} sptSparseTensorHiCOO;
-
-
 
 /**
  * Semi-sparse tensor type

@@ -22,7 +22,7 @@
 #include <ParTI.h>
 #include "../src/sptensor/sptensor.h"
 
-void print_usage(char ** argv) {
+static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -i INPUT, --input=INPUT (.tns file)\n");
     printf("         -o OUTPUT, --output=OUTPUT (output file name)\n");
@@ -86,7 +86,7 @@ int main(int argc, char ** argv) {
             printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             sptAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
@@ -148,7 +148,7 @@ int main(int argc, char ** argv) {
             /* Pre-process tensor, the same with the one used in HiCOO.
              * Only difference is not setting kptr and kschr in this function.
              */
-            sptSparseTensorMixedOrder(&X, sb_bits, sk_bits, nthreads);
+            sptSparseTensorMixedOrder(&X, sb_bits, sk_bits);
             break;
         case 4:
             // sptGetBestModeOrder(mode_order, 0, X.ndims, X.nmodes);

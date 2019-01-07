@@ -23,49 +23,58 @@
 /**
  * Sparse tensor times a vector (SpTTV)
  */
-int sptSparseTensorMulVector(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptValueVector *V, sptIndex const mode) {
-    int result;
-    sptIndex *ind_buf;
-    sptNnzIndexVector fiberidx;
+int sptSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sptValueVector *V, sptIndex mode) 
+{
     if(mode >= X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Vec", "shape mismatch");
     }
     if(X->ndims[mode] != V->len) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Vec", "shape mismatch");
     }
+
+    int result;
+    sptIndex *ind_buf;
+    sptNnzIndexVector fiberidx;
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+
+    sptStartTimer(timer);
     sptSparseTensorSortIndexAtMode(X, mode, 0);
-    // jli: try to avoid malloc in all operation functions.
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorSortIndexAtMode");
+
+    sptStartTimer(timer);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
     spt_CheckOSError(!ind_buf, "CPU  SpTns * Vec");
     for(sptIndex m = 0; m < X->nmodes; ++m) {
-        ind_buf[m] = X->ndims[m];
+        if(m < mode)
+            ind_buf[m] = X->ndims[m];
+        else if(m > mode)
+            ind_buf[m - 1] = X->ndims[m];
     }
-    ind_buf[mode] = 1;
-    // jli: use pre-processing to allocate Y size outside this function.
-    result = sptNewSemiSparseTensor(Y, X->nmodes, mode, ind_buf);
+
+    result = sptNewSparseTensor(Y, X->nmodes - 1, ind_buf);
     free(ind_buf);
     spt_CheckError(result, "CPU  SpTns * Vec", NULL);
-    sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
+    sptSparseTensorSetIndices(Y, &fiberidx, mode, X);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Allocate output tensor");
 
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
+
     sptStartTimer(timer);
-
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];
         sptNnzIndex j;
-        // jli: exchange the two loops
         for(j = inz_begin; j < inz_end; ++j) {
             sptIndex r = X->inds[mode].data[j];
-            Y->values.values[i*Y->stride] += X->values.data[j] * V->data[r];
+            Y->values.data[i] += X->values.data[j] * V->data[r];
         }
     }
-
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CPU  SpTns * Vec");
+    sptPrintElapsedTime(timer, "Cpu  SpTns * Vec");
     sptFreeTimer(timer);
-
     sptFreeNnzIndexVector(&fiberidx);
+
     return 0;
 }

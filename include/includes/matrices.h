@@ -24,7 +24,7 @@ static inline sptNnzIndex sptGetMatrixLength(const sptMatrix *mtx) {
     return mtx->nrows * mtx->stride;
 }
 int sptNewMatrix(sptMatrix *mtx, sptIndex const nrows, sptIndex const ncols);
-int sptRandomizeMatrix(sptMatrix *mtx, sptIndex const nrows, sptIndex const ncols);
+int sptRandomizeMatrix(sptMatrix *mtx);
 int sptIdentityMatrix(sptMatrix *mtx);
 int sptConstantMatrix(sptMatrix * const mtx, sptValue const val);
 void sptMatrixInverseShuffleIndices(sptMatrix *mtx, sptIndex * mode_map_inds);
@@ -37,21 +37,9 @@ int sptDumpMatrix(sptMatrix *mtx, FILE *fp);
 /* Dense matrix operations */
 int sptMatrixDotMul(sptMatrix const * A, sptMatrix const * B, sptMatrix const * C);
 int sptMatrixDotMulSeq(sptIndex const mode, sptIndex const nmodes, sptMatrix ** mats);
-int sptCudaMatrixDotMulSeq(
-    sptIndex const mode,
-    sptIndex const nmodes, 
-    sptIndex const rank, 
-    sptIndex const stride, 
-    sptValue ** dev_ata);
 int sptMatrixDotMulSeqCol(sptIndex const mode, sptIndex const nmodes, sptMatrix ** mats);
 int sptMatrixDotMulSeqTriangle(sptIndex const mode, sptIndex const nmodes, sptMatrix ** mats);
 int sptMatrix2Norm(sptMatrix * const A, sptValue * const lambda);
-int sptCudaMatrix2Norm(
-    sptIndex const nrows,
-    sptIndex const ncols,
-    sptIndex const stride,
-    sptValue * const dev_vals,
-    sptValue * const dev_lambda);
 int sptMatrixMaxNorm(sptMatrix * const A, sptValue * const lambda);
 void GetFinalLambda(
   sptIndex const rank,

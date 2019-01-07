@@ -22,11 +22,11 @@
 #include <ParTI.h>
 #include "../src/sptensor/sptensor.h"
 
-void print_usage(char ** argv) {
+static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -i INPUT, --input=INPUT (.tns file)\n");
     printf("         -o OUTPUT, --output=OUTPUT (output file name)\n");
-    printf("         -m MODE, --mode=MODE (default -1: loop all modes, or specify a mode, e.g., 0 or 1 or 2 for third-order tensors.)\n");
+    printf("         -m MODE, --mode=MODE (specify a mode, e.g., 0 (default) or 1 or 2 for third-order tensors.)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
     printf("         OpenMP options: \n");
@@ -45,7 +45,7 @@ int main(int argc, char ** argv) {
     sptMatrix ** U;
     sptMatrix ** copy_U;
 
-    sptIndex mode = PARTI_INDEX_MAX;
+    sptIndex mode = 0;
     sptIndex R = 16;
     int dev_id = -2;
     int niters = 5;
@@ -59,19 +59,19 @@ int main(int argc, char ** argv) {
         exit(1);
     }
 
+    static struct option long_options[] = {
+        {"input", required_argument, 0, 'i'},
+        {"mode", required_argument, 0, 'm'},
+        {"output", optional_argument, 0, 'o'},
+        {"dev-id", optional_argument, 0, 'd'},
+        {"rank", optional_argument, 0, 'r'},
+        {"nt", optional_argument, 0, 't'},
+        {"use-reduce", optional_argument, 0, 'u'},
+        {"help", no_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
     int c;
     for(;;) {
-        static struct option long_options[] = {
-            {"input", required_argument, 0, 'i'},
-            {"mode", required_argument, 0, 'm'},
-            {"output", optional_argument, 0, 'o'},
-            {"dev-id", optional_argument, 0, 'd'},
-            {"rank", optional_argument, 0, 'r'},
-            {"nt", optional_argument, 0, 't'},
-            {"use-reduce", optional_argument, 0, 'u'},
-            {"help", no_argument, 0, 0},
-            {0, 0, 0, 0}
-        };
         int option_index = 0;
         c = getopt_long(argc, argv, "i:m:o:d:r:t:u:", long_options, &option_index);
         if(c == -1) {
@@ -84,7 +84,7 @@ int main(int argc, char ** argv) {
             printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             sptAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
@@ -136,182 +136,79 @@ int main(int argc, char ** argv) {
     sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
     sptIndex stride = U[0]->stride;
 
-    sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
-
-    if (mode == PARTI_INDEX_MAX) {
-
-        for(sptIndex mode=0; mode<nmodes; ++mode) {
-            /* Reset U[nmodes] */
-            U[nmodes]->nrows = X.ndims[mode];
-            sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
-
-            /* Set zeros for temporary copy_U, for mode-"mode" */
-            char * bytestr;
-            if(dev_id == -1 && use_reduce == 1) {
-                copy_U = (sptMatrix **)malloc(nt * sizeof(sptMatrix*));
-                for(int t=0; t<nt; ++t) {
-                    copy_U[t] = (sptMatrix *)malloc(sizeof(sptMatrix));
-                    sptAssert(sptNewMatrix(copy_U[t], X.ndims[mode], R) == 0);
-                    sptAssert(sptConstantMatrix(copy_U[t], 0) == 0);
-                }
-                sptNnzIndex bytes = nt * X.ndims[mode] * R * sizeof(sptValue);
-                bytestr = sptBytesString(bytes);
-                printf("MODE MATRIX COPY=%s\n", bytestr);
-                free(bytestr);
-            }
-
-            mats_order[0] = mode;
-            for(sptIndex i=1; i<nmodes; ++i)
-                mats_order[i] = (mode+i) % nmodes;
-
-            /* For warm-up caches, timing not included */
-            if(dev_id == -2) {
-                nthreads = 1;
-                sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
-            } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
-                printf("nt: %d\n", nt);
-                if(use_reduce == 1) {
-                    printf("sptOmpMTTKRP_Reduce:\n");
-                    sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
-                } else {
-                    printf("sptOmpMTTKRP:\n");
-                    sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
-                }
-#endif
-            }
-
-            
-            sptTimer timer;
-            sptNewTimer(&timer, 0);
-            sptStartTimer(timer);
-
-            for(int it=0; it<niters; ++it) {
-                // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
-                if(dev_id == -2) {
-                    nthreads = 1;
-                    sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
-                } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
-                    if(use_reduce == 1) {
-                        sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
-                    } else {
-                        sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
-                        // printf("sptOmpMTTKRP_Lock:\n");
-                        // sptAssert(sptOmpMTTKRP_Lock(&X, U, mats_order, mode, nt, lock_pool) == 0);
-                    }
-#endif
-                }
-            }
-
-            sptStopTimer(timer);
-
-            if(dev_id == -2 || dev_id == -1) {
-                char * prg_name;
-                int ret = asprintf(&prg_name, "CPU  SpTns MTTKRP MODE %"PARTI_PRI_INDEX, mode);
-                if(ret < 0) {
-                    perror("asprintf");
-                    abort();
-                }
-                double aver_time = sptPrintAverageElapsedTime(timer, niters, prg_name);
-                free(prg_name);
-
-                double gflops = (double)nmodes * R * X.nnz / aver_time / 1e9;
-                uint64_t bytes = ( nmodes * sizeof(sptIndex) + sizeof(sptValue) ) * X.nnz; 
-                for (sptIndex m=0; m<nmodes; ++m) {
-                    bytes += X.ndims[m] * R * sizeof(sptValue);
-                }
-                double gbw = (double)bytes / aver_time / 1e9;
-                printf("Performance: %.2lf GFlop/s, Bandwidth: %.2lf GB/s\n\n", gflops, gbw);
-            }
-            sptFreeTimer(timer);
-
-            if(fo != NULL) {
-                sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
-            }
-
-        } // End nmodes
-
-    } else {
-
-        /* Set zeros for temporary copy_U, for mode-"mode" */
-        char * bytestr;
-        if(dev_id == -1 && use_reduce == 1) {
-            copy_U = (sptMatrix **)malloc(nt * sizeof(sptMatrix*));
-            for(int t=0; t<nt; ++t) {
-                copy_U[t] = (sptMatrix *)malloc(sizeof(sptMatrix));
-                sptAssert(sptNewMatrix(copy_U[t], X.ndims[mode], R) == 0);
-                sptAssert(sptConstantMatrix(copy_U[t], 0) == 0);
-            }
-            sptNnzIndex bytes = nt * X.ndims[mode] * R * sizeof(sptValue);
-            bytestr = sptBytesString(bytes);
-            printf("MODE MATRIX COPY=%s\n", bytestr);
-            free(bytestr);
+    /* Set zeros for temporary copy_U, for mode-"mode" */
+    char * bytestr;
+    if(dev_id == -1 && use_reduce == 1) {
+        copy_U = (sptMatrix **)malloc(nt * sizeof(sptMatrix*));
+        for(int t=0; t<nt; ++t) {
+            copy_U[t] = (sptMatrix *)malloc(sizeof(sptMatrix));
+            sptAssert(sptNewMatrix(copy_U[t], X.ndims[mode], R) == 0);
+            sptAssert(sptConstantMatrix(copy_U[t], 0) == 0);
         }
+        sptNnzIndex bytes = nt * X.ndims[mode] * R * sizeof(sptValue);
+        bytestr = sptBytesString(bytes);
+        printf("MODE MATRIX COPY=%s\n", bytestr);
+        free(bytestr);
+    }
 
-        sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
-        mats_order[0] = mode;
-        for(sptIndex i=1; i<nmodes; ++i)
-            mats_order[i] = (mode+i) % nmodes;
+    sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
+    mats_order[0] = mode;
+    for(sptIndex i=1; i<nmodes; ++i)
+        mats_order[i] = (mode+i) % nmodes;
 
-        /* For warm-up caches, timing not included */
+    /* For warm-up caches, timing not included */
+    if(dev_id == -2) {
+        nthreads = 1;
+        sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
+    } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
+        printf("nt: %d\n", nt);
+        if(use_reduce == 1) {
+            printf("sptOmpMTTKRP_Reduce:\n");
+            sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
+        } else {
+            printf("sptOmpMTTKRP:\n");
+            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
+        }
+#endif
+    }
+
+    
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
+
+    for(int it=0; it<niters; ++it) {
+        // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
         if(dev_id == -2) {
             nthreads = 1;
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            printf("nt: %d\n", nt);
             if(use_reduce == 1) {
-                printf("sptOmpMTTKRP_Reduce:\n");
                 sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
             } else {
-                printf("sptOmpMTTKRP:\n");
                 sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
             }
 #endif
         }
+    }
 
-        
-        sptTimer timer;
-        sptNewTimer(&timer, 0);
-        sptStartTimer(timer);
+    sptStopTimer(timer);
+    sptFreeTimer(timer);
 
-        for(int it=0; it<niters; ++it) {
-            // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
-            if(dev_id == -2) {
-                nthreads = 1;
-                sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
-            } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
-                if(use_reduce == 1) {
-                    sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
-                } else {
-                    sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
-                }
-#endif
-            }
-        }
+    double aver_time = sptPrintAverageElapsedTime(timer, niters, "Average CooMTTKRP");
+    double gflops = (double)nmodes * R * X.nnz / aver_time / 1e9;
+    uint64_t bytes = ( nmodes * sizeof(sptIndex) + sizeof(sptValue) ) * X.nnz; 
+    for (sptIndex m=0; m<nmodes; ++m) {
+        bytes += X.ndims[m] * R * sizeof(sptValue);
+    }
+    double gbw = (double)bytes / aver_time / 1e9;
+    printf("Performance: %.2lf GFlop/s, Bandwidth: %.2lf GB/s\n\n", gflops, gbw);
 
-        sptStopTimer(timer);
-
-        if(dev_id == -2 || dev_id == -1) {
-            double aver_time = sptPrintAverageElapsedTime(timer, niters, "CPU SpTns MTTKRP");
-
-            double gflops = (double)nmodes * R * X.nnz / aver_time / 1e9;
-            uint64_t bytes = ( nmodes * sizeof(sptIndex) + sizeof(sptValue) ) * X.nnz; 
-            for (sptIndex m=0; m<nmodes; ++m) {
-                bytes += X.ndims[m] * R * sizeof(sptValue);
-            }
-            double gbw = (double)bytes / aver_time / 1e9;
-            printf("Performance: %.2lf GFlop/s, Bandwidth: %.2lf GB/s\n\n", gflops, gbw);
-        }
-        sptFreeTimer(timer);
-
-        if(fo != NULL) {
-            sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
-        }
-
-    } // End execute a specified mode
+    if(fo != NULL) {
+        sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
+    }
 
     if(fo != NULL) {
         fclose(fo);

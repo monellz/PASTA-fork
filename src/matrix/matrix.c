@@ -58,17 +58,17 @@ int sptNewMatrix(sptMatrix *mtx, sptIndex const nrows, sptIndex const ncols) {
 /**
  * Build a matrix with random number
  *
- * @param mtx   a pointer to an uninitialized matrix
+ * @param mtx   a pointer to an initialized matrix
  * @param nrows fill the specified number of rows
  * @param ncols fill the specified number of columns
  *
  * The matrix is filled with uniform distributed pseudorandom number in [0, 1]
  * The random number will have a precision of 31 bits out of 51 bits
  */
-int sptRandomizeMatrix(sptMatrix *mtx, sptIndex const nrows, sptIndex const ncols) {
-  srand(time(NULL));
-  for(sptIndex i=0; i<nrows; ++i)
-    for(sptIndex j=0; j<ncols; ++j) {
+int sptRandomizeMatrix(sptMatrix *mtx) {
+  for(sptIndex i=0; i<mtx->nrows; ++i)
+    for(sptIndex j=0; j<mtx->ncols; ++j) {
+      srand(time(NULL) + i + j);  
       mtx->values[i * mtx->stride + j] = sptRandomValue();
       // mtx->values[i * mtx->stride + j] = i + j + 1;
     }

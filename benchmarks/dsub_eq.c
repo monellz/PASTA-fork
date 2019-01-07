@@ -21,7 +21,7 @@
 #include <getopt.h>
 #include <ParTI.h>
 
-void print_usage(char ** argv) {
+static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -X INPUT (.tns file)\n");
     printf("         -Y INPUT (.tns file)\n");
@@ -135,11 +135,6 @@ int main(int argc, char *argv[]) {
             sptAssert(sptSparseTensorDotSubEq(&Z, &X, &Y, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            #pragma omp parallel
-            {
-                nthreads = omp_get_num_threads();
-            }
-            printf("nthreads: %d\n", nthreads);
             sptAssert(sptOmpSparseTensorDotSubEq(&Z, &X, &Y, collectZero) == 0);
         }
 #endif

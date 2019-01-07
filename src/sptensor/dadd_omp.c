@@ -15,6 +15,7 @@
     License along with ParTI!.
     If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef PARTI_USE_OPENMP
 
 #include <ParTI.h>
 #include "sptensor.h"
@@ -26,40 +27,63 @@
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-/* TODO: bug. */
-int sptOmpSparseTensorDotAdd(sptSparseTensor *Y, sptSparseTensor *X, int const nthreads) {
+int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *Y, sptSparseTensor *X, int collectZero, int nthreads) 
+{
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP SpTns Add", "shape mismatch");
     }
+    sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
-        if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP SpTns Add", "shape mismatch");
+        if(Y->ndims[i] > X->ndims[i]) {
+            max_ndims[i] = Y->ndims[i];
+        } else {
+            max_ndims[i] = X->ndims[i];
         }
     }
 
-    /* Determine partationing strategy. */
-    sptNnzIndex * dist_nnzs_X = (sptNnzIndex*)malloc(nthreads*sizeof(sptNnzIndex));
-    sptNnzIndex * dist_nnzs_Y = (sptNnzIndex*)malloc(nthreads*sizeof(sptNnzIndex));
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+
+    /* Allocate output tensor Z */
+    sptStartTimer(timer);
+    sptAssert(sptNewSparseTensor(Z, Y->nmodes, max_ndims) == 0);
+    free(max_ndims);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptNewSparseTensor");
+
+    /* Determine partitioning strategy. */
+    sptStartTimer(timer);
+    sptNnzIndex * dist_nnzs_X = (sptNnzIndex*)malloc((nthreads+1)*sizeof(sptNnzIndex));
+    sptNnzIndex * dist_nnzs_Y = (sptNnzIndex*)malloc((nthreads+1)*sizeof(sptNnzIndex));
     sptIndex * dist_nrows_Y = (sptIndex*)malloc(nthreads*sizeof(sptIndex));
 
     spt_DistSparseTensor(Y, nthreads, dist_nnzs_Y, dist_nrows_Y);
-    spt_DistSparseTensorFixed(X, nthreads, dist_nnzs_X, dist_nnzs_Y);
-    free(dist_nrows_Y);
+    spt_DistSparseTensorFixed(X, nthreads, dist_nrows_Y, dist_nnzs_X);
 
     printf("dist_nnzs_Y:\n");
-    for(int i=0; i<nthreads; ++i) {
+    for(int i=0; i<nthreads + 1; ++i) {
         printf("%zu ", dist_nnzs_Y[i]);
     }
     printf("\n");
-    printf("dist_nnzs_X:\n");
+    printf("dist_nrows_Y:\n");
     for(int i=0; i<nthreads; ++i) {
+        printf("%u ", dist_nrows_Y[i]);
+    }
+    printf("\n");
+    printf("dist_nnzs_X:\n");
+    for(int i=0; i<nthreads + 1; ++i) {
         printf("%zu ", dist_nnzs_X[i]);
     }
     printf("\n");
     fflush(stdout);
 
+    free(dist_nrows_Y);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Distribute two input tensors");
 
+
+    sptStartTimer(timer);
     /* Build a private arrays to append values. */
     sptNnzIndex nnz_gap = llabs((long long) Y->nnz - (long long) X->nnz);
     sptNnzIndex increase_size = 0;
@@ -80,60 +104,79 @@ int sptOmpSparseTensorDotAdd(sptSparseTensor *Y, sptSparseTensor *X, int const n
     }
 
     /* Add elements one by one, assume indices are ordered */
-    sptNnzIndex Ynnz = 0;
+    sptNnzIndex Znnz = 0;
     omp_set_dynamic(0);
     omp_set_num_threads(nthreads);
-    #pragma omp parallel reduction(+:Ynnz)
+    #pragma omp parallel reduction(+:Znnz)
     {
         int tid = omp_get_thread_num();
-        sptNnzIndex i=0, j=0;
-        Ynnz = dist_nnzs_Y[tid];
+        int result;
+        sptNnzIndex i=dist_nnzs_X[tid], j=dist_nnzs_Y[tid];
 
-        while(i < dist_nnzs_X[tid] && j < dist_nnzs_Y[tid]) {
+        while(i < dist_nnzs_X[tid+1] && j < dist_nnzs_Y[tid+1]) {
             int compare = spt_SparseTensorCompareIndices(X, i, Y, j);
             if(compare > 0) {    // X(i) > Y(j)
+                for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
+                    sptAssert(sptAppendIndexVector(&(local_inds[tid][mode]), Y->inds[mode].data[j]) == 0);
+                }
+                sptAssert(sptAppendValueVector(&(local_vals[tid]), Y->values.data[j]) == 0);
+
+                ++ Znnz;
                 ++j;
             } else if(compare < 0) {    // X(i) < Y(j)
-                sptIndex mode;
-                int result;
-                for(mode = 0; mode < X->nmodes; ++mode) {
-                    result = sptAppendIndexVector(&(local_inds[tid][mode]), X->inds[mode].data[i]);
-                    spt_CheckOmpError(result, "OMP SpTns Add", NULL);
+                for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
+                    sptAssert(sptAppendIndexVector(&(local_inds[tid][mode]), X->inds[mode].data[i]) == 0);
                 }
-                result = sptAppendValueVector(&(local_vals[tid]), X->values.data[i]);
-                spt_CheckOmpError(result, "OMP SpTns Add", NULL);
-                ++Ynnz;
+                sptAssert(sptAppendValueVector(&(local_vals[tid]), X->values.data[i]) == 0);
+
+                ++Znnz;
                 ++i;
             } else {    // X(i) = Y(j)
-                Y->values.data[j] += X->values.data[i];
+                for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
+                    sptAssert(sptAppendIndexVector(&(local_inds[tid][mode]), X->inds[mode].data[i]) == 0);
+                }
+                sptAssert(sptAppendValueVector(&(local_vals[tid]), X->values.data[i] + Y->values.data[j]) == 0);
+
+                ++ Znnz;
                 ++i;
                 ++j;
             }
         }
-        /* Append remaining elements of X to Y */
-        while(i < dist_nnzs_X[tid]) {
-            sptIndex mode;
-            int result;
-            for(mode = 0; mode < X->nmodes; ++mode) {
-                result = sptAppendIndexVector(&(local_inds[tid][mode]), X->inds[mode].data[i]);
-                spt_CheckOmpError(result, "OMP SpTns Add", NULL);
+
+        /* Append remaining elements of X to Z */
+        while(i < dist_nnzs_X[tid+1]) {
+            for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
+                sptAssert(sptAppendIndexVector(&(local_inds[tid][mode]), X->inds[mode].data[i]) == 0);
             }
-            result = sptAppendValueVector(&(local_vals[tid]), X->values.data[i]);
-            spt_CheckOmpError(result, "OMP SpTns Add", NULL);
-            ++Ynnz;
+            sptAssert(sptAppendValueVector(&(local_vals[tid]), X->values.data[i]) == 0);
+
+            ++Znnz;
             ++i;
         }
 
+        /* Append remaining elements of Y to Z */
+        while(j < dist_nnzs_Y[tid+1]) {
+            for(sptIndex mode = 0; mode < Y->nmodes; ++mode) {
+                sptAssert(sptAppendIndexVector(&(local_inds[tid][mode]), Y->inds[mode].data[j]) == 0);
+            }
+            sptAssert(sptAppendValueVector(&(local_vals[tid]), Y->values.data[j]) == 0);
+
+            ++Znnz;
+            ++j;
+        }
+
     }
-    Y->nnz = Ynnz;
+    Z->nnz = Znnz;  
 
     /* Append all the local arrays to Y. */
     for(int k=0; k<nthreads; ++k) {
-        for(sptIndex m=0; m<Y->nmodes; ++m) {
-            sptAppendIndexVectorWithVector(&(Y->inds[m]), &(local_inds[k][m]));
+        for(sptIndex m=0; m<Z->nmodes; ++m) {
+            sptAssert(sptAppendIndexVectorWithVector(&(Z->inds[m]), &(local_inds[k][m])) == 0);
         }
-        sptAppendValueVectorWithVector(&(Y->values), &(local_vals[k]));
+        sptAssert(sptAppendValueVectorWithVector(&(Z->values), &(local_vals[k])) == 0);
     }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Omp  SpTns DotAdd");
 
 
     for(int k=0; k<nthreads; ++k) {
@@ -152,9 +195,14 @@ int sptOmpSparseTensorDotAdd(sptSparseTensor *Y, sptSparseTensor *X, int const n
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    sptSparseTensorCollectZeros(Y);
-    /* Sort the indices */
-    sptSparseTensorSortIndex(Y, 1);
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Y);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
     return 0;
 }
+
+#endif
