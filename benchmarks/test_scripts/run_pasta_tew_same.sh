@@ -15,7 +15,7 @@ nt=32
 nmodes=3
 modes="$(seq -s ' ' 0 $((nmodes-1)))"
 
-for tsr_name in "${test_tsr_names[@]}"
+for tsr_name in "${s3tsrs[@]}"
 do
 	for prog_name in "${programs[@]}"
 	do
