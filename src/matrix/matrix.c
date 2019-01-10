@@ -69,8 +69,8 @@ int sptRandomizeMatrix(sptMatrix *mtx) {
   for(sptIndex i=0; i<mtx->nrows; ++i)
     for(sptIndex j=0; j<mtx->ncols; ++j) {
       srand(time(NULL) + i + j);  
-      mtx->values[i * mtx->stride + j] = sptRandomValue();
-      // mtx->values[i * mtx->stride + j] = i + j + 1;
+      // mtx->values[i * mtx->stride + j] = sptRandomValue();
+      mtx->values[i * mtx->stride + j] = i + j + 1;
     }
   return 0;
 }
