@@ -55,7 +55,7 @@ int sptOmpSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, con
     sptStartTimer(timer);
     #pragma omp parallel for
     for(sptNnzIndex i = 0; i < nnz; ++ i)
-        Z->values.data[i] = X->values.data[i] * Y->values.data[i];
+        Z->values.data[i] = X->values.data[i] / Y->values.data[i];
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Omp SpTns DotDiv");
 

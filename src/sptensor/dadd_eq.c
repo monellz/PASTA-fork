@@ -54,7 +54,7 @@ int sptSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const 
 
     sptStartTimer(timer);
     for(i=0; i< nnz; ++i)
-        Z->values.data[i] += Y->values.data[i];
+        Z->values.data[i] = X->values.data[i] + Y->values.data[i];
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Cpu SpTns DotAdd");
 
