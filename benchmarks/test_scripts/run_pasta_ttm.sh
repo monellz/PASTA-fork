@@ -13,7 +13,7 @@ out_path="/global/homes/j/jiajiali/Work/ParTI-dev/timing-results/pasta/coo"
 nt=32
 nmodes=3
 modes="$(seq -s ' ' 0 $((nmodes-1)))"
-prog_name="mttkrp"
+prog_name="ttm"
 
 # for R in 8 16 32 64
 for R in 16
@@ -34,13 +34,8 @@ do
 			export OMP_NUM_THREADS=${nt}
 			# for nt in ${threads[@]}
 			# do
-				# Use reduce
 				echo "numactl --interleave=0-1 ./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.tns -m ${mode} -d ${dev_id} -r ${R} -t ${nt} > ${out_path}/${tsr_name}_${prog_name}}-m${mode}-r${R}-t${nt}.txt"
 				numactl --interleave=0-1 ./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.tns -m ${mode} -d ${dev_id} -r ${R} -t ${nt} > ${out_path}/${tsr_name}_${prog_name}}-m${mode}-r${R}-t${nt}.txt
-
-				# NOT Use reduce
-				# echo "./build/tests/mttkrp -i ${tsr_path}/${tsr_name}.tns -d ${dev_id} -r ${R} -t ${nt} -u 0 > ${out_path}/${tsr_name}-r${R}-t${nt}-noreduce.txt"
-				# ./build/tests/mttkrp -i ${tsr_path}/${tsr_name}.tns -d ${dev_id} -r ${R} -t ${nt} -u 0 > ${out_path}/${tsr_name}-r${R}-t${nt}-noreduce.txt
 			# done
 
 		done
