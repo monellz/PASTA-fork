@@ -5,7 +5,7 @@ declare -a l3tsrs=("amazon-reviews" "patents" "reddit-2015")
 declare -a s4tsrs=("chicago-crime-comm-4d" "nips-4d" "enron-4d" "flickr-4d" "delicious-4d")
 declare -a test_tsr_names=("vast-2015-mc1")
 declare -a threads=("2" "4" "8" "16" "32")
-declare -a programs=("dadd_eq" "dadd_eq" "dadd_eq" "dadd_eq")
+declare -a programs=("dadd_eq" "dsub_eq" "dmul_eq" "ddiv_eq")
 
 # Cori
 tsr_path="${SCRATCH}/BIGTENSORS"
