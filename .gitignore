@@ -11,6 +11,6 @@ timing-results/
 
 tmp*
 out*
+*.out
 tags
 
-benchmarks/run_pasta_tew_same.sh
