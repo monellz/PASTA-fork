@@ -27,10 +27,8 @@ add_definitions(-DPARTI_ELEMENT_INDEX_TYPEWIDTH=8)
 
 # Check for implementations
 option(USE_ICC "Use ICC" OFF)
-option(USE_KNL "Use KNL" OFF)
 option(USE_OPENMP "Use OPENMP" ON)
 option(USE_CUDA "Use NVIDIA CUDA library" OFF)
-option(USE_MPI "Use MPI" OFF)
 
 
 # Check for debug mode
@@ -43,11 +41,6 @@ else()
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-
-if(USE_MPI)
-    add_definitions(-DPARTI_USE_MPI)
-    set(CMAKE_C_COMPILER "${MPICC_PATH}" CACHE BOOL ON)
-endif()
 
 if(USE_CUDA)
     find_package(CUDA REQUIRED)
@@ -68,13 +61,8 @@ if(USE_OPENMP)
             set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -Wno-maybe-uninitialized -Wno-unused-variable -lrt -qopenmp -O0 -g -DADD_")
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-maybe-uninitialized -lrt -qopenmp -O0 -g -DADD_")
         else()
-            if(USE_KNL)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mmic -std=gnu99 -Wall -Wextra -Wno-maybe-uninitialized -Wno-unused-variable -lrt -qopenmp -O3 -DADD_")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmic -Wall -Wextra -Wno-maybe-uninitialized -lrt -qopenmp -O3 -DADD_")
-            else()
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -Wno-maybe-uninitialized -Wno-unused-variable -lrt -qopenmp -O3 -DADD_")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-maybe-uninitialized -lrt -qopenmp -O3 -DADD_")
-            endif()
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -Wno-maybe-uninitialized -Wno-unused-variable -lrt -qopenmp -O3 -DADD_")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-maybe-uninitialized -lrt -qopenmp -O3 -DADD_")
         endif()
     else()
         if(DEFINED DEBUG)

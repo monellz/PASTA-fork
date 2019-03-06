@@ -114,6 +114,13 @@ int sptOmpSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, con
 
 int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode);
 int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode);
+int sptCudaSparseTensorMulMatrix(
+    sptSemiSparseTensor *Y,
+    sptSparseTensor *X,
+    const sptMatrix *U,
+    sptIndex const mode,
+    sptIndex const impl_num,
+    sptNnzIndex const smen_size);
 
 int sptSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sptValueVector *V, sptIndex mode);
 int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sptValueVector *V, sptIndex mode);
@@ -156,6 +163,12 @@ int sptOmpMTTKRP_Lock(sptSparseTensor const * const X,
     sptIndex const mode,
     const int tk,
     sptMutexPool * lock_pool);
+int sptCudaMTTKRP(
+    sptSparseTensor const * const X,
+    sptMatrix ** const mats,     // mats[nmodes] as temporary space.
+    sptIndex * const mats_order,    // Correspond to the mode order of X.
+    sptIndex const mode,
+    sptIndex const impl_num);
 
 
 #endif

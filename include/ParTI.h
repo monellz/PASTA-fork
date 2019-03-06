@@ -28,9 +28,6 @@
 #ifdef PARTI_USE_OPENMP
     #include <omp.h>
 #endif
-#ifdef PARTI_USE_MPI
-    #include <mpi.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {
