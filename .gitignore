@@ -11,4 +11,5 @@ timing-results/
 
 tmp*
 out*
+*.out
 tags
