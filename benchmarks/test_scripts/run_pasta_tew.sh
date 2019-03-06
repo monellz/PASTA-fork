@@ -3,7 +3,7 @@
 declare -a s3tsrs=("vast-2015-mc1" "choa700k" "1998DARPA" "nell2" "freebase_music" "freebase_sampled" "nell1" "delicious")
 declare -a l3tsrs=("amazon-reviews" "patents" "reddit-2015")
 declare -a s4tsrs=("chicago-crime-comm-4d" "nips-4d" "enron-4d" "flickr-4d" "delicious-4d")
-declare -a test_tsr_names=("vast-2015-mc1")
+declare -a test_tsr_names=("freebase_sampled" "nell1")
 declare -a threads=("2" "4" "8" "16" "32")
 declare -a programs=("dadd" "dsub" "dmul" "ddiv")
 
