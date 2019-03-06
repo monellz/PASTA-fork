@@ -51,8 +51,7 @@ int sptNewValueVector(sptValueVector *vec, sptNnzIndex len, sptNnzIndex cap) {
 int sptRandomizeValueVector(sptValueVector *vec) {
     for(sptNnzIndex i = 0; i < vec->len; ++ i) {
         srand(time(NULL) + i);
-        // vec->data[i] = sptRandomValue();
-        vec->data[i] = i + 1;
+        vec->data[i] = sptRandomValue();
     }
     return 0;
 }
