@@ -26,7 +26,7 @@ static void print_usage(char ** argv) {
     printf("Options: -X INPUT (.tns file)\n");
     printf("         -a INPUT (a scalar)\n");
     printf("         -Z OUTPUT (output file name)\n");
-    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
+    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel; >=0:GPU parallel)\n");
     printf("         --help\n");
     printf("\n");
 }
@@ -78,8 +78,8 @@ int main(int argc, char *argv[]) {
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
-            if(dev_id < -2 || dev_id >= 0) {
-                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+            if(dev_id < -2) {
+                fprintf(stderr, "Error: set dev_id to -2/-1/>=0.\n");
                 exit(1);
             }
             break;
@@ -111,6 +111,9 @@ int main(int argc, char *argv[]) {
         printf("\nnthreads: %d\n", nthreads);
         sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
 #endif
+    } else {
+        sptCudaSetDevice(dev_id);
+        sptAssert(sptCudaSparseTensorAddScalar(&Z, &X, a) == 0);
     }
 
     sptStartTimer(timer);
@@ -127,6 +130,9 @@ int main(int argc, char *argv[]) {
             printf("nthreads: %d\n", nthreads);
             sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
 #endif
+        } else {
+            sptCudaSetDevice(dev_id);
+            sptAssert(sptCudaSparseTensorAddScalar(&Z, &X, a) == 0);
         }
     }
     sptStopTimer(timer);

@@ -16,8 +16,13 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_VMUL_KERNELS_H
-#define PARTI_VMUL_KERNELS_H
+#include <ParTI.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "sptensor.h"
+
+
 
 /* impl_num = 11 */
 __global__ void spt_TTVNnzKernel(
@@ -29,7 +34,29 @@ __global__ void spt_TTVNnzKernel(
     const sptNnzIndex * __restrict__ fiberidx_val, 
     sptNnzIndex fiberidx_len,
     const sptValue * __restrict__ V_val, 
-    sptIndex V_nrows);
+    sptIndex V_nrows)
+{
+    sptNnzIndex num_loops_nnz = 1;
+    sptNnzIndex const nnz_per_loop = gridDim.x * blockDim.x;
+    if(Y_nnz > nnz_per_loop) {
+        num_loops_nnz = (Y_nnz + nnz_per_loop - 1) / nnz_per_loop;
+    }
 
+    const sptNnzIndex tidx = threadIdx.x;
+    sptNnzIndex x;
 
-#endif
+    for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
+        x = blockIdx.x * blockDim.x + tidx + nl * nnz_per_loop;
+        if(x < Y_nnz) {
+            const sptNnzIndex inz_begin = fiberidx_val[x];
+            const sptNnzIndex inz_end = fiberidx_val[x+1];
+
+            for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
+                const sptIndex row = X_inds_m[i];
+                Y_val[x] += X_val[i] * V_val[row];
+            }
+        }
+        __syncthreads();
+    }
+
+}
