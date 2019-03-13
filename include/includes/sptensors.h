@@ -124,20 +124,23 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor *X, const sp
 int sptOmpSparseTensorDotAdd(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTensor *Y, int collectZero, int nthreads);
 int sptSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
+int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 
 int sptSparseTensorDotSub(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotSub(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTensor *Y, int collectZero, int nthreads);
 int sptSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
+int sptCudaSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 
 int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotMul(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTensor *Y, int collectZero, int nthreads);
 int sptSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
+int sptCudaSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 
-int sptSparseTensorDotDiv(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y);
 int sptSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 int sptOmpSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
+int sptCudaSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
 
 int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode);
 int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode);

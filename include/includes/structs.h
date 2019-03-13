@@ -121,6 +121,39 @@ typedef struct {
 
 
 /**
+ * Semi-sparse tensor type
+ * The chosen mode is dense, while other modes are sparse.
+ * Can be considered as "sparse tensor of dense fiber".
+ * The "fiber" here can be defined as a vector of elements that have indices
+ * only different in the last mode.
+ */
+typedef struct {
+    sptIndex nmodes; /// # Modes, must >= 2
+    sptIndex *ndims; /// size of each mode, length nmodes
+    sptIndex mode;   /// the mode where data is stored in dense format
+    sptNnzIndex nnz;    /// # non-zero fibers
+    sptIndexVector *inds;  /// indices of each dense fiber, length [nmodes][nnz], the mode-th value is ignored
+    sptIndex stride; /// ndims[mode] rounded up to 8
+    sptMatrix     values; /// dense fibers, size nnz*ndims[mode]
+} sptSemiSparseTensor;
+
+
+/**
+ * General Semi-sparse tensor type
+ */
+typedef struct {
+    sptIndex nmodes; /// # Modes, must >= 2
+    sptIndex *ndims; /// size of each mode, length nmodes
+    sptIndex ndmodes;
+    sptIndex *dmodes;   /// the mode where data is stored in dense format, allocate nmodes sized space
+    sptNnzIndex nnz;    /// # non-zero fibers
+    sptIndexVector *inds;  /// indices of each dense fiber, length [nmodes][nnz], the mode-th value is ignored
+    sptIndex *strides; /// ndims[mode] rounded up to 8
+    sptMatrix     values; /// dense fibers, size nnz*ndims[mode]
+} sptSemiSparseTensorGeneral;
+
+
+/**
  * Sparse tensor type, Hierarchical COO format (HiCOO)
  */
 typedef struct {
@@ -156,38 +189,6 @@ typedef struct {
 } sptSparseTensorHiCOO;
 
 
-
-/**
- * Semi-sparse tensor type
- * The chosen mode is dense, while other modes are sparse.
- * Can be considered as "sparse tensor of dense fiber".
- * The "fiber" here can be defined as a vector of elements that have indices
- * only different in the last mode.
- */
-typedef struct {
-    sptIndex nmodes; /// # Modes, must >= 2
-    sptIndex *ndims; /// size of each mode, length nmodes
-    sptIndex mode;   /// the mode where data is stored in dense format
-    sptNnzIndex nnz;    /// # non-zero fibers
-    sptIndexVector *inds;  /// indices of each dense fiber, length [nmodes][nnz], the mode-th value is ignored
-    sptIndex stride; /// ndims[mode] rounded up to 8
-    sptMatrix     values; /// dense fibers, size nnz*ndims[mode]
-} sptSemiSparseTensor;
-
-
-/**
- * General Semi-sparse tensor type
- */
-typedef struct {
-    sptIndex nmodes; /// # Modes, must >= 2
-    sptIndex *ndims; /// size of each mode, length nmodes
-    sptIndex ndmodes;
-    sptIndex *dmodes;   /// the mode where data is stored in dense format, allocate nmodes sized space
-    sptNnzIndex nnz;    /// # non-zero fibers
-    sptIndexVector *inds;  /// indices of each dense fiber, length [nmodes][nnz], the mode-th value is ignored
-    sptIndex *strides; /// ndims[mode] rounded up to 8
-    sptMatrix     values; /// dense fibers, size nnz*ndims[mode]
-} sptSemiSparseTensorGeneral;
 
 
 /**
