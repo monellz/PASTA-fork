@@ -19,7 +19,6 @@
 #include <ParTI.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../error/error.h"
 
 
 /**
@@ -117,7 +116,7 @@ int sptDumpNnzIndexVector(sptNnzIndexVector *vec, FILE *fp) {
  * @param fp a file pointer
  *
  */
-int sptDumpValueIndexVector(sptValueVector *vec, FILE *fp) {
+int sptDumpValueVector(sptValueVector *vec, FILE *fp) {
     int iores;
     sptNnzIndex len = vec->len;
     iores = fprintf(fp, "sptValueVector length: %"PARTI_PRI_NNZ_INDEX "\n", len);

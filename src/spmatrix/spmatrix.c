@@ -17,7 +17,6 @@
 */
 
 #include <ParTI.h>
-#include "../error/error.h"
 
 /**
  * Initialize a new sparse matrix

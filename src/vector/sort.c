@@ -19,7 +19,6 @@
 #include <ParTI.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../error/error.h"
 
 void sptQuickSortNnzIndexArray(sptNnzIndex * array, sptNnzIndex l, sptNnzIndex r) {
     sptNnzIndex i, j, p;

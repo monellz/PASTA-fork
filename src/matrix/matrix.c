@@ -22,7 +22,6 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include "../error/error.h"
 
 /**
  * Initialize a new dense matrix

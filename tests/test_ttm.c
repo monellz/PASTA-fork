@@ -19,7 +19,6 @@
 #include <ParTI.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/error/error.h"
 
 static int spt_LoadMatrixTranspose(sptMatrix *X, FILE *f) {
     int result = 0;

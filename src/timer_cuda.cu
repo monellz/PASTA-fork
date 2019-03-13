@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "error/error.h"
 
 #ifndef PARTI_USE_CUDA
 

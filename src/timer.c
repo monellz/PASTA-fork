@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include "error/error.h"
 
 struct sptTagTimer {
     int use_cuda;

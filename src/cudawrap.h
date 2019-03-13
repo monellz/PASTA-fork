@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <cuda_runtime.h>
-#include "error/error.h"
+#include "../include/includes/error.h"
 
 
 typedef struct cusparseContext *cusparseHandle_t;

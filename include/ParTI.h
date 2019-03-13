@@ -56,7 +56,7 @@ extern "C" {
  * HELPER FUNCTIONS
  *************************************************/
 #include "includes/helper_funcs.h"
-
+#include "includes/error.h"
 
 /*************************************************
  * FUNCTIONS

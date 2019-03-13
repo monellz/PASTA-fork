@@ -24,7 +24,6 @@ extern "C" {
 #endif
 
 #include <ParTI.h>
-#include "../error/error.h"
 
 double spt_SparseTensorNorm(const sptSparseTensor *X);
 int spt_SparseTensorCompareIndices(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2);

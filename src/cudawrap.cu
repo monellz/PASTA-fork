@@ -18,7 +18,6 @@
 
 #include <ParTI.h>
 #include <stdlib.h>
-#include "error/error.h"
 #include "cudawrap.h"
 #include <cusparse.h>
 #include <cusolverSp.h>

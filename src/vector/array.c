@@ -19,7 +19,6 @@
 #include <ParTI.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../error/error.h"
 
 
 sptNnzIndex sptMaxNnzIndexArray(

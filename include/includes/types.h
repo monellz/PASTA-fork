@@ -90,6 +90,7 @@ typedef sptBlockIndex sptBlockNnzIndex;
 #define PARTI_SCN_BLOCKNNZ_INDEX PARTI_SCN_BLOCK_INDEX
 
 typedef uint64_t sptNnzIndex;
+#define PARTI_NNZ_INDEX_MAX UINT64_MAX
 #define PARTI_PRI_NNZ_INDEX PRIu64
 #define PARTI_SCN_NNZ_INDEX PRIu64
 

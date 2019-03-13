@@ -36,7 +36,7 @@ int sptAppendValueVector(sptValueVector *vec, sptValue const value);
 int sptAppendValueVectorWithVector(sptValueVector *vec, const sptValueVector *append_vec);
 int sptResizeValueVector(sptValueVector *vec, sptNnzIndex const size);
 void sptFreeValueVector(sptValueVector *vec);
-int sptDumpValueIndexVector(sptValueVector *vec, FILE *fp);
+int sptDumpValueVector(sptValueVector *vec, FILE *fp);
 
 /* Dense vector, with sptIndexVector type */
 int sptNewIndexVector(sptIndexVector *vec, sptNnzIndex len, sptNnzIndex cap);

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <ParTI.h>
-#include "../src/error/error.h"
 
 
 static void print_usage(char ** argv) {

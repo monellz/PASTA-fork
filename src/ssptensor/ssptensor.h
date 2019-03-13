@@ -24,7 +24,6 @@ extern "C" {
 #endif
 
 #include <ParTI.h>
-#include "../error/error.h"
 
 int spt_SemiSparseTensorAppend(sptSemiSparseTensor *tsr, const sptIndex indices[], sptValue value);
 int spt_SemiSparseTensorCompareIndices(const sptSemiSparseTensor *tsr1, sptNnzIndex ind1, const sptSemiSparseTensor *tsr2, sptNnzIndex ind2);

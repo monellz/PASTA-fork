@@ -30,7 +30,7 @@ static void print_usage(char ** argv) {
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
     printf("         OpenMP options: \n");
-    printf("         -t NTHREADS, --nt=NT (1:default)\n");
+    printf("         -t NTHREADS, --nthreads=NT (1:default)\n");
     printf("         -u use_reduce, --ur=use_reduce (use privatization or not)\n");
     printf("         --help\n");
     printf("\n");
@@ -39,7 +39,8 @@ static void print_usage(char ** argv) {
 /**
  * Benchmark Matriced Tensor Times Khatri-Rao Product (MTTKRP), tensor in COO format, matrices are dense.
  */
-int main(int argc, char ** argv) {
+int main(int argc, char ** argv) 
+{
     FILE *fi = NULL, *fo = NULL;
     sptSparseTensor X;
     sptMatrix ** U;
@@ -49,9 +50,8 @@ int main(int argc, char ** argv) {
     sptIndex R = 16;
     int dev_id = -2;
     int niters = 5;
-    int nthreads;
+    int nthreads = 1;
     int use_reduce = 1; // Need to choose from two omp parallel approaches
-    int nt = 1;
     printf("niters: %d\n", niters);
 
     if(argc <= 3) { // #Required arguments
@@ -65,7 +65,7 @@ int main(int argc, char ** argv) {
         {"output", optional_argument, 0, 'o'},
         {"dev-id", optional_argument, 0, 'd'},
         {"rank", optional_argument, 0, 'r'},
-        {"nt", optional_argument, 0, 't'},
+        {"nthreads", optional_argument, 0, 't'},
         {"use-reduce", optional_argument, 0, 'u'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
@@ -101,7 +101,7 @@ int main(int argc, char ** argv) {
             sscanf(optarg, "%d", &use_reduce);
             break;
         case 't':
-            sscanf(optarg, "%d", &nt);
+            sscanf(optarg, "%d", &nthreads);
             break;
         case '?':   /* invalid option */
         case 'h':
@@ -139,13 +139,13 @@ int main(int argc, char ** argv) {
     /* Set zeros for temporary copy_U, for mode-"mode" */
     char * bytestr;
     if(dev_id == -1 && use_reduce == 1) {
-        copy_U = (sptMatrix **)malloc(nt * sizeof(sptMatrix*));
-        for(int t=0; t<nt; ++t) {
+        copy_U = (sptMatrix **)malloc(nthreads * sizeof(sptMatrix*));
+        for(int t=0; t<nthreads; ++t) {
             copy_U[t] = (sptMatrix *)malloc(sizeof(sptMatrix));
             sptAssert(sptNewMatrix(copy_U[t], X.ndims[mode], R) == 0);
             sptAssert(sptConstantMatrix(copy_U[t], 0) == 0);
         }
-        sptNnzIndex bytes = nt * X.ndims[mode] * R * sizeof(sptValue);
+        sptNnzIndex bytes = nthreads * X.ndims[mode] * R * sizeof(sptValue);
         bytestr = sptBytesString(bytes);
         printf("MODE MATRIX COPY=%s\n", bytestr);
         free(bytestr);
@@ -162,13 +162,13 @@ int main(int argc, char ** argv) {
         sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-        printf("nt: %d\n", nt);
+        printf("nthreads: %d\n", nthreads);
         if(use_reduce == 1) {
             printf("sptOmpMTTKRP_Reduce:\n");
-            sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
+            sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nthreads) == 0);
         } else {
             printf("sptOmpMTTKRP:\n");
-            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
+            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
         }
 #endif
     }
@@ -181,14 +181,13 @@ int main(int argc, char ** argv) {
     for(int it=0; it<niters; ++it) {
         // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
         if(dev_id == -2) {
-            nthreads = 1;
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
             if(use_reduce == 1) {
-                sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nt) == 0);
+                sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nthreads) == 0);
             } else {
-                sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nt) == 0);
+                sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
             }
 #endif
         }
@@ -208,14 +207,12 @@ int main(int argc, char ** argv) {
 
     if(fo != NULL) {
         sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
-    }
-
-    if(fo != NULL) {
         fclose(fo);
     }
+
     if(dev_id == -1) {
         if (use_reduce == 1) {
-            for(int t=0; t<nt; ++t) {
+            for(int t=0; t<nthreads; ++t) {
                 sptFreeMatrix(copy_U[t]);
             }
             free(copy_U);

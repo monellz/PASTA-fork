@@ -18,7 +18,6 @@
 
 #include <ParTI.h>
 #include "ssptensor.h"
-#include "../error/error.h"
 
 int spt_SemiSparseTensorSetMode(
     sptSemiSparseTensor       *dest,

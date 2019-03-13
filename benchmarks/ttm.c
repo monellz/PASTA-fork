@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <ParTI.h>
-#include "../src/error/error.h"
 
 
 static void print_usage(char ** argv) {
@@ -42,7 +41,7 @@ int main(int argc, char ** argv)
 
     if(argc < 3) {
         print_usage(argv);
-        return 0;
+        exit(1);
     }
 
     static struct option long_options[] = {
@@ -139,7 +138,8 @@ int main(int argc, char ** argv)
         sptSparseTensor Y_coo;
         sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
         sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
-        sptFreeSparseTensor(&Y_coo);        
+        sptFreeSparseTensor(&Y_coo);  
+        fclose(fo);      
     }
 
     sptFreeSemiSparseTensor(&Y);
