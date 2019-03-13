@@ -32,7 +32,7 @@ static void print_usage(char ** argv) {
 }
 
 /**
- * Benchmark COO tensor addition with a scalar. 
+ * Benchmark COO tensor multiplication with a scalar. 
  */
 int main(int argc, char *argv[]) {
     FILE *fX, *fZ;
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
 
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
-        sptAssert(sptSparseTensorAddScalar(&Z, &X, a) == 0);
+        sptAssert(sptSparseTensorMulScalar(&Z, &X, a) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -109,29 +109,29 @@ int main(int argc, char *argv[]) {
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
+        sptAssert(sptOmpSparseTensorMulScalar(&Z, &X, a) == 0);
 #endif
     } else {
         sptCudaSetDevice(dev_id);
-        sptAssert(sptCudaSparseTensorAddScalar(&Z, &X, a) == 0);
+        sptAssert(sptCudaSparseTensorMulScalar(&Z, &X, a) == 0);
     }
 
     sptStartTimer(timer);
     for(int it=0; it<niters; ++it) {
         sptFreeSparseTensor(&Z);
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorAddScalar(&Z, &X, a) == 0);
+            sptAssert(sptSparseTensorMulScalar(&Z, &X, a) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            sptAssert(sptOmpSparseTensorAddScalar(&Z, &X, a) == 0);
+            sptAssert(sptOmpSparseTensorMulScalar(&Z, &X, a) == 0);
 #endif
         } else {
             sptCudaSetDevice(dev_id);
-            sptAssert(sptCudaSparseTensorAddScalar(&Z, &X, a) == 0);
+            sptAssert(sptCudaSparseTensorMulScalar(&Z, &X, a) == 0);
         }
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooAddScalar");
+    sptPrintAverageElapsedTime(timer, niters, "Average CooMulScalar");
     sptFreeTimer(timer);
 
     if(fZ != NULL) {

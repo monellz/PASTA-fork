@@ -16,8 +16,6 @@ static void print_usage(char ** argv) {
     printf("         -m MODE, --mode=MODE (specify a mode, e.g., 0 (default) or 1 or 2 for third-order tensors.)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
-    printf("         OpenMP options: \n");
-    printf("         -t NTHREADS, --nt=NT (1:default)\n");
     printf("         --help\n");
     printf("\n");
 }
@@ -50,14 +48,13 @@ int main(int argc, char ** argv)
         {"output", optional_argument, 0, 'o'},
         {"dev-id", optional_argument, 0, 'd'},
         {"rank", optional_argument, 0, 'r'},
-        {"nt", optional_argument, 0, 't'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
     int c;
     for(;;) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:d:r:t:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:m:o:d:r:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -80,9 +77,6 @@ int main(int argc, char ** argv)
             break;
         case 'r':
             sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
-            break;
-        case 't':
-            sscanf(optarg, "%d", &nthreads);
             break;
         case '?':   /* invalid option */
         case 'h':
