@@ -27,8 +27,6 @@ void print_usage(int argc, char ** argv) {
     printf("Options: -i INPUT, --input=INPUT\n");
     printf("         -o OUTPUT, --output=OUTPUT\n");
     printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
-    printf("         -k KERNELSIZE (bits), --kernelsize=KERNELSIZE (bits)\n");
-    printf("         -c CHUNKSIZE (bits), --chunksize=CHUNKSIZE (bits, <=9)\n");
     printf("         -m MODE, --mode=MODE\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID\n");
     printf("         -r RANK\n");
@@ -47,14 +45,13 @@ int main(int argc, char ** argv)
     sptMatrix ** U;
     sptSparseTensorHiCOO hitsr;
     sptElementIndex sb_bits = 7;
-    sptElementIndex sk_bits = 7;
-    sptElementIndex sc_bits = 14;
 
     sptIndex mode = 0;
     sptIndex R = 16;
     int dev_id = -2;
     int niters = 5;
     int nthreads = 1;
+    int sort_impl = 1;  // 1: Morton order; 2: Rowblock sorting
     printf("niters: %d\n", niters);
     int retval;
 
@@ -68,8 +65,6 @@ int main(int argc, char ** argv)
             {"input", required_argument, 0, 'i'},
             {"output", required_argument, 0, 'o'},
             {"bs", optional_argument, 0, 'b'},
-            {"ks", optional_argument, 0, 'k'},
-            {"cs", optional_argument, 0, 'c'},
             {"mode", optional_argument, 0, 'm'},
             {"dev-id", optional_argument, 0, 'd'},
             {"rank", optional_argument, 0, 'r'},
@@ -79,7 +74,7 @@ int main(int argc, char ** argv)
         int option_index = 0;
         int c = 0;
         // c = getopt_long(argc, argv, "i:o:b:k:c:m:", long_options, &option_index);
-        c = getopt_long(argc, argv, "i:o:b:k:c:m:d:r:t:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:o:b:m:d:r:t:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -94,12 +89,6 @@ int main(int argc, char ** argv)
             break;
         case 'b':
             sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
-            break;
-        case 'k':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sk_bits);
-            break;
-        case 'c':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sc_bits);
             break;
         case 'm':
             sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
@@ -122,6 +111,7 @@ int main(int argc, char ** argv)
     }
     printf("mode: %"PARTI_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
+    printf("Sorting implementation: %d\n", sort_impl);
 
     sptAssert(sptLoadSparseTensor(&tsr, 1, fi) == 0);
     // sptSparseTensorSortIndex(&tsr, 1);
@@ -135,7 +125,7 @@ int main(int argc, char ** argv)
 
     /* Convert to HiCOO tensor */
     sptNnzIndex max_nnzb = 0;
-    sptAssert(sptSparseTensorToHiCOO(&hitsr, &max_nnzb, &tsr, sb_bits, sk_bits, sc_bits, nthreads) == 0);
+    sptAssert(sptSparseTensorToHiCOO(&hitsr, &max_nnzb, &tsr, sb_bits, sort_impl, nthreads) == 0);
     sptFreeSparseTensor(&tsr);
     sptSparseTensorStatusHiCOO(&hitsr, stdout);
     // sptAssert(sptDumpSparseTensorHiCOO(&hitsr, stdout) == 0);

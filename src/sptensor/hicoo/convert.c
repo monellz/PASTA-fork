@@ -376,177 +376,30 @@ static int sptSetKernelScheduler(
  * @return      mode pointers
  */
 static int sptPreprocessSparseTensor(
-    sptNnzIndexVector * kptr,
-    sptIndexVector **kschr,
-    sptIndex *nkiters,
-    sptIndexVector **kschr_balanced,
-    sptIndexVector **kschr_balanced_pos,
-    sptIndex *nkpars,
-    sptIndexVector * kschr_rest,
-    sptNnzIndexVector * knnzs,
     sptSparseTensor *tsr, 
     const sptElementIndex sb_bits,
-    const sptElementIndex sk_bits,
-    int const tk)
+    int sort_impl)
 {
-    sptNnzIndex nnz = tsr->nnz;
-    int result;
-
-    // TODO: possible permute modes to improve parallelism
-
-    /* Sort tsr in a Row-major Block order to get all kernels. Not use Morton-order for kernels: 1. better support for higher-order tensors by limiting kernel size, because Morton key bit <= 128; */
-    sptTimer rowblock_sort_timer;
-    sptNewTimer(&rowblock_sort_timer, 0);
-    sptStartTimer(rowblock_sort_timer);
-
-    sptSparseTensorSortIndexRowBlock(tsr, 1, 0, nnz, sk_bits);  // Parallelized inside
-
-    sptStopTimer(rowblock_sort_timer);
-    sptPrintElapsedTime(rowblock_sort_timer, "\t\trowblock sorting");
-    sptFreeTimer(rowblock_sort_timer);
-#if PARTI_DEBUG == 3
-    printf("Sorted by sptSparseTensorSortIndexRowBlock.\n");
-    sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
-#endif
-
-    sptTimer set_kernel_timer;
-    sptNewTimer(&set_kernel_timer, 0);
-    sptStartTimer(set_kernel_timer);
-
-    result = sptSetKernelPointers(kptr, knnzs, tsr, sk_bits);
-    spt_CheckError(result, "HiSpTns Preprocess", NULL);
-    result = sptSetKernelScheduler(kschr, nkiters, kptr, tsr, sk_bits);
-    spt_CheckError(result, "HiSpTns Preprocess", NULL);
-    // printf("OK\n"); fflush(stdout);
-
-    /* Set balanced data structures: kschr_balanced, kschr_rest */
-    sptNnzIndex avg_nnzk = tsr->nnz / (kptr->len - 1);
-    sptNnzIndex max_nnzk = 0;
-    for(sptIndex k=0; k<kptr->len - 1; ++k) {
-        sptNnzIndex nnzk = knnzs->data[k];
-        if(max_nnzk < nnzk) max_nnzk = nnzk;
-    }
-    // sptNnzIndex par_nnzk_th = 20 * avg_nnzk; // threshold for nnzk per thread
-    sptNnzIndex par_nnzk_th = 5 * max_nnzk; // threshold for nnzk per thread
-    // printf("par_nnzk_th: %lu\n", par_nnzk_th);
-    sptIndex sk = (sptIndex)pow(2, sk_bits);
-    // printf("OK-2\n"); fflush(stdout);
-
-    for(sptIndex m=0; m < tsr->nmodes; ++m) {   // Loop kschr for each mode
-
-        sptIndexVector * restrict kschr_mode = kschr[m];
-        sptIndexVector * restrict kschr_balanced_mode = kschr_balanced[m];
-        sptIndexVector * restrict kschr_balanced_pos_mode = kschr_balanced_pos[m];
-        sptIndex kernel_ndim = (tsr->ndims[m] + sk - 1)/sk;
-        for(sptIndex i=0; i < kernel_ndim; ++i) {
-            sptAppendIndexVector(&(kschr_balanced_pos_mode[i]), 0);
-        }
-        sptIndex j_rest = nkiters[m];
-        sptIndex npars = 0;
-        int tag_rest = 0;
-        sptIndex count_nk = 0;
-        sptIndex empty_schr_rows_th = 1.0 * kernel_ndim > 1 ? 1.0 * kernel_ndim : 1;
-        // printf("[mode %u] empty_schr_rows_th: %u\n", m, empty_schr_rows_th);
-
-        while(tag_rest == 0 && count_nk < kptr->len - 1) {  // Loop for partitions. tag_rest = 1, maybe there is no rest.
-            /* Check two ranges: npars and j or tmp_j !!! */
-            sptIndex max_nnzk_per_col = 0, par_nnzk = 0;
-            sptIndex count_empty_schr_rows = 0;
-            for(sptIndex i=0; i < kernel_ndim; ++i) {   // Find the max nnzk
-                if(count_empty_schr_rows > empty_schr_rows_th) {
-                    tag_rest = 1;
-                    break;
-                }
-                if(npars >= kschr_balanced_pos_mode[i].len) {
-                    ++ count_empty_schr_rows;
-                    continue;
-                } else {
-                    sptIndex j = kschr_balanced_pos_mode[i].data[npars];
-                    if(j >= kschr_mode[i].len) {
-                        ++ count_empty_schr_rows;
-                        continue;
-                    }
-                    sptIndex kernel_num = kschr_mode[i].data[j];
-                    sptNnzIndex kernel_nnz = knnzs->data[kernel_num];
-                    if (max_nnzk_per_col < kernel_nnz) {
-                        max_nnzk_per_col = kernel_nnz;
-                    }
-                }
-            }   // End of i
-
-            if(tag_rest == 1) {   // an empty superblock met, to kschr_rest
-                for(sptIndex i=0; i < kernel_ndim; ++i) {
-                    if(npars >= kschr_balanced_pos_mode[i].len) continue;
-                    sptIndex j2 = kschr_balanced_pos_mode[i].data[npars];
-                    for(; j2 < kschr_mode[i].len; ++j2) {
-                        sptAppendIndexVector(&kschr_rest[m], kschr_mode[i].data[j2]);
-                        ++ count_nk;
-                    }
-                }
-            } else {    // all non-empty superblocks for this column, to kschr_balanced, kschr_balanced_pos
-                /* set par_nnzk */
-                if(max_nnzk_per_col > par_nnzk_th) {
-                    par_nnzk = max_nnzk_per_col;    // split according to the superblock with the max nnzk
-                } else {
-                    par_nnzk = par_nnzk_th;
-                }
-
-                /* Real partition */
-                for(sptIndex i=0; i < kernel_ndim; ++i) {
-                    if(npars >= kschr_balanced_pos_mode[i].len) continue;
-                    sptIndex tmp_j = kschr_balanced_pos_mode[i].data[npars];
-                    if(tmp_j >= kschr_mode[i].len) continue;
-                    sptIndex kernel_num = kschr_mode[i].data[tmp_j];
-                    sptNnzIndex sum_nnzk = knnzs->data[kernel_num];
-                    while(sum_nnzk <= par_nnzk) {
-                        sptAppendIndexVector(&(kschr_balanced_mode[i]), kernel_num);
-                        ++ count_nk;
-                        ++ tmp_j;
-                        if(tmp_j < kschr_mode[i].len) {
-                            kernel_num = kschr_mode[i].data[tmp_j]; // j + 1
-                            sum_nnzk += knnzs->data[kernel_num];
-                        } else {
-                            break;
-                        }
-                    }   // End of while
-                    sptAppendIndexVector(&(kschr_balanced_pos_mode[i]), tmp_j);
-                }
-                ++ npars;
-            }
-            // printf("count_nk: %u\n", count_nk); fflush(stdout);
-        }   // End of while
-        nkpars[m] = npars;  // kschr_balanced_pos.len is npars + 1.
-    }   // End loop of modes
-
-
-    sptStopTimer(set_kernel_timer);
-    sptPrintElapsedTime(set_kernel_timer, "\t\tSet Kernel Ptrs");
-    sptFreeTimer(set_kernel_timer);
-
-    sptTimer morton_sort_timer;
-    sptNewTimer(&morton_sort_timer, 0);
-    sptStartTimer(morton_sort_timer);
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
 
     /* Sort blocks in each kernel in Morton-order */
-    sptNnzIndex k_begin, k_end;
-    /* Loop for all kernels, 0-kptr.len for OMP code */
-    #pragma omp parallel for num_threads(tk) 
-    for(sptNnzIndex k=0; k<kptr->len - 1; ++k) {
-        k_begin = kptr->data[k];
-        k_end = kptr->data[k+1];   // exclusive
-        /* Sort blocks in each kernel in Morton-order */
-        sptSparseTensorSortIndexMorton(tsr, 1, k_begin, k_end, sb_bits);
-        // sptSparseTensorSortIndexRowBlock(tsr, 1, k_begin, k_end, sb_bits, tk);
-#if PARTI_DEBUG == 3
-    printf("Kernel %"PARTI_PRI_NNZ_INDEX ": Sorted by sptSparseTensorSortIndexMorton.\n", k);
-    sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
-#endif
+    if(sort_impl == 1)
+        sptSparseTensorSortIndexMorton(tsr, 1, 0, tsr->nnz, sb_bits);
+    else if(sort_impl == 2)
+        sptSparseTensorSortIndexRowBlock(tsr, 1, 0, tsr->nnz, sb_bits);
+    else {
+        printf("Specify a valid sorting implementation. \n");
+        exit(1);
     }
 
-    sptStopTimer(morton_sort_timer);
-    sptPrintElapsedTime(morton_sort_timer, "\t\tMorton sorting");
-    // sptPrintElapsedTime(morton_sort_timer, "\t\t2nd Rowblock sorting");
-    sptFreeTimer(morton_sort_timer);
+    sptStopTimer(timer);
+    if(sort_impl == 1)
+        sptPrintElapsedTime(timer, "\t\tMorton sorting");
+    else if(sort_impl == 2)
+        sptPrintElapsedTime(timer, "\t\tRowblock sorting");
+    sptFreeTimer(timer);
 
     return 0;
 }
@@ -557,20 +410,14 @@ int sptSparseTensorToHiCOO(
     sptNnzIndex *max_nnzb,
     sptSparseTensor *tsr, 
     const sptElementIndex sb_bits,
-    const sptElementIndex sk_bits,
-    const sptElementIndex sc_bits,
+    int sort_impl,
     int const tk)
 {
-    sptAssert(sk_bits >= sb_bits);
-    sptAssert(sc_bits >= sb_bits);
-
     sptIndex i;
     int result;
     sptIndex nmodes = tsr->nmodes;
     sptNnzIndex nnz = tsr->nnz;
-
     sptElementIndex sb = pow(2, sb_bits);
-    sptIndex sc = pow(2, sc_bits);
 
     /* Set HiCOO parameters. ndims for type conversion, size_t -> sptIndex */
     sptIndex * ndims = malloc(nmodes * sizeof *ndims);
@@ -579,7 +426,7 @@ int sptSparseTensorToHiCOO(
         ndims[i] = (sptIndex)tsr->ndims[i];
     }
 
-    result = sptNewSparseTensorHiCOO(hitsr, (sptIndex)tsr->nmodes, ndims, (sptNnzIndex)tsr->nnz, sb_bits, sk_bits, sc_bits);
+    result = sptNewSparseTensorHiCOO(hitsr, (sptIndex)tsr->nmodes, ndims, (sptNnzIndex)tsr->nnz, sb_bits);
     spt_CheckError(result, "HiSpTns Convert", NULL);
 
     /* Pre-process tensor to get hitsr->kptr, values are nonzero locations. */
@@ -587,16 +434,14 @@ int sptSparseTensorToHiCOO(
     sptNewTimer(&sort_timer, 0);
     sptStartTimer(sort_timer);
 
-    sptPreprocessSparseTensor(&hitsr->kptr, hitsr->kschr, hitsr->nkiters, hitsr->kschr_balanced, hitsr->kschr_balanced_pos, hitsr->nkpars, hitsr->kschr_rest, &hitsr->knnzs, tsr, sb_bits, sk_bits, tk);
+    sptPreprocessSparseTensor(tsr, sb_bits, sort_impl);
 
     sptStopTimer(sort_timer);
-    sptPrintElapsedTime(sort_timer, "\tHiCOO sorting (rowblock + morton)");
+    sptPrintElapsedTime(sort_timer, "\tHiCOO sorting (Morton)");
     sptFreeTimer(sort_timer);
 #if PARTI_DEBUG >= 2
-    printf("Kernels: Row-major, blocks: Morton-order sorted:\n");
+    printf("Blocks: Morton-order sorted:\n");
     sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
-    printf("hitsr->kptr:\n");
-    sptDumpNnzIndexVector(&hitsr->kptr, stdout);
 #endif
 
     sptTimer gen_timer;
@@ -609,14 +454,9 @@ int sptSparseTensorToHiCOO(
     sptIndex * block_begin_prior = (sptIndex *)malloc(nmodes * sizeof(*block_begin_prior));
     sptIndex * block_coord = (sptIndex *)malloc(nmodes * sizeof(*block_coord));
 
-    sptNnzIndex k_begin, k_end; // #Nonzeros locations
-    sptNnzIndex nk = 0; // #Kernels  
-    sptNnzIndex nc = 0; // #Chunks  
     sptNnzIndex nb = 1; // #Blocks  // counting from the first nnz
-    sptNnzIndex nb_tmp = 0;
     sptNnzIndex ne = 0; // #Nonzeros per block
     sptIndex eindex = 0;
-    sptBlockIndex chunk_size = 0;
 
     /* different appending methods:
      * elements: append every nonzero entry
@@ -634,97 +474,67 @@ int sptSparseTensorToHiCOO(
     sptAppendNnzIndexVector(&hitsr->bptr, 0);
 
 
-    /* Loop for all kernels, 0 - hitsr->kptr.len - 1 for OMP code */
-    for(sptNnzIndex k=0; k<hitsr->kptr.len - 1; ++k) {
-        k_begin = hitsr->kptr.data[k];
-        k_end = hitsr->kptr.data[k+1]; // exclusive
-        nb_tmp = k == 0 ? 0: nb;
-        /* Modify kptr pointing to block locations */
-        hitsr->kptr.data[k] = nb_tmp;
-        ++ nk;
+    /* Loop nonzeros in each kernel */
+    for(sptNnzIndex z = 0; z < hitsr->nnz; ++z) {
+        #if PARTI_DEBUG == 5
+            printf("z: %"PARTI_PRI_NNZ_INDEX "\n", z);
+        #endif
 
-        /* Only append a chunk for the new kernel, the last chunk in the old kernel may be larger than sc */
-        sptAppendNnzIndexVector(&hitsr->cptr, nb_tmp);
-        // printf("cptr 1:\n");
-        // sptDumpNnzIndexVector(&hitsr->cptr, stdout);
-        ++ nc;
-        chunk_size = 0;
+        for(sptIndex m=0; m<nmodes; ++m) 
+            block_coord[m] = tsr->inds[m].data[z];    // first nonzero indices
+        #if PARTI_DEBUG == 5
+            printf("block_coord:\n");
+            sptAssert(sptDumpIndexArray(block_coord, nmodes, stdout) == 0);
+        #endif
 
-        /* Loop nonzeros in each kernel */
-        for(sptNnzIndex z = k_begin; z < k_end; ++z) {
-            #if PARTI_DEBUG == 5
-                printf("z: %"PARTI_PRI_NNZ_INDEX "\n", z);
-            #endif
+        result = sptLocateBeginCoord(block_begin, tsr, block_coord, sb_bits);
+        // spt_CheckError(result, "HiSpTns Convert", NULL);
+        #if PARTI_DEBUG == 5
+            printf("block_begin_prior:\n");
+            sptAssert(sptDumpIndexArray(block_begin_prior, nmodes, stdout) == 0);
+            printf("block_begin:\n");
+            sptAssert(sptDumpIndexArray(block_begin, nmodes, stdout) == 0);
+        #endif
 
-            for(sptIndex m=0; m<nmodes; ++m) 
-                block_coord[m] = tsr->inds[m].data[z];    // first nonzero indices
-            #if PARTI_DEBUG == 5
-                printf("block_coord:\n");
-                sptAssert(sptDumpIndexArray(block_coord, nmodes, stdout) == 0);
-            #endif
+        result = sptBlockEnd(block_end, tsr, block_begin, sb);  // exclusive
+        // spt_CheckError(result, "HiSpTns Convert", NULL);
 
-            result = sptLocateBeginCoord(block_begin, tsr, block_coord, sb_bits);
-            // spt_CheckError(result, "HiSpTns Convert", NULL);
-            #if PARTI_DEBUG == 5
-                printf("block_begin_prior:\n");
-                sptAssert(sptDumpIndexArray(block_begin_prior, nmodes, stdout) == 0);
-                printf("block_begin:\n");
-                sptAssert(sptDumpIndexArray(block_begin, nmodes, stdout) == 0);
-            #endif
-
-            result = sptBlockEnd(block_end, tsr, block_begin, sb);  // exclusive
-            // spt_CheckError(result, "HiSpTns Convert", NULL);
-
-            /* Append einds and values */
-            for(sptIndex m=0; m<nmodes; ++m) {
-                eindex = tsr->inds[m].data[z] < (block_begin[m] << sb_bits) ? tsr->inds[m].data[z] : tsr->inds[m].data[z] - (block_begin[m] << sb_bits);
-                sptAssert(eindex < sb);
-                sptAppendElementIndexVector(&hitsr->einds[m], (sptElementIndex)eindex);
-            }
-            sptAppendValueVector(&hitsr->values, tsr->values.data[z]);
+        /* Append einds and values */
+        for(sptIndex m=0; m<nmodes; ++m) {
+            eindex = tsr->inds[m].data[z] < (block_begin[m] << sb_bits) ? tsr->inds[m].data[z] : tsr->inds[m].data[z] - (block_begin[m] << sb_bits);
+            sptAssert(eindex < sb);
+            sptAppendElementIndexVector(&hitsr->einds[m], (sptElementIndex)eindex);
+        }
+        sptAppendValueVector(&hitsr->values, tsr->values.data[z]);
 
 
-            /* z in the same block with last z */
-            if (sptEqualWithTwoCoordinates(block_begin, block_begin_prior, nmodes) == 1)
-            {
-                /* ne: #Elements in current block */
-                ++ ne;
-            } else { /* New block */
-                /* ne: #Elements in the last block */
-                /* Append block bptr and bidx */
-                sptAppendNnzIndexVector(&hitsr->bptr, (sptBlockIndex)z);
-                for(sptIndex m=0; m<nmodes; ++m)
-                    sptAppendBlockIndexVector(&hitsr->binds[m], (sptBlockIndex)block_begin[m]);
-                for(sptIndex m=0; m<nmodes; ++m)
-                    block_begin_prior[m] = block_begin[m];
+        /* z in the same block with last z */
+        if (sptEqualWithTwoCoordinates(block_begin, block_begin_prior, nmodes) == 1)
+        {
+            /* ne: #Elements in current block */
+            ++ ne;
+        } else { /* New block */
+            /* ne: #Elements in the last block */
+            /* Append block bptr and bidx */
+            sptAppendNnzIndexVector(&hitsr->bptr, (sptBlockIndex)z);
+            for(sptIndex m=0; m<nmodes; ++m)
+                sptAppendBlockIndexVector(&hitsr->binds[m], (sptBlockIndex)block_begin[m]);
+            for(sptIndex m=0; m<nmodes; ++m)
+                block_begin_prior[m] = block_begin[m];
 
-                if(chunk_size + ne >= sc) {    // calculate the prior block
-                    /* Append a chunk ending by the old block */
-                    sptAppendNnzIndexVector(&hitsr->cptr, nb);
-                    ++ nc;
-                    chunk_size = 0;
-                } else {
-                    chunk_size += ne;
-                }
+            ++ nb;
+            ne = 1;              
+        } // End new block
+        #if PARTI_DEBUG == 5
+            printf("nb: %u, ne: %u\n\n", nb, ne);
+        #endif
 
-                ++ nb;
-                ne = 1;              
-            } // End new block
-            #if PARTI_DEBUG == 5
-                printf("nk: %u, nc: %u, nb: %u, ne: %u, chunk_size: %lu\n\n", nk, nc, nb, ne, chunk_size);
-            #endif
-
-        }   // End z loop
-        
-    }   // End k loop
+    }   // End z loop
+    
     sptAssert(nb <= nnz);
     sptAssert(nb == hitsr->binds[0].len); 
-    // sptAssert(nc <= nb);
-    sptAssert(nk == hitsr->kptr.len - 1);
 
-    /* Last element for kptr, cptr, bptr */
-    hitsr->kptr.data[hitsr->kptr.len - 1] = hitsr->bptr.len;
-    sptAppendNnzIndexVector(&hitsr->cptr, hitsr->bptr.len);
+    /* Last element for bptr */
     sptAppendNnzIndexVector(&hitsr->bptr, nnz);
 
 

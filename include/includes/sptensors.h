@@ -94,9 +94,7 @@ int sptNewSparseTensorHiCOO(
     const sptIndex nmodes, 
     const sptIndex ndims[],
     const sptNnzIndex nnz,
-    const sptElementIndex sb_bits,
-    const sptElementIndex sk_bits,
-    const sptElementIndex sc_bits);
+    const sptElementIndex sb_bits);
 int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src);
 void sptFreeSparseTensorHiCOO(sptSparseTensorHiCOO *hitsr);
 int sptSparseTensorToHiCOO(
@@ -104,8 +102,7 @@ int sptSparseTensorToHiCOO(
     sptNnzIndex *max_nnzb,
     sptSparseTensor *tsr, 
     const sptElementIndex sb_bits,
-    const sptElementIndex sk_bits,
-    const sptElementIndex sc_bits,
+    int sort_impl,
     int const tk);
 int sptHiCOOToSparseTensor(
     sptSparseTensor *tsr, 
@@ -114,6 +111,12 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp);
 void sptLoadShuffleFile(sptSparseTensor *tsr, FILE *fs, sptIndex ** map_inds);
 void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp);
 double SparseTensorFrobeniusNormSquaredHiCOO(sptSparseTensorHiCOO const * const hitsr);
+void sptSparseTensorHiCOOSortIndexBlock(
+    sptSparseTensorHiCOO *hitsr, 
+    int force,
+    const sptNnzIndex begin,
+    const sptNnzIndex end,
+    const sptElementIndex sb_bits);
 
 
 /* Sparse tensor unary operations */
@@ -159,6 +162,15 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
 int sptCudaSparseTensorMulMatrix(
     sptSemiSparseTensor *Y,
     sptSparseTensor *X,
+    const sptMatrix *U,
+    sptIndex const mode,
+    sptIndex const impl_num,
+    sptNnzIndex const smen_size);
+int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode);
+int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode);
+int sptCudaSparseTensorMulMatrixHiCOO(
+    sptSemiSparseTensorHiCOO *Y,
+    sptSparseTensorHiCOO *X,
     const sptMatrix *U,
     sptIndex const mode,
     sptIndex const impl_num,

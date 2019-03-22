@@ -29,7 +29,8 @@
  * @param mode   the mode which will be stored in dense format
  * @param ndims  the dimension of each mode the tensor will have
  */
-int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[]) {
+int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[]) 
+{
     sptIndex i;
     int result;
     if(nmodes < 2) {

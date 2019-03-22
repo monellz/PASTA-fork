@@ -29,7 +29,6 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp)
 {
     int iores;
     sptIndex mode;
-    sptIndex sk = (sptIndex)pow(2, hitsr->sk_bits);
 
     iores = fprintf(fp, "%u\n", hitsr->nmodes);
     spt_CheckOSError(iores < 0, "SpTns Dump");

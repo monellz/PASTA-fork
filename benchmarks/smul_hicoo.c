@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
     int dev_id = -2;
     int niters = 5;
     int nthreads;
+    int sort_impl = 1;  // 1: Morton order; 2: Rowblock sorting
     sptTimer timer;
     sptNewTimer(&timer, 0);
 
@@ -103,6 +104,7 @@ int main(int argc, char *argv[])
     printf("Scaling a: %"PARTI_PRI_VALUE"\n", a); 
     printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id); fflush(stdout);
+    printf("Sorting implementation: %d\n", sort_impl);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
     fclose(fX);
@@ -110,10 +112,10 @@ int main(int argc, char *argv[])
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
 
-    sptStartTimer(timer);
     /* Convert to HiCOO tensor */
+    sptStartTimer(timer);
     sptNnzIndex max_nnzb = 0;
-    sptAssert(sptSparseTensorToHiCOO(&hiX, &max_nnzb, &X, sb_bits, sb_bits, sb_bits, 1) == 0);
+    sptAssert(sptSparseTensorToHiCOO(&hiX, &max_nnzb, &X, sb_bits, sort_impl, 1) == 0);
     sptFreeSparseTensor(&X);
     // sptSparseTensorStatusHiCOO(&hiX, stdout);
     // sptAssert(sptDumpSparseTensorHiCOO(&hiX, stdout) == 0);
@@ -157,8 +159,8 @@ int main(int argc, char *argv[])
     if(fZ != NULL) {
         // sptDumpSparseTensorHiCOO(&hiZ, stdout);
 
-        sptStartTimer(timer);
         /* Convert HiCOO to COO tensor */
+        sptStartTimer(timer);
         sptAssert(sptHiCOOToSparseTensor(&Z, &hiZ) == 0);
         sptFreeSparseTensorHiCOO(&hiZ);
         // sptSparseTensorStatus(&Z, stdout);

@@ -25,6 +25,8 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
+#include <assert.h>
 #ifdef PARTI_USE_OPENMP
     #include <omp.h>
 #endif

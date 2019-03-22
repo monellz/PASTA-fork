@@ -31,6 +31,18 @@ void sptFreeSemiSparseTensor(sptSemiSparseTensor *tsr);
 int sptSparseTensorToSemiSparseTensor(sptSemiSparseTensor *dest, const sptSparseTensor *src, sptIndex mode);
 int sptSemiSparseTensorSortIndex(sptSemiSparseTensor *tsr);
 
+/* Semi-sparse tensor HiCOO */
+int sptNewSemiSparseTensorHiCOO(
+    sptSemiSparseTensorHiCOO *histsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptIndex mode,
+    const sptElementIndex sb_bits);
+void sptFreeSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO *histsr);
+int sptSemiHiCOOToSemiSparseTensor(
+    sptSemiSparseTensor *stsr, 
+    sptSemiSparseTensorHiCOO *histsr);
+
 int sptNewSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr, sptIndex nmodes, const sptIndex ndims[], sptIndex ndmodes, const sptIndex dmodes[]);
 void sptFreeSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr);
 

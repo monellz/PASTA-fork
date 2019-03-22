@@ -165,21 +165,6 @@ typedef struct {
 
     /* Parameters */
     sptElementIndex       sb_bits;         /// block size by nnz
-    sptElementIndex       sk_bits;         /// kernel size by nnz
-    sptElementIndex       sc_bits;         /// chunk size by blocks
-
-    /* Scheduling information */
-    sptNnzIndexVector         kptr;      /// Nonzero kernel pointers in 1-D array, indexing blocks. sptIndexVector may be enough
-    sptIndexVector            **kschr;    /// Kernel scheduler
-    sptIndex                  *nkiters;     /// max-length of iterations
-    sptNnzIndexVector         cptr;      /// Chunk pointers to evenly split or combine blocks in a group, indexing blocks. sptIndexVector may be enough
-
-    /* Balanced scheduler */
-    sptIndexVector            **kschr_balanced;    /// Balanced kernel scheduler, nmodes * ndims / sk * even_nks
-    sptIndexVector            **kschr_balanced_pos;     /// indicators of partitions
-    sptIndex                  *nkpars;     /// max-length of partitions
-    sptIndexVector            *kschr_rest;    /// The rest imbalanced kernels
-    sptNnzIndexVector         knnzs;        /// Record the nnzs of each kernel
 
     /* Index data arrays */
     sptNnzIndexVector         bptr;      /// Block pointers to all nonzeros
@@ -189,6 +174,26 @@ typedef struct {
 } sptSparseTensorHiCOO;
 
 
+/**
+ * Semi-Sparse tensor type, Hierarchical COO format (HiCOO)
+ */
+typedef struct {
+    /* Basic information */
+    sptIndex            nmodes;      /// # modes
+    sptIndex            *ndims;      /// size of each mode, length nmodes
+    sptIndex            mode;   /// the mode where data is stored in dense format
+    sptNnzIndex         nnz;         /// # non-zeros
+
+    /* Parameters */
+    sptElementIndex       sb_bits;         /// block size by nnz
+
+    /* Index data arrays */
+    sptNnzIndexVector         bptr;      /// Block pointers to all nonzeros
+    sptBlockIndexVector       *binds;    /// Block indices within each group
+    sptElementIndexVector     *einds;    /// Element indices within each block 
+    sptIndex                  stride;    /// ndims[mode] rounded up to 8
+    sptMatrix                 values;    /// dense fibers, size nnz*ndims[mode]
+} sptSemiSparseTensorHiCOO;
 
 
 /**

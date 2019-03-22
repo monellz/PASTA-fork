@@ -30,9 +30,7 @@ int sptNewSparseTensorHiCOO(
     const sptIndex nmodes, 
     const sptIndex ndims[],
     const sptNnzIndex nnz,
-    const sptElementIndex sb_bits,
-    const sptElementIndex sk_bits,
-    const sptElementIndex sc_bits)
+    const sptElementIndex sb_bits)
 {
     sptIndex i;
     int result;
@@ -49,61 +47,6 @@ int sptNewSparseTensorHiCOO(
 
     /* Parameters */
     hitsr->sb_bits = sb_bits; // block size by nnz
-    hitsr->sk_bits = sk_bits; // kernel size by nnz
-    hitsr->sc_bits = sc_bits; // chunk size by blocks
-    sptIndex sk = (sptIndex)pow(2, sk_bits);
-
-    hitsr->kschr = (sptIndexVector**)malloc(nmodes * sizeof *hitsr->kschr);
-    spt_CheckOSError(!hitsr->kschr, "HiSpTns New");
-    for(sptIndex m = 0; m < nmodes; ++m) {
-        sptIndex kernel_ndim = (ndims[m] + sk - 1)/sk;
-        hitsr->kschr[m] = (sptIndexVector*)malloc(kernel_ndim * sizeof(*(hitsr->kschr[m])));
-        spt_CheckOSError(!hitsr->kschr[m], "HiSpTns New");
-        for(sptIndex i = 0; i < kernel_ndim; ++i) {
-            result = sptNewIndexVector(&(hitsr->kschr[m][i]), 0, 0);
-            spt_CheckError(result, "HiSpTns New", NULL);
-        }
-    }
-    hitsr->nkiters = (sptIndex*)malloc(nmodes * sizeof *hitsr->nkiters);
-
-    result = sptNewNnzIndexVector(&hitsr->kptr, 0, 0);
-    spt_CheckError(result, "HiSpTns New", NULL);
-    result = sptNewNnzIndexVector(&hitsr->cptr, 0, 0);
-    spt_CheckError(result, "HiSpTns New", NULL);
-
-    /* Balanced structures */
-    hitsr->kschr_balanced = (sptIndexVector**)malloc(nmodes * sizeof *hitsr->kschr_balanced);
-    spt_CheckOSError(!hitsr->kschr_balanced, "HiSpTns New");
-    for(sptIndex m = 0; m < nmodes; ++m) {
-        sptIndex kernel_ndim = (ndims[m] + sk - 1)/sk;
-        hitsr->kschr_balanced[m] = (sptIndexVector*)malloc(kernel_ndim * sizeof(*(hitsr->kschr_balanced[m])));
-        spt_CheckOSError(!hitsr->kschr_balanced[m], "HiSpTns New");
-        for(sptIndex i = 0; i < kernel_ndim; ++i) {
-            result = sptNewIndexVector(&(hitsr->kschr_balanced[m][i]), 0, 0);
-            spt_CheckError(result, "HiSpTns New", NULL);
-        }
-    }
-    hitsr->kschr_balanced_pos = (sptIndexVector**)malloc(nmodes * sizeof *hitsr->kschr_balanced_pos);
-    spt_CheckOSError(!hitsr->kschr_balanced_pos, "HiSpTns New");
-    for(sptIndex m = 0; m < nmodes; ++m) {
-        sptIndex kernel_ndim = (ndims[m] + sk - 1)/sk;
-        hitsr->kschr_balanced_pos[m] = (sptIndexVector*)malloc(kernel_ndim * sizeof(*(hitsr->kschr_balanced_pos[m])));
-        spt_CheckOSError(!hitsr->kschr_balanced_pos[m], "HiSpTns New");
-        for(sptIndex i = 0; i < kernel_ndim; ++i) {
-            result = sptNewIndexVector(&(hitsr->kschr_balanced_pos[m][i]), 0, 0);
-            spt_CheckError(result, "HiSpTns New", NULL);
-        }
-    }
-    hitsr->nkpars = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
-    spt_CheckOSError(!hitsr->nkpars, "HiSpTns New");
-    hitsr->kschr_rest = (sptIndexVector*)malloc(nmodes * sizeof *hitsr->kschr_rest);
-    spt_CheckOSError(!hitsr->kschr_rest, "HiSpTns New");
-    for(sptIndex m = 0; m < nmodes; ++m) {
-        result = sptNewIndexVector(&(hitsr->kschr_rest[m]), 0, 0);
-        spt_CheckError(result, "HiSpTns New", NULL);
-    }
-    result = sptNewNnzIndexVector(&hitsr->knnzs, 0, 0);
-    spt_CheckError(result, "HiSpTns New", NULL);
 
     result = sptNewNnzIndexVector(&hitsr->bptr, 0, 0);
     spt_CheckError(result, "HiSpTns New", NULL);
@@ -146,25 +89,6 @@ int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHi
     dest->nnz = src->nnz;
 
     dest->sb_bits = src->sb_bits;
-    dest->sk_bits = src->sk_bits;
-    dest->sc_bits = src->sc_bits;
-
-    // if (src->kptr.len > 0) {
-    //     result = sptCopyNnzIndexVector(&dest->kptr, &src->kptr);
-    //     spt_CheckError(result, "HiSpTns Copy", NULL);
-    //     if(src->kschr != NULL) {
-    //         // TODO
-    //     }
-    //     if(src->nkiters != NULL) {
-    //         // TODO
-    //     }
-    // }
-    // if (src->cptr.len > 0) {
-    //     result = sptCopyNnzIndexVector(&dest->cptr, &src->cptr);
-    //     spt_CheckError(result, "HiSpTns Copy", NULL);
-    // }
-
-    /* Ignore balanced scheduler */
 
     result = sptCopyNnzIndexVector(&dest->bptr, &src->bptr);
     spt_CheckError(result, "HiSpTns Copy", NULL);
@@ -194,7 +118,6 @@ void sptFreeSparseTensorHiCOO(sptSparseTensorHiCOO *hitsr)
 {
     sptIndex i;
     sptIndex nmodes = hitsr->nmodes;
-    sptIndex sk = (sptIndex)pow(2, hitsr->sk_bits);
 
     sptFreeNnzIndexVector(&hitsr->bptr);
     for(i = 0; i < nmodes; ++i) {
@@ -227,3 +150,4 @@ double SparseTensorFrobeniusNormSquaredHiCOO(sptSparseTensorHiCOO const * const 
   }
   return norm;
 }
+

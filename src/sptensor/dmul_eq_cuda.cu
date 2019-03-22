@@ -68,7 +68,6 @@ int sptCudaSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     if(Y->nnz != X->nnz) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotMul", "nonzero distribution mismatch");
     }
-    sptNnzIndex nnz = X->nnz;
     int result;
 
     sptTimer timer;

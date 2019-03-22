@@ -30,19 +30,14 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
   fprintf(fp, " NNZ=%"PARTI_PRI_NNZ_INDEX, hitsr->nnz);
   fprintf(fp, "\n");
   fprintf(fp, "sb=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sb_bits));
-  fprintf(fp, " sk=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sk_bits));
   fprintf(fp, "\n");
   fprintf(fp, "nb=%"PARTI_PRI_NNZ_INDEX, hitsr->bptr.len - 1);
-  fprintf(fp, " nk=%"PARTI_PRI_NNZ_INDEX, hitsr->kptr.len - 1);
   fprintf(fp, "\n");
 
   sptNnzIndex bytes = hitsr->nnz * ( sizeof(sptValue) + nmodes * sizeof(sptElementIndex) );
   bytes += hitsr->binds[0].len * nmodes * sizeof(sptBlockIndex);
   bytes += hitsr->bptr.len * sizeof(sptNnzIndex);
-  if(hitsr->kptr.len > 0)
-    bytes += hitsr->kptr.len * sizeof(sptNnzIndex);
 
-  sptIndex sk = (sptIndex)pow(2, hitsr->sk_bits);
   char * bytestr = sptBytesString(bytes);
   fprintf(fp, "HiCOO-STORAGE=%s\n", bytestr);
   free(bytestr);

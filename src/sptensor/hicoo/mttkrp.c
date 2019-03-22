@@ -77,51 +77,46 @@ int sptMTTKRPHiCOO(
     sptIndex * ele_coord = (sptIndex*)malloc(nmodes * sizeof(*ele_coord));
 
 
-    /* Loop kernels */
-    for(sptIndex k=0; k<hitsr->kptr.len - 1; ++k) {
-        sptNnzIndex kptr_begin = hitsr->kptr.data[k];
-        sptNnzIndex kptr_end = hitsr->kptr.data[k+1];
+    /* Loop blocks */
+    for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
-        /* Loop blocks in a kernel */
-        for(sptIndex b=kptr_begin; b<kptr_end; ++b) {
-            /* Block indices */
+        /* Block indices */
+        for(sptIndex m=0; m<nmodes; ++m)
+            block_coord[m] = hitsr->binds[m].data[b];
+
+        sptNnzIndex bptr_begin = hitsr->bptr.data[b];
+        sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
+        /* Loop entries in a block */
+        for(sptIndex z=bptr_begin; z<bptr_end; ++z) {
+            /* Element indices */
             for(sptIndex m=0; m<nmodes; ++m)
-                block_coord[m] = hitsr->binds[m].data[b];
+                ele_coord[m] = (block_coord[m] << hitsr->sb_bits) + hitsr->einds[m].data[z];
 
-            sptNnzIndex bptr_begin = hitsr->bptr.data[b];
-            sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
-            /* Loop entries in a block */
-            for(sptIndex z=bptr_begin; z<bptr_end; ++z) {
-                /* Element indices */
-                for(sptIndex m=0; m<nmodes; ++m)
-                    ele_coord[m] = (block_coord[m] << hitsr->sb_bits) + hitsr->einds[m].data[z];
-
-                /* Multiply the 1st matrix */
-                sptIndex times_mat_index = mats_order[1];
-                sptMatrix * times_mat = mats[times_mat_index];
-                sptIndex tmp_i = ele_coord[times_mat_index];
-                sptValue const entry = vals[z];
+            /* Multiply the 1st matrix */
+            sptIndex times_mat_index = mats_order[1];
+            sptMatrix * times_mat = mats[times_mat_index];
+            sptIndex tmp_i = ele_coord[times_mat_index];
+            sptValue const entry = vals[z];
+            for(sptIndex r=0; r<R; ++r) {
+                scratch.data[r] = entry * times_mat->values[tmp_i * stride + r];
+            }
+            /* Multiply the rest matrices */
+            for(sptIndex m=2; m<nmodes; ++m) {
+                times_mat_index = mats_order[m];
+                times_mat = mats[times_mat_index];
+                tmp_i = ele_coord[times_mat_index];
                 for(sptIndex r=0; r<R; ++r) {
-                    scratch.data[r] = entry * times_mat->values[tmp_i * stride + r];
+                    scratch.data[r] *= times_mat->values[tmp_i * stride + r];
                 }
-                /* Multiply the rest matrices */
-                for(sptIndex m=2; m<nmodes; ++m) {
-                    times_mat_index = mats_order[m];
-                    times_mat = mats[times_mat_index];
-                    tmp_i = ele_coord[times_mat_index];
-                    for(sptIndex r=0; r<R; ++r) {
-                        scratch.data[r] *= times_mat->values[tmp_i * stride + r];
-                    }
-                }
+            }
 
-                sptIndex const mode_i = ele_coord[mode];
-                for(sptIndex r=0; r<R; ++r) {
-                    mvals[mode_i * stride + r] += scratch.data[r];
-                }
-            }   // End loop entries
-        }   // End loop blocks
+            sptIndex const mode_i = ele_coord[mode];
+            for(sptIndex r=0; r<R; ++r) {
+                mvals[mode_i * stride + r] += scratch.data[r];
+            }
+        }   // End loop entries
 
-    }   // End loop kernels
+    }   // End loop blocks
 
 
     free(block_coord);
@@ -172,42 +167,35 @@ int sptMTTKRPHiCOO_3D(
     sptValue * restrict blocked_times_mat_1;
     sptValue * restrict blocked_times_mat_2;
 
-    /* Loop kernels */
-    for(sptIndex k=0; k<hitsr->kptr.len - 1; ++k) {
-        sptNnzIndex kptr_begin = hitsr->kptr.data[k];
-        sptNnzIndex kptr_end = hitsr->kptr.data[k+1];
+    /* Loop blocks */
+    for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
-        /* Loop blocks in a kernel */
-        for(sptIndex b=kptr_begin; b<kptr_end; ++b) {
+        blocked_mvals = mvals + (hitsr->binds[mode].data[b] << hitsr->sb_bits) * stride;
+        blocked_times_mat_1 = times_mat_1->values + (hitsr->binds[times_mat_index_1].data[b] << hitsr->sb_bits) * stride;
+        blocked_times_mat_2 = times_mat_2->values + (hitsr->binds[times_mat_index_2].data[b] << hitsr->sb_bits) * stride;
 
-            blocked_mvals = mvals + (hitsr->binds[mode].data[b] << hitsr->sb_bits) * stride;
-            blocked_times_mat_1 = times_mat_1->values + (hitsr->binds[times_mat_index_1].data[b] << hitsr->sb_bits) * stride;
-            blocked_times_mat_2 = times_mat_2->values + (hitsr->binds[times_mat_index_2].data[b] << hitsr->sb_bits) * stride;
+        sptNnzIndex bptr_begin = hitsr->bptr.data[b];
+        sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
+        /* Loop entries in a block */
+        for(sptIndex z=bptr_begin; z<bptr_end; ++z) {
+            
+            mode_i = hitsr->einds[mode].data[z];
+            tmp_i_1 = hitsr->einds[times_mat_index_1].data[z];
+            tmp_i_2 = hitsr->einds[times_mat_index_2].data[z];
+            entry = vals[z];
 
-            sptNnzIndex bptr_begin = hitsr->bptr.data[b];
-            sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
-            /* Loop entries in a block */
-            for(sptIndex z=bptr_begin; z<bptr_end; ++z) {
-                
-                mode_i = hitsr->einds[mode].data[z];
-                tmp_i_1 = hitsr->einds[times_mat_index_1].data[z];
-                tmp_i_2 = hitsr->einds[times_mat_index_2].data[z];
-                entry = vals[z];
+            sptValue * const restrict bmvals_row = blocked_mvals + mode_i * stride;
+            sptValue * const restrict blocked_times_mat_1_row = blocked_times_mat_1 + tmp_i_1 * stride;
+            sptValue * const restrict blocked_times_mat_2_row = blocked_times_mat_2 + tmp_i_2 * stride;
 
-                sptValue * const restrict bmvals_row = blocked_mvals + mode_i * stride;
-                sptValue * const restrict blocked_times_mat_1_row = blocked_times_mat_1 + tmp_i_1 * stride;
-                sptValue * const restrict blocked_times_mat_2_row = blocked_times_mat_2 + tmp_i_2 * stride;
-
-                for(sptIndex r=0; r<R; ++r) {
-                    bmvals_row[r] += entry *
-                        blocked_times_mat_1_row[r]
-                        * blocked_times_mat_2_row[r];
-                }
-                
-            }   // End loop entries
-        }   // End loop blocks
-
-    }   // End loop kernels
+            for(sptIndex r=0; r<R; ++r) {
+                bmvals_row[r] += entry *
+                    blocked_times_mat_1_row[r]
+                    * blocked_times_mat_2_row[r];
+            }
+            
+        }   // End loop entries
+    }   // End loop blocks
 
     return 0;
 }
