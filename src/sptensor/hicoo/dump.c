@@ -42,19 +42,6 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp)
         spt_CheckOSError(iores < 0, "SpTns Dump");
     }
     fputs("\n", fp);
-    fprintf(fp, "nkiters:\n");
-    sptDumpIndexArray(hitsr->nkiters, hitsr->nmodes, fp);
-    fprintf(fp, "kschr:\n");
-    for(mode = 0; mode < hitsr->nmodes; ++mode) {
-        fprintf(fp, "mode %u\n", mode);
-        for(sptIndex i=0; i<(hitsr->ndims[mode] + sk - 1)/sk; ++i) {
-            sptDumpIndexVector(&hitsr->kschr[mode][i], fp);
-        }
-    }
-    fprintf(fp, "kptr:\n");
-    sptDumpNnzIndexVector(&hitsr->kptr, fp);
-    fprintf(fp, "cptr:\n");
-    sptDumpNnzIndexVector(&hitsr->cptr, fp);
     fprintf(fp, "bptr:\n");
     sptDumpNnzIndexVector(&hitsr->bptr, fp);
     fprintf(fp, "binds:\n");

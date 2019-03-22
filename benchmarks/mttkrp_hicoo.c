@@ -191,7 +191,7 @@ int main(int argc, char ** argv)
     }
 
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "CPU  SpTns MTTKRP");
+    sptPrintAverageElapsedTime(timer, niters, "CPU  SpTns MTTKRP HiCOO");
     sptFreeTimer(timer);
 
     if(fo != NULL) {

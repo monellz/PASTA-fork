@@ -259,7 +259,7 @@ static int sptKernelEnd(
  * @param tsr    a pointer to a sparse tensor
  * @return      mode pointers
  */
-static int sptSetKernelPointers(
+int sptSetKernelPointers(
     sptNnzIndexVector *kptr,
     sptNnzIndexVector *knnzs,
     sptSparseTensor *tsr, 
@@ -428,7 +428,7 @@ static int sptPreprocessSparseTensor(
     }
     // sptNnzIndex par_nnzk_th = 20 * avg_nnzk; // threshold for nnzk per thread
     sptNnzIndex par_nnzk_th = 5 * max_nnzk; // threshold for nnzk per thread
-    printf("par_nnzk_th: %lu\n", par_nnzk_th);
+    // printf("par_nnzk_th: %lu\n", par_nnzk_th);
     sptIndex sk = (sptIndex)pow(2, sk_bits);
     // printf("OK-2\n"); fflush(stdout);
 
@@ -446,7 +446,7 @@ static int sptPreprocessSparseTensor(
         int tag_rest = 0;
         sptIndex count_nk = 0;
         sptIndex empty_schr_rows_th = 1.0 * kernel_ndim > 1 ? 1.0 * kernel_ndim : 1;
-        printf("[mode %u] empty_schr_rows_th: %u\n", m, empty_schr_rows_th);
+        // printf("[mode %u] empty_schr_rows_th: %u\n", m, empty_schr_rows_th);
 
         while(tag_rest == 0 && count_nk < kptr->len - 1) {  // Loop for partitions. tag_rest = 1, maybe there is no rest.
             /* Check two ranges: npars and j or tmp_j !!! */
@@ -750,4 +750,51 @@ int sptSparseTensorToHiCOO(
     free(block_coord);
 
 	return 0;
+}
+
+
+int sptHiCOOToSparseTensor(
+    sptSparseTensor *tsr, 
+    sptSparseTensorHiCOO *hitsr)
+{
+    sptIndex const nmodes = hitsr->nmodes;
+    sptNnzIndex const nnz = hitsr->nnz;
+    int result;
+
+    result = sptNewSparseTensor(tsr, nmodes, hitsr->ndims);
+    spt_CheckOSError(result, "Convert HiCOO -> COO");
+    tsr->nnz = hitsr->nnz;
+    for(sptIndex m=0; m<nmodes; ++m) {
+        result = sptResizeIndexVector(&(tsr->inds[m]), nnz);
+        spt_CheckOSError(result, "Convert HiCOO -> COO");
+    }
+    result = sptResizeValueVector(&tsr->values, nnz);
+    spt_CheckOSError(result, "Convert HiCOO -> COO");
+
+    sptIndex * block_coord = (sptIndex*)malloc(nmodes * sizeof(*block_coord));
+    sptIndex ele_coord;
+
+
+    /* Loop blocks in a kernel */
+    for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
+        /* Block indices */
+        for(sptIndex m=0; m<nmodes; ++m)
+            block_coord[m] = hitsr->binds[m].data[b] << hitsr->sb_bits;
+
+        sptNnzIndex bptr_begin = hitsr->bptr.data[b];
+        sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
+        /* Loop entries in a block */
+        for(sptNnzIndex z=bptr_begin; z<bptr_end; ++z) {
+            /* Element indices */
+            for(sptIndex m=0; m<nmodes; ++m) {
+                ele_coord = block_coord[m] + hitsr->einds[m].data[z];
+                tsr->inds[m].data[z] = ele_coord;
+            }
+            tsr->values.data[z] = hitsr->values.data[z];
+        }
+    }
+
+    free(block_coord);
+
+    return 0;
 }

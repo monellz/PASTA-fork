@@ -295,10 +295,10 @@ int sptSparseTensorMixedOrder(
     /* Sort tsr in a Row-major Block order to get all kernels. Not use Morton-order for kernels: 1. better support for higher-order tensors by limiting kernel size, because Morton key bit <= 128; */
     sptSparseTensorSortIndexRowBlock(tsr, 1, 0, nnz, sk_bits);
 
-    sptNnzIndexVector kptr;
+    sptNnzIndexVector kptr, knnzs;
     result = sptNewNnzIndexVector(&kptr, 0, 0);
     spt_CheckError(result, "HiSpTns New", NULL);
-    result = sptSetKernelPointers(&kptr, tsr, sk_bits);
+    result = sptSetKernelPointers(&kptr, &knnzs, tsr, sk_bits);
     spt_CheckError(result, "HiSpTns Preprocess", NULL);
 
     /* Sort blocks in each kernel in Morton-order */

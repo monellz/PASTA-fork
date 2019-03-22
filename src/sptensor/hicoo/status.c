@@ -31,104 +31,21 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
   fprintf(fp, "\n");
   fprintf(fp, "sb=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sb_bits));
   fprintf(fp, " sk=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sk_bits));
-  fprintf(fp, " sc=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sc_bits));
   fprintf(fp, "\n");
   fprintf(fp, "nb=%"PARTI_PRI_NNZ_INDEX, hitsr->bptr.len - 1);
   fprintf(fp, " nk=%"PARTI_PRI_NNZ_INDEX, hitsr->kptr.len - 1);
-  fprintf(fp, " nc=%"PARTI_PRI_NNZ_INDEX, hitsr->cptr.len - 1);
   fprintf(fp, "\n");
 
   sptNnzIndex bytes = hitsr->nnz * ( sizeof(sptValue) + nmodes * sizeof(sptElementIndex) );
   bytes += hitsr->binds[0].len * nmodes * sizeof(sptBlockIndex);
   bytes += hitsr->bptr.len * sizeof(sptNnzIndex);
-  bytes += hitsr->kptr.len * sizeof(sptNnzIndex);
-  bytes += hitsr->cptr.len * sizeof(sptNnzIndex);
-  /* add kschr */
+  if(hitsr->kptr.len > 0)
+    bytes += hitsr->kptr.len * sizeof(sptNnzIndex);
+
   sptIndex sk = (sptIndex)pow(2, hitsr->sk_bits);
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    for(sptIndex i=0; i < kernel_ndim; ++i) {
-      bytes += hitsr->kschr[m][i].len * sizeof(sptIndex);
-    }
-    bytes += kernel_ndim * sizeof(sptIndexVector *);
-  }
-  bytes += nmodes * sizeof(sptIndexVector **);
-  /* add nkiters  */
-  bytes += nmodes * sizeof(sptIndex);
-
-  /* add kschr_balanced */
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    for(sptIndex i=0; i < kernel_ndim; ++i) {
-      bytes += hitsr->kschr_balanced[m][i].len * sizeof(sptIndex);
-    }
-    bytes += kernel_ndim * sizeof(sptIndexVector *);
-  }
-  bytes += nmodes * sizeof(sptIndexVector **);
-
-  /* add kschr_balanced_pos */
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    for(sptIndex i=0; i < kernel_ndim; ++i) {
-      bytes += hitsr->kschr_balanced_pos[m][i].len * sizeof(sptIndex);
-    }
-    bytes += kernel_ndim * sizeof(sptIndexVector *);
-  }
-  bytes += nmodes * sizeof(sptIndexVector **);
-
-  /* add kschr_rest */
-  for(sptIndex m=0; m < nmodes; ++m) {
-    bytes += hitsr->kschr_rest[m].len * sizeof(sptIndexVector *);
-  }
-  bytes += nmodes * sizeof(sptIndexVector *);
-
-  /* add knnzs */
-  bytes += hitsr->knnzs.len * sizeof(sptNnzIndex);
-
   char * bytestr = sptBytesString(bytes);
   fprintf(fp, "HiCOO-STORAGE=%s\n", bytestr);
   free(bytestr);
-
-  fprintf(fp, "SCHEDULE INFO [KERNEL]: \n");
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    fprintf(fp, "SCHEDULE MODE %"PARTI_PRI_INDEX" : %"PARTI_PRI_INDEX" x %"PARTI_PRI_INDEX"\n", m, kernel_ndim, hitsr->nkiters[m]);
-  }
-
-  fprintf(fp, "BALANCED SCHEDULE INFO [KERNEL]: \n");
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    sptIndex npars = hitsr->nkpars[m];
-    fprintf(fp, "SCHEDULE MODE %"PARTI_PRI_INDEX" : %"PARTI_PRI_INDEX" x %"PARTI_PRI_INDEX"\n", m, kernel_ndim, npars);
-  }
-  
-  for(sptIndex m=0; m < nmodes; ++m) {
-    sptNnzIndex sum_balanced_nnzk = 0;
-    sptIndex kernel_ndim = (hitsr->ndims[m] + sk - 1)/sk;
-    for(sptIndex i=0; i < kernel_ndim; ++i) {
-      for(sptIndex j=0; j < hitsr->kschr_balanced[m][i].len; ++j) {
-        sptIndex kernel_num = hitsr->kschr_balanced[m][i].data[j];
-        sum_balanced_nnzk += hitsr->knnzs.data[kernel_num];
-      }
-    }
-    fprintf(fp, "MODE %"PARTI_PRI_INDEX" : Balanced nnzs: %.2lf, rest nnzs: %.2lf\n", m, (double)sum_balanced_nnzk / hitsr->nnz, 1.0 - (double)sum_balanced_nnzk / hitsr->nnz);
-  }
-
-  sptNnzIndex max_nnzk = 0;
-  sptNnzIndex min_nnzk = PARTI_NNZ_INDEX_MAX;
-  sptNnzIndex sum_nnzk = 0;
-  sptNnzIndex avg_nnzk = hitsr->nnz / (hitsr->kptr.len - 1);
-  double std_nnzk = 0.0;
-  for(sptIndex k=0; k<hitsr->kptr.len - 1; ++k) {
-    sptNnzIndex nnzk = hitsr->knnzs.data[k];
-    sum_nnzk += nnzk;
-    std_nnzk += (nnzk - avg_nnzk) * (nnzk - avg_nnzk);
-    if(min_nnzk > nnzk) min_nnzk = nnzk;
-    if(max_nnzk < nnzk) max_nnzk = nnzk;
-  }
-  std_nnzk = sqrt(std_nnzk / (hitsr->kptr.len - 1));
-  assert(sum_nnzk == hitsr->nnz);
-  fprintf(fp, "Nnzk: Max=%" PARTI_PRI_NNZ_INDEX ", Min=%" PARTI_PRI_NNZ_INDEX ", Avg=%" PARTI_PRI_NNZ_INDEX ", Std: %.1lf\n", max_nnzk, min_nnzk, avg_nnzk, std_nnzk);
 
   sptIndex sb = (sptIndex)pow(2, hitsr->sb_bits);
   sptNnzIndex max_nnzb = hitsr->bptr.data[1] - hitsr->bptr.data[0];

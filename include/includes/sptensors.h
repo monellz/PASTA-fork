@@ -83,6 +83,7 @@ int sptSparseTensorSetIndices(
 );
 int sptSetKernelPointers(
     sptNnzIndexVector *kptr,
+    sptNnzIndexVector *knnzs,
     sptSparseTensor *tsr, 
     const sptElementIndex sk_bits);
 
@@ -96,6 +97,7 @@ int sptNewSparseTensorHiCOO(
     const sptElementIndex sb_bits,
     const sptElementIndex sk_bits,
     const sptElementIndex sc_bits);
+int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src);
 void sptFreeSparseTensorHiCOO(sptSparseTensorHiCOO *hitsr);
 int sptSparseTensorToHiCOO(
     sptSparseTensorHiCOO *hitsr, 
@@ -105,6 +107,9 @@ int sptSparseTensorToHiCOO(
     const sptElementIndex sk_bits,
     const sptElementIndex sc_bits,
     int const tk);
+int sptHiCOOToSparseTensor(
+    sptSparseTensor *tsr, 
+    sptSparseTensorHiCOO *hitsr);
 int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp);
 void sptLoadShuffleFile(sptSparseTensor *tsr, FILE *fs, sptIndex ** map_inds);
 void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp);
@@ -118,6 +123,13 @@ int sptCudaSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
 int sptSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
 int sptOmpSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
 int sptCudaSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a);
+
+int sptSparseTensorAddScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
+int sptOmpSparseTensorAddScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
+int sptCudaSparseTensorAddScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
+int sptSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
+int sptOmpSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
+int sptCudaSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *Z, sptSparseTensorHiCOO *X, sptValue a);
 
 /* Sparse tensor binary operations */
 int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero);
