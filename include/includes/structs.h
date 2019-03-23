@@ -175,6 +175,30 @@ typedef struct {
 
 
 /**
+ * Sparse tensor type, Hierarchical COO format (HiCOO)
+ */
+typedef struct {
+    /* Basic information */
+    sptIndex            nmodes;      /// # modes
+    sptIndex            *sortorder;  /// the order in which the indices are sorted
+    sptIndex            *ndims;      /// size of each mode, length nmodes
+    sptIndex            ncmodes;     /// #HiCOO compressed modes
+    sptIndex            *flags;       /// indicate compressed modes in HiCOO
+    sptNnzIndex         nnz;         /// # non-zeros
+
+    /* Parameters */
+    sptElementIndex       sb_bits;         /// block size by nnz
+
+    /* Index data arrays */
+    sptNnzIndexVector         bptr;      /// Block pointers to all nonzeros
+    sptBlockIndexVector       *binds;    /// Block indices within each group
+    sptElementIndexVector     *einds;    /// Element indices within each block 
+    sptIndexVector            *inds;       /// indices of each element, length [ncmodes][nnz]
+    sptValueVector            values;      /// non-zero values, length nnz
+} sptSparseTensorHiCOOGeneral;
+
+
+/**
  * Semi-Sparse tensor type, Hierarchical COO format (HiCOO)
  */
 typedef struct {

@@ -151,3 +151,102 @@ double SparseTensorFrobeniusNormSquaredHiCOO(sptSparseTensorHiCOO const * const 
   return norm;
 }
 
+
+/**
+ * Create a new sparse tensor in HiCOO-General format
+ * @param hitsr    a pointer to an uninitialized sparse tensor
+ * @param nmodes number of modes the tensor will have
+ * @param ndims  the dimension of each mode the tensor will have
+ * @param nnz number of nonzeros the tensor will have
+ */
+int sptNewSparseTensorHiCOOGeneral(
+    sptSparseTensorHiCOOGeneral *hitsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nnz,
+    const sptElementIndex sb_bits,
+    const sptIndex ncmodes,
+    const sptIndex *flags)
+{
+    sptIndex i;
+    int result;
+
+    hitsr->nmodes = nmodes;
+    hitsr->ncmodes = ncmodes;
+    hitsr->sortorder = malloc(nmodes * sizeof hitsr->sortorder[0]);
+    for(i = 0; i < nmodes; ++i) {
+        hitsr->sortorder[i] = i;
+    }
+    hitsr->ndims = malloc(nmodes * sizeof *hitsr->ndims);
+    spt_CheckOSError(!hitsr->ndims, "HiSpTnsGen New");
+    memcpy(hitsr->ndims, ndims, nmodes * sizeof *hitsr->ndims);
+    hitsr->flags = malloc(nmodes * sizeof *hitsr->flags);
+    spt_CheckOSError(!hitsr->flags, "HiSpTnsGen New");
+    memcpy(hitsr->flags, flags, nmodes * sizeof *hitsr->flags);
+    hitsr->nnz = nnz;
+
+    /* Parameters */
+    hitsr->sb_bits = sb_bits; // block size by nnz
+
+    result = sptNewNnzIndexVector(&hitsr->bptr, 0, 0);
+    spt_CheckError(result, "HiSpTnsGen New", NULL);
+    hitsr->binds = malloc( ncmodes * sizeof *hitsr->binds);
+    spt_CheckOSError(!hitsr->binds, "HiSpTnsGen New");
+    for(i = 0; i < nmodes; ++i) {
+        result = sptNewBlockIndexVector(&hitsr->binds[i], 0, 0);
+        spt_CheckError(result, "HiSpTnsGen New", NULL);
+    }
+
+    hitsr->einds = malloc( ncmodes * sizeof *hitsr->einds);
+    spt_CheckOSError(!hitsr->einds, "HiSpTnsGen New");
+    for(i = 0; i < nmodes; ++i) {
+        result = sptNewElementIndexVector(&hitsr->einds[i], 0, 0);
+        spt_CheckError(result, "HiSpTnsGen New", NULL);
+    }
+
+    hitsr->inds = malloc( (nmodes - ncmodes) * sizeof *hitsr->inds);
+    spt_CheckOSError(!hitsr->inds, "HiSpTnsGen New");
+    for(i = 0; i < nmodes - ncmodes; ++i) {
+        result = sptNewIndexVector(&hitsr->inds[i], 0, 0);
+        spt_CheckError(result, "HiSpTnsGen New", NULL);
+    }
+
+    result = sptNewValueVector(&hitsr->values, 0, 0);
+    spt_CheckError(result, "HiSpTnsGen New", NULL);
+
+
+    return 0;
+}
+
+
+/**
+ * Release any memory the HiCOO-General sparse tensor is holding
+ * @param hitsr the tensor to release
+ */
+void sptFreeSparseTensorHiCOOGeneral(sptSparseTensorHiCOOGeneral *hitsr)
+{
+    sptIndex i;
+    sptIndex nmodes = hitsr->nmodes;
+
+    sptFreeNnzIndexVector(&hitsr->bptr);
+    for(i = 0; i < hitsr->ncmodes; ++i) {
+        sptFreeBlockIndexVector(&hitsr->binds[i]);
+        sptFreeElementIndexVector(&hitsr->einds[i]);
+    }
+    for(i = 0; i < nmodes - hitsr->ncmodes; ++i) {
+        sptFreeIndexVector(&hitsr->inds[i]);
+    }
+    free(hitsr->binds);
+    free(hitsr->einds);
+    free(hitsr->inds);
+    sptFreeValueVector(&hitsr->values);
+
+    hitsr->nmodes = 0;
+    hitsr->ncmodes = 0;
+    hitsr->nnz = 0;
+    hitsr->sb_bits = 0;
+
+    free(hitsr->sortorder);
+    free(hitsr->ndims);
+    free(hitsr->flags);
+}

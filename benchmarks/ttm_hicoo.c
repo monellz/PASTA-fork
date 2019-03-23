@@ -30,7 +30,7 @@ int main(int argc, char ** argv)
     FILE *fi = NULL, *fo = NULL;
     sptSparseTensor X;
     sptSemiSparseTensor Y;
-    sptSparseTensorHiCOO hiX;
+    sptSparseTensorHiCOOGeneral hiX;
     sptSemiSparseTensorHiCOO hiY;
     sptMatrix U;
     sptIndex mode = 0;
@@ -39,7 +39,6 @@ int main(int argc, char ** argv)
     int dev_id = -2;
     int niters = 5;
     int nthreads = 1;
-    int sort_impl = 2;  // 1: Morton order; 2: Rowblock sorting
     printf("niters: %d\n", niters);
     sptTimer timer;
     sptNewTimer(&timer, 0);
@@ -100,7 +99,6 @@ int main(int argc, char ** argv)
     printf("mode: %"PARTI_PRI_INDEX "\n", mode);
     printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id);
-    printf("Sorting implementation: %d\n", sort_impl);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
     fclose(fi);
@@ -110,10 +108,17 @@ int main(int argc, char ** argv)
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
     sptAssert(sptRandomizeMatrix(&U) == 0);
 
+    sptIndex ncmodes = 2;
+    sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));
+    for(sptIndex m = 0; m < X.nmodes; ++m) {
+        flags[m] = 1;
+    }
+    flags[mode] = 0;
+
     /* Convert to HiCOO tensor */
     sptStartTimer(timer);
     sptNnzIndex max_nnzb = 0;
-    sptAssert(sptSparseTensorToHiCOO(&hiX, &max_nnzb, &X, sb_bits, sort_impl, 1) == 0);
+    sptAssert(sptSparseTensorToHiCOOGeneral(&hiX, &max_nnzb, &X, sb_bits, ncmodes, flags, 1) == 0);
     sptFreeSparseTensor(&X);
     // sptSparseTensorStatusHiCOO(&hiX, stdout);
     // sptAssert(sptDumpSparseTensorHiCOO(&hiX, stdout) == 0);

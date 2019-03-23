@@ -32,14 +32,13 @@
  * Anyway, you do not have to take this side-effect into consideration if you
  * do not need to access raw data.
  */
-#if 0
-int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode) 
+int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode) 
 {
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
     }
     if(X->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
     }
     
     int result;
@@ -48,36 +47,37 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     sptNnzIndexVector fiberidx;
 
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  SpTns * Mtx");
+    spt_CheckOSError(!ind_buf, "CPU  HiSpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
     result = sptNewSemiSparseTensorHiCOO(Y, X->nmodes, ind_buf, mode, X->sb_bits);
     free(ind_buf);
-    spt_CheckError(result, "CPU  SpTns * Mtx", NULL);
-    sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
+    spt_CheckError(result, "CPU  HiSpTns * Mtx", NULL);
+    // sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
 
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    // sptTimer timer;
+    // sptNewTimer(&timer, 0);
+    // sptStartTimer(timer);
 
-    for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
-        sptNnzIndex inz_begin = fiberidx.data[i];
-        sptNnzIndex inz_end = fiberidx.data[i+1];
-        for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
-            sptIndex r = X->inds[mode].data[j];
-            for(sptIndex k = 0; k < U->ncols; ++k) {
-                Y->values.values[i*Y->stride + k] += X->values.data[j] * U->values[r*U->stride + k];
-            }
-        }
-    }
+    // for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
+    //     sptNnzIndex inz_begin = fiberidx.data[i];
+    //     sptNnzIndex inz_end = fiberidx.data[i+1];
+    //     for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
+    //         sptIndex r = X->inds[mode].data[j];
+    //         for(sptIndex k = 0; k < U->ncols; ++k) {
+    //             Y->values.values[i*Y->stride + k] += X->values.data[j] * U->values[r*U->stride + k];
+    //         }
+    //     }
+    // }
 
-    sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  SpTns * Mtx");
-    sptFreeTimer(timer);
+    // sptStopTimer(timer);
+    // sptPrintElapsedTime(timer, "Cpu  HiSpTns * Mtx");
+    // sptFreeTimer(timer);
+    
     sptFreeNnzIndexVector(&fiberidx);
     
     return 0;
 }
-#endif
+

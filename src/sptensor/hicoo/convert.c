@@ -166,15 +166,26 @@ static int sptNextBlockBegin(
  */
 static int sptBlockEnd(
     sptIndex * out_item,
-    sptSparseTensor *tsr,
+    sptIndex nmodes,
+    sptIndex * ndims,
+    sptIndex * flags,
     const sptIndex * in_item,
     const sptElementIndex sb)
 {
-    sptIndex nmodes = tsr->nmodes;
-
-    for(sptIndex m=0; m<nmodes; ++m) {
-        sptAssert(in_item[m] < tsr->ndims[m]);
-        out_item[m] = in_item[m]+sb < tsr->ndims[m] ? in_item[m]+sb : tsr->ndims[m];    // exclusive
+    if(flags != NULL) {
+        for(sptIndex m=0; m<nmodes; ++m) {
+            sptAssert(in_item[m] < ndims[m]);
+            out_item[m] = in_item[m]+sb < ndims[m] ? in_item[m]+sb : ndims[m];    // exclusive
+        }
+    } else {
+        sptIndex fm = 0;
+        for(sptIndex m=0; m<nmodes; ++m) {
+            if(flags[m] == 1) {
+                sptAssert(in_item[fm] < ndims[m]);
+                out_item[fm] = in_item[fm]+sb < ndims[m] ? in_item[fm]+sb : ndims[m];    // exclusive
+                ++ fm;
+            }
+        }
     }
 
     return 0;
@@ -188,12 +199,10 @@ static int sptBlockEnd(
  */
 static int sptLocateBeginCoord(
     sptIndex * out_item,
-    sptSparseTensor *tsr,
+    sptIndex nmodes,
     const sptIndex * in_item,
     const sptElementIndex bits)
-{
-    sptIndex nmodes = tsr->nmodes;
-    
+{   
     for(sptIndex m=0; m<nmodes; ++m) {
         out_item[m] = in_item[m] >> bits;
     }
@@ -280,13 +289,13 @@ int sptSetKernelPointers(
     /* Process first nnz to get the first kernel_coord_prior */
     for(sptIndex m=0; m<nmodes; ++m) 
         coord[m] = tsr->inds[m].data[0];    // first nonzero indices
-    result = sptLocateBeginCoord(kernel_coord_prior, tsr, coord, sk_bits);
+    result = sptLocateBeginCoord(kernel_coord_prior, nmodes, coord, sk_bits);
     spt_CheckError(result, "HiSpTns Convert", NULL);
 
     for(sptNnzIndex z=0; z<nnz; ++z) {
         for(sptIndex m=0; m<nmodes; ++m) 
             coord[m] = tsr->inds[m].data[z];
-        result = sptLocateBeginCoord(kernel_coord, tsr, coord, sk_bits);
+        result = sptLocateBeginCoord(kernel_coord, nmodes, coord, sk_bits);
         spt_CheckError(result, "HiSpTns Convert", NULL);
 
         if(sptEqualWithTwoCoordinates(kernel_coord, kernel_coord_prior, nmodes) == 1) {
@@ -315,59 +324,6 @@ int sptSetKernelPointers(
 
     return 0;
 }
-
-
-/**
- * Set scheduler for kernels.
- * @param kschr  nmodes kernel schedulers.
- * @param tsr    a pointer to a sparse tensor
- * @return      mode pointers
- */
-static int sptSetKernelScheduler(
-    sptIndexVector **kschr,
-    sptIndex *nkiters,
-    sptNnzIndexVector * const kptr,
-    sptSparseTensor *tsr, 
-    const sptElementIndex sk_bits)
-{
-    sptIndex nmodes = tsr->nmodes;
-    sptIndex * ndims = tsr->ndims;
-    int result = 0;
-
-    sptIndex * coord = (sptIndex *)malloc(nmodes * sizeof(*coord));
-    sptIndex * kernel_coord = (sptIndex *)malloc(nmodes * sizeof(*kernel_coord));
-
-    for(sptNnzIndex k=0; k<kptr->len - 1; ++k) {
-        sptNnzIndex z = kptr->data[k];
-        for(sptIndex m=0; m<nmodes; ++m) 
-            coord[m] = tsr->inds[m].data[z];
-        result = sptLocateBeginCoord(kernel_coord, tsr, coord, sk_bits);
-        spt_CheckError(result, "HiSpTns Convert", NULL);
-
-        for(sptIndex m=0; m<nmodes; ++m) {
-            result = sptAppendIndexVector(&(kschr[m][kernel_coord[m]]), k);
-            spt_CheckError(result, "HiSpTns Convert", NULL);
-        }
-    }
-
-    free(coord);
-    free(kernel_coord);
-
-    sptIndex sk = (sptIndex)pow(2, sk_bits);
-    sptIndex tmp;
-    for(sptIndex m=0; m<nmodes; ++m) {
-        tmp = 0;
-        sptIndex kernel_ndim = (ndims[m] + sk - 1) / sk;
-        for(sptIndex i=0; i<kernel_ndim; ++i) {
-            if(tmp < kschr[m][i].len)
-                tmp = kschr[m][i].len;
-        }
-        nkiters[m] = tmp;
-    }
-
-    return 0;
-}
-
 
 
 /**
@@ -467,7 +423,7 @@ int sptSparseTensorToHiCOO(
     /* Process first nnz */
     for(sptIndex m=0; m<nmodes; ++m) 
         block_coord[m] = tsr->inds[m].data[0];    // first nonzero indices
-    result = sptLocateBeginCoord(block_begin_prior, tsr, block_coord, sb_bits);
+    result = sptLocateBeginCoord(block_begin_prior, nmodes, block_coord, sb_bits);
     spt_CheckError(result, "HiSpTns Convert", NULL);
     for(sptIndex m=0; m<nmodes; ++m)
         sptAppendBlockIndexVector(&hitsr->binds[m], (sptBlockIndex)block_begin_prior[m]);
@@ -487,7 +443,7 @@ int sptSparseTensorToHiCOO(
             sptAssert(sptDumpIndexArray(block_coord, nmodes, stdout) == 0);
         #endif
 
-        result = sptLocateBeginCoord(block_begin, tsr, block_coord, sb_bits);
+        result = sptLocateBeginCoord(block_begin, nmodes, block_coord, sb_bits);
         // spt_CheckError(result, "HiSpTns Convert", NULL);
         #if PARTI_DEBUG == 5
             printf("block_begin_prior:\n");
@@ -496,7 +452,7 @@ int sptSparseTensorToHiCOO(
             sptAssert(sptDumpIndexArray(block_begin, nmodes, stdout) == 0);
         #endif
 
-        result = sptBlockEnd(block_end, tsr, block_begin, sb);  // exclusive
+        result = sptBlockEnd(block_end, nmodes, tsr->ndims, NULL, block_begin, sb);  // exclusive
         // spt_CheckError(result, "HiSpTns Convert", NULL);
 
         /* Append einds and values */
@@ -604,6 +560,200 @@ int sptHiCOOToSparseTensor(
         }
     }
 
+    free(block_coord);
+
+    return 0;
+}
+
+
+
+int sptSparseTensorToHiCOOGeneral(
+    sptSparseTensorHiCOOGeneral *hitsr,
+    sptNnzIndex *max_nnzb,
+    sptSparseTensor *tsr, 
+    const sptElementIndex sb_bits,
+    sptIndex ncmodes,
+    sptIndex *flags,
+    int const tk)
+{
+    sptAssert(ncmodes > 0);
+    sptIndex i;
+    int result;
+    sptIndex nmodes = tsr->nmodes;
+    sptNnzIndex nnz = tsr->nnz;
+    sptElementIndex sb = pow(2, sb_bits);
+
+    /* Set HiCOO parameters. ndims for type conversion, size_t -> sptIndex */
+    sptIndex * ndims = malloc(nmodes * sizeof *ndims);
+    spt_CheckOSError(!ndims, "HiSpTns Convert");
+    for(i = 0; i < nmodes; ++i) {
+        ndims[i] = (sptIndex)tsr->ndims[i];
+    }
+
+    result = sptNewSparseTensorHiCOOGeneral(hitsr, (sptIndex)tsr->nmodes, ndims, (sptNnzIndex)tsr->nnz, sb_bits, ncmodes, flags);
+    spt_CheckError(result, "HiSpTns Convert", NULL);
+
+    /* Pre-process tensor to get hitsr->kptr, values are nonzero locations. */
+    sptTimer sort_timer;
+    sptNewTimer(&sort_timer, 0);
+    sptStartTimer(sort_timer);
+
+    /* Sort naturally */
+    sptSparseTensorSortIndex(tsr, 1);
+    /* Sort only block indices. Keep the sorting order in the same fiber. */
+    sptPreprocessSparseTensor(tsr, sb_bits, 2);
+
+    sptStopTimer(sort_timer);
+    sptPrintElapsedTime(sort_timer, "\tHiCOO sorting (Morton)");
+    sptFreeTimer(sort_timer);
+#if PARTI_DEBUG >= 2
+    printf("Blocks: Morton-order sorted:\n");
+    sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
+#endif
+
+    sptTimer gen_timer;
+    sptNewTimer(&gen_timer, 0);
+    sptStartTimer(gen_timer);
+
+    /* Temporary storage */
+    sptIndex * block_begin = (sptIndex *)malloc(ncmodes * sizeof(*block_begin));
+    sptIndex * block_end = (sptIndex *)malloc(ncmodes * sizeof(*block_end));
+    sptIndex * block_begin_prior = (sptIndex *)malloc(ncmodes * sizeof(*block_begin_prior));
+    sptIndex * block_coord = (sptIndex *)malloc(ncmodes * sizeof(*block_coord));
+
+    sptNnzIndex nb = 1; // #Blocks  // counting from the first nnz
+    sptNnzIndex ne = 0; // #Nonzeros per block
+    sptIndex eindex = 0;
+    sptIndex fm = 0;
+
+    /* different appending methods:
+     * elements: append every nonzero entry
+     * blocks: append when seeing a new block.
+     * chunks: appending when seeting a new chunk. Notice the boundary of kernels and the last chunk of the whole tensor may be larger than the sc.
+     * kernels: append when seeing a new kernel. Not appending a vector, just write data into an allocated array.
+     */
+    /* Process first nnz */
+    fm = 0;
+    for(sptIndex m=0; m<nmodes; ++m) {
+        if(flags[m] == 1) {
+            block_coord[fm] = tsr->inds[m].data[0];    // first nonzero indices
+            ++ fm;
+        }
+    }
+    sptAssert(fm == ncmodes);
+    result = sptLocateBeginCoord(block_begin_prior, ncmodes, block_coord, sb_bits);
+    spt_CheckError(result, "HiSpTns Convert", NULL);
+    for(sptIndex m=0; m<ncmodes; ++m) {
+        sptAppendBlockIndexVector(&hitsr->binds[m], (sptBlockIndex)block_begin_prior[m]);
+    }
+    sptAppendNnzIndexVector(&hitsr->bptr, 0);
+
+
+    /* Loop nonzeros in each kernel */
+    for(sptNnzIndex z = 0; z < hitsr->nnz; ++z) {
+        sptIndex fm = 0;
+        #if PARTI_DEBUG == 5
+            printf("z: %"PARTI_PRI_NNZ_INDEX "\n", z);
+        #endif
+
+        fm = 0;
+        for(sptIndex m=0; m<nmodes; ++m) {
+            if(flags[m] == 1) {
+                block_coord[fm] = tsr->inds[m].data[z];    // first nonzero indices
+                ++ fm;
+            }
+        }
+        sptAssert(fm == ncmodes);
+        #if PARTI_DEBUG == 5
+            printf("block_coord:\n");
+            sptAssert(sptDumpIndexArray(block_coord, ncmodes, stdout) == 0);
+        #endif
+
+        result = sptLocateBeginCoord(block_begin, ncmodes, block_coord, sb_bits);
+        // spt_CheckError(result, "HiSpTns Convert", NULL);
+        #if PARTI_DEBUG == 5
+            printf("block_begin_prior:\n");
+            sptAssert(sptDumpIndexArray(block_begin_prior, ncmodes, stdout) == 0);
+            printf("block_begin:\n");
+            sptAssert(sptDumpIndexArray(block_begin, ncmodes, stdout) == 0);
+        #endif
+
+        result = sptBlockEnd(block_end, nmodes, tsr->ndims, flags, block_begin, sb);  // exclusive
+        // spt_CheckError(result, "HiSpTns Convert", NULL);
+
+        /* Append einds */
+        fm = 0;
+        for(sptIndex m=0; m<nmodes; ++m) {
+            if(flags[m] == 1) {
+                eindex = tsr->inds[m].data[z] < (block_begin[fm] << sb_bits) ? tsr->inds[m].data[z] : tsr->inds[m].data[z] - (block_begin[fm] << sb_bits);
+                sptAssert(eindex < sb);
+                sptAppendElementIndexVector(&hitsr->einds[fm], (sptElementIndex)eindex);
+                ++ fm;
+            }
+        }
+        sptAssert(fm == ncmodes);
+
+        /* Append uncompressed inds and values */
+        fm = 0;
+        for(sptIndex m=0; m<nmodes; ++m) {
+            if(flags[m] == 0) {
+                sptAppendIndexVector(&hitsr->inds[fm], tsr->inds[m].data[z]);
+                ++ fm;
+            }
+        }
+        sptAssert(fm == nmodes - ncmodes);
+        sptAppendValueVector(&hitsr->values, tsr->values.data[z]);
+
+
+        /* z in the same block with last z */
+        if (sptEqualWithTwoCoordinates(block_begin, block_begin_prior, ncmodes) == 1)
+        {
+            /* ne: #Elements in current block */
+            ++ ne;
+        } else { /* New block */
+            /* ne: #Elements in the last block */
+            /* Append block bptr and bidx */
+            sptAppendNnzIndexVector(&hitsr->bptr, (sptBlockIndex)z);
+            for(sptIndex m=0; m<ncmodes; ++m)
+                sptAppendBlockIndexVector(&hitsr->binds[m], (sptBlockIndex)block_begin[m]);
+            for(sptIndex m=0; m<ncmodes; ++m)
+                block_begin_prior[m] = block_begin[m];
+
+            ++ nb;
+            ne = 1;              
+        } // End new block
+        #if PARTI_DEBUG == 5
+            printf("nb: %u, ne: %u\n\n", nb, ne);
+        #endif
+
+    }   // End z loop
+    
+    sptAssert(nb <= nnz);
+    sptAssert(nb == hitsr->binds[0].len); 
+
+    /* Last element for bptr */
+    sptAppendNnzIndexVector(&hitsr->bptr, nnz);
+
+
+    *max_nnzb = hitsr->bptr.data[1] - hitsr->bptr.data[0];
+    sptNnzIndex sum_nnzb = 0;
+    for(sptIndex i=0; i < hitsr->bptr.len - 1; ++i) {
+        sptNnzIndex nnzb = hitsr->bptr.data[i+1] - hitsr->bptr.data[i];
+        sum_nnzb += nnzb;
+        if(*max_nnzb < nnzb) {
+          *max_nnzb = nnzb;
+        }
+    }
+    sptAssert(sum_nnzb == hitsr->nnz);
+
+    sptStopTimer(gen_timer);
+    sptPrintElapsedTime(gen_timer, "\tGenerate HiCOO-General");
+    sptFreeTimer(gen_timer);
+
+
+    free(block_begin);
+    free(block_end);
+    free(block_begin_prior);
     free(block_coord);
 
     return 0;

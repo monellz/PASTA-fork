@@ -108,6 +108,23 @@ int sptHiCOOToSparseTensor(
     sptSparseTensor *tsr, 
     sptSparseTensorHiCOO *hitsr);
 int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp);
+int sptNewSparseTensorHiCOOGeneral(
+    sptSparseTensorHiCOOGeneral *hitsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nnz,
+    const sptElementIndex sb_bits,
+    const sptIndex ncmodes,
+    const sptIndex *flags);
+void sptFreeSparseTensorHiCOOGeneral(sptSparseTensorHiCOOGeneral *hitsr);
+int sptSparseTensorToHiCOOGeneral(
+    sptSparseTensorHiCOOGeneral *hitsr,
+    sptNnzIndex *max_nnzb,
+    sptSparseTensor *tsr, 
+    const sptElementIndex sb_bits,
+    sptIndex ncmodes,
+    sptIndex *flags,
+    int const tk);
 void sptLoadShuffleFile(sptSparseTensor *tsr, FILE *fs, sptIndex ** map_inds);
 void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp);
 double SparseTensorFrobeniusNormSquaredHiCOO(sptSparseTensorHiCOO const * const hitsr);
@@ -178,7 +195,7 @@ int sptCudaSparseTensorMulMatrix(
     sptIndex const mode,
     sptIndex const impl_num,
     sptNnzIndex const smen_size);
-int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode);
+int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode);
 int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode);
 int sptCudaSparseTensorMulMatrixHiCOO(
     sptSemiSparseTensorHiCOO *Y,
