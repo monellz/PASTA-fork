@@ -39,7 +39,7 @@ int main(int argc, char ** argv)
     int dev_id = -2;
     int niters = 5;
     int nthreads = 1;
-    int sort_impl = 1;  // 1: Morton order; 2: Rowblock sorting
+    int sort_impl = 2;  // 1: Morton order; 2: Rowblock sorting
     printf("niters: %d\n", niters);
     sptTimer timer;
     sptNewTimer(&timer, 0);

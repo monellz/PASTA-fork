@@ -80,5 +80,4 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     
     return 0;
 }
-
 #endif

@@ -24,28 +24,29 @@
 static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
     printf("Options: -X INPUT (.tns file)\n");
-    printf("         -a INPUT (a scalar)\n");
+    printf("         -Y INPUT (.tns file)\n");
     printf("         -Z OUTPUT (output file name)\n");
     printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
+    printf("         -c collectZero (0:default; 1)\n");
     printf("         --help\n");
     printf("\n");
 }
 
 /**
- * Benchmark HiCOO tensor multiplication with a scalar. 
+ * Benchmark element-wise HiCOO tensor multiplication. 
+ * Require two tensors has the same number of dimensions, the same shape and the same nonzero distribution.
  */
-int main(int argc, char *argv[]) 
-{
-    FILE *fX, *fZ;
-    sptValue a;
-    sptSparseTensor X, Z;
-    sptSparseTensorHiCOO hiX, hiZ;
+int main(int argc, char *argv[]) {
+    FILE *fX, *fY, *fZ;
+    sptSparseTensor X, Y, Z;
+    sptSparseTensorHiCOO hiX, hiY, hiZ;
     sptElementIndex sb_bits = 7;
     int dev_id = -2;
     int niters = 5;
-    int nthreads;
     int sort_impl = 1;  // 1: Morton order; 2: Rowblock sorting
+    int collectZero = 0;
+    int nthreads;
     sptTimer timer;
     sptNewTimer(&timer, 0);
 
@@ -56,17 +57,18 @@ int main(int argc, char *argv[])
 
     static struct option long_options[] = {
         {"Xinput", required_argument, 0, 'X'},
-        {"ainput", required_argument, 0, 'a'},
+        {"Yinput", required_argument, 0, 'Y'},
         {"Zoutput", optional_argument, 0, 'Z'},
         {"bs", optional_argument, 0, 'b'},
         {"dev-id", optional_argument, 0, 'd'},
+        {"collectZero", optional_argument, 0, 'c'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
     int c;
     for(;;) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "X:a:Z:b:d:", long_options, &option_index);
+        c = getopt_long(argc, argv, "X:Y:Z:b:d:c:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -76,8 +78,10 @@ int main(int argc, char *argv[])
             sptAssert(fX != NULL);
             printf("X input file: %s\n", optarg); fflush(stdout);
             break;
-        case 'a':
-            sscanf(optarg, "%"PARTI_SCN_VALUE, &a);
+        case 'Y':
+            fY = fopen(optarg, "r");
+            sptAssert(fY != NULL);
+            printf("Y input file: %s\n", optarg); fflush(stdout);
             break;
         case 'Z':
             fZ = fopen(optarg, "w");
@@ -86,6 +90,13 @@ int main(int argc, char *argv[])
             break;
         case 'b':
             sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
+            break;
+        case 'c':
+            sscanf(optarg, "%d", &collectZero);
+            if(collectZero != 0 && collectZero != 1) {
+                fprintf(stderr, "Error: set collectZero to 0/1.\n");
+                exit(1);
+            }
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
@@ -101,15 +112,16 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-    printf("Scaling a: %"PARTI_PRI_VALUE"\n", a); 
-    printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id);
+    printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
+    printf("collectZero: %d\n", collectZero); 
     printf("Sorting implementation: %d\n", sort_impl); fflush(stdout);
+
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
     fclose(fX);
-    sptSparseTensorStatus(&X, stdout);
-    // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
+    sptAssert(sptLoadSparseTensor(&Y, 1, fY) == 0);
+    fclose(fY);
 
     /* Convert to HiCOO tensor */
     sptStartTimer(timer);
@@ -121,9 +133,18 @@ int main(int argc, char *argv[])
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Convert COO -> HiCOO");
 
+    sptStartTimer(timer);
+    max_nnzb = 0;
+    sptAssert(sptSparseTensorToHiCOO(&hiY, &max_nnzb, &Y, sb_bits, sort_impl, 1) == 0);
+    sptFreeSparseTensor(&Y);
+    // sptSparseTensorStatusHiCOO(&hiY, stdout);
+    // sptAssert(sptDumpSparseTensorHiCOO(&hiY, stdout) == 0);
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Convert COO -> HiCOO");
+
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
-        sptAssert(sptSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
+        sptAssert(sptSparseTensorDotMulEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -131,7 +152,7 @@ int main(int argc, char *argv[])
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        // sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
+        // sptAssert(sptOmpSparseTensorDotMulEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
 #endif
     }
 
@@ -139,21 +160,15 @@ int main(int argc, char *argv[])
     for(int it=0; it<niters; ++it) {
         sptFreeSparseTensorHiCOO(&hiZ);
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
+            sptAssert(sptSparseTensorDotMulEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            #pragma omp parallel
-            {
-                nthreads = omp_get_num_threads();
-            }
-            printf("nthreads: %d\n", nthreads);
-            // sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
-#endif
+            // sptAssert(sptOmpSparseTensorDotMulEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
         }
+#endif
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooMulScalarHiCOO");
-
+    sptPrintAverageElapsedTime(timer, niters, "Average CooDotMulEqHiCOO");
 
     if(fZ != NULL) {
         // sptDumpSparseTensorHiCOO(&hiZ, stdout);
@@ -166,14 +181,16 @@ int main(int argc, char *argv[])
         // sptAssert(sptDumpSparseTensor(&Z, stdout) == 0);
         sptStopTimer(timer);
         sptPrintElapsedTime(timer, "Convert HiCOO -> COO");
-        sptFreeTimer(timer);
 
+        sptSparseTensorSortIndex(&Z, 1);
         sptAssert(sptDumpSparseTensor(&Z, 1, fZ) == 0);
         fclose(fZ);
         sptFreeSparseTensor(&Z);
     }
 
+    sptFreeTimer(timer);
     sptFreeSparseTensorHiCOO(&hiX);
+    sptFreeSparseTensorHiCOO(&hiY);
 
     return 0;
 }
