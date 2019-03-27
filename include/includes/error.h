@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_ERROR_H_INCLUDED
-#define PARTI_ERROR_H_INCLUDED
+#ifndef PASTA_ERROR_H_INCLUDED
+#define PASTA_ERROR_H_INCLUDED
 
 #include <errno.h>
 #include <stdlib.h>

@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             printf("X input file: %s\n", optarg); fflush(stdout);
             break;
         case 'a':
-            sscanf(optarg, "%"PARTI_SCN_VALUE, &a);
+            sscanf(optarg, "%"PASTA_SCN_VALUE, &a);
             break;
         case 'Z':
             fZ = fopen(optarg, "w");
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
             printf("Z output file: %s\n", optarg); fflush(stdout);
             break;
         case 'b':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
+            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
             exit(1);
         }
     }
-    printf("Scaling a: %"PARTI_PRI_VALUE"\n", a); 
-    printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
+    printf("Scaling a: %"PASTA_PRI_VALUE"\n", a); 
+    printf("Block size (bit-length): %"PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id); 
     printf("Sorting implementation: %d\n", sort_impl);
     fflush(stdout);
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     if(dev_id == -2) {
         sptAssert(sptSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
     } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel
         {
             nthreads = omp_get_num_threads();
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
         if(dev_id == -2) {
             sptAssert(sptSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
         } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
             sptAssert(sptOmpSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
 #endif
         } else {

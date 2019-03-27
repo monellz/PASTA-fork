@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2)  # CMake 3.2 supports CUDA 7.0
-project(ParTI)
+project(PASTA)
 
 if(USE_CUDA)
     file(GLOB_RECURSE TEST_SRCS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.c" "*.cu")
@@ -17,9 +17,9 @@ foreach(TEST_SRC IN LISTS TEST_SRCS)
     endif()
     set_target_properties("tests_${TEST_EXE}" PROPERTIES C_STANDARD 99)
     if(BUILD_STATIC)
-        target_link_libraries("tests_${TEST_EXE}" ParTI_s)
+        target_link_libraries("tests_${TEST_EXE}" PASTA_s)
     else()
-        target_link_libraries("tests_${TEST_EXE}" ParTI)
+        target_link_libraries("tests_${TEST_EXE}" PASTA)
     endif()
     add_test(NAME "Test_${TEST_EXE}" COMMAND "tests_${TEST_EXE}")
 endforeach(TEST_SRC)

@@ -16,14 +16,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 static int spt_LoadMatrixTranspose(sptMatrix *X, FILE *f) {
     int result = 0;
     sptIndex nmodes, nrows, ncols;
-    result = fscanf(f, "%"PARTI_SCN_INDEX"%"PARTI_SCN_INDEX"%"PARTI_SCN_INDEX, &nmodes, &ncols, &nrows);
+    result = fscanf(f, "%"PASTA_SCN_INDEX"%"PASTA_SCN_INDEX"%"PASTA_SCN_INDEX, &nmodes, &ncols, &nrows);
     spt_CheckOSError(result < 3, "LoadMtx");
     if(nmodes != 2) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "LoadMtx", "nmodes != 2");

@@ -17,7 +17,7 @@
 */
 
 #include <stdio.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 int main(int argc, char *argv[]) {
     FILE *fa, *fb, *fo;

@@ -16,13 +16,13 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
 
-#ifndef PARTI_USE_CUDA
+#ifndef PASTA_USE_CUDA
 
 struct sptTagTimer {
     int use_cuda;

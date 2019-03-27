@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_MTTKRP_KERNELS_H
-#define PARTI_MTTKRP_KERNELS_H
+#ifndef PASTA_MTTKRP_KERNELS_H
+#define PASTA_MTTKRP_KERNELS_H
 
 /* impl_num = 15 */
 __global__ void spt_MTTKRPKernelRankSplitNnz3DOneKernel(

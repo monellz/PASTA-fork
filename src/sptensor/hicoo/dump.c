@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 
 /**
@@ -30,9 +30,9 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp)
     int iores;
     sptIndex mode;
 
-    iores = fprintf(fp, "%"PARTI_PRI_INDEX ", NNZ: %"PARTI_PRI_NNZ_INDEX"\n", hitsr->nmodes, hitsr->nnz);
+    iores = fprintf(fp, "%"PASTA_PRI_INDEX ", NNZ: %"PASTA_PRI_NNZ_INDEX"\n", hitsr->nmodes, hitsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
-    iores = fprintf(fp, "sb_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
+    iores = fprintf(fp, "sb_bits: %"PASTA_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
     spt_CheckOSError(iores < 0, "SpTns Dump");
     fprintf(fp, "ndims:\n");
     for(mode = 0; mode < hitsr->nmodes; ++mode) {
@@ -74,9 +74,9 @@ int sptDumpSparseTensorHiCOOGeneral(sptSparseTensorHiCOOGeneral * const hitsr, F
 
     iores = fprintf(fp, "%u (Compressed %u) \n", hitsr->nmodes, hitsr->ncmodes);
     spt_CheckOSError(iores < 0, "SpTns Dump");
-    iores = fprintf(fp, "NNZ: %"PARTI_PRI_NNZ_INDEX"\n", hitsr->nnz);
+    iores = fprintf(fp, "NNZ: %"PASTA_PRI_NNZ_INDEX"\n", hitsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
-    iores = fprintf(fp, "sb_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
+    iores = fprintf(fp, "sb_bits: %"PASTA_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
     spt_CheckOSError(iores < 0, "SpTns Dump");
     fprintf(fp, "ndims:\n");
     for(mode = 0; mode < hitsr->nmodes; ++mode) {

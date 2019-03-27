@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_MTTKRP_HICOO_KERNELS_H
-#define PARTI_MTTKRP_HICOO_KERNELS_H
+#ifndef PASTA_MTTKRP_HICOO_KERNELS_H
+#define PASTA_MTTKRP_HICOO_KERNELS_H
 
 
 /* impl_num = 14  Matrix Blocked, 2-D, with rank blocking. */

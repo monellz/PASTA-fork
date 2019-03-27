@@ -16,10 +16,10 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_CUDAWRAP_H
-#define PARTI_CUDAWRAP_H
+#ifndef PASTA_CUDAWRAP_H
+#define PASTA_CUDAWRAP_H
 
-#ifdef PARTI_USE_CUDA
+#ifdef PASTA_USE_CUDA
 
 #include <assert.h>
 #include <stdlib.h>

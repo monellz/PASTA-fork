@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_SPTENSORS_H
-#define PARTI_SPTENSORS_H
+#ifndef PASTA_SPTENSORS_H
+#define PASTA_SPTENSORS_H
 
 /* Sparse tensor */
 int sptNewSparseTensor(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndims[]);

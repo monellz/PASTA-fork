@@ -4,7 +4,7 @@ Getting started with ParTI!
 
 To use ParTI! in a C/C++ project, simply add
 ```c
-#include <ParTI.h>
+#include <pasta.h>
 ```
 to your source code.
 

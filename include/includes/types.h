@@ -16,83 +16,83 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_TYPES_H
-#define PARTI_TYPES_H
+#ifndef PASTA_TYPES_H
+#define PASTA_TYPES_H
 
 #include <stdint.h>
 
 /**
  * Define types, TODO: check the bit size of them, add branch for different settings
  */
-#define PARTI_INDEX_TYPEWIDTH 32
-#define PARTI_VALUE_TYPEWIDTH 32
-#define PARTI_ELEMENT_INDEX_TYPEWIDTH 8
+#define PASTA_INDEX_TYPEWIDTH 32
+#define PASTA_VALUE_TYPEWIDTH 32
+#define PASTA_ELEMENT_INDEX_TYPEWIDTH 8
 
-#if PARTI_INDEX_TYPEWIDTH == 32
+#if PASTA_INDEX_TYPEWIDTH == 32
   typedef uint32_t sptIndex;
   typedef uint32_t sptBlockIndex;
-  #define PARTI_INDEX_MAX UINT32_MAX
-  #define PARTI_PRI_INDEX PRIu32
-  #define PARTI_SCN_INDEX SCNu32
-  #define PARTI_PRI_BLOCK_INDEX PRIu32
-  #define PARTI_SCN_BLOCK_INDEX SCNu32
-#elif PARTI_INDEX_TYPEWIDTH == 64
+  #define PASTA_INDEX_MAX UINT32_MAX
+  #define PASTA_PRI_INDEX PRIu32
+  #define PASTA_SCN_INDEX SCNu32
+  #define PASTA_PRI_BLOCK_INDEX PRIu32
+  #define PASTA_SCN_BLOCK_INDEX SCNu32
+#elif PASTA_INDEX_TYPEWIDTH == 64
   typedef uint64_t sptIndex;
   typedef uint64_t sptBlockIndex;
-  #define PARTI_INDEX_MAX UINT64_MAX
-  #define PARTI_PRI_INDEX PRIu64
-  #define PARTI_SCN_INDEX SCNu64
-  #define PARTI_PRI_BLOCK_INDEX PRIu64
-  #define PARTI_SCN_BLOCK_INDEX SCNu64
+  #define PASTA_INDEX_MAX UINT64_MAX
+  #define PASTA_PRI_INDEX PRIu64
+  #define PASTA_SCN_INDEX SCNu64
+  #define PASTA_PRI_BLOCK_INDEX PRIu64
+  #define PASTA_SCN_BLOCK_INDEX SCNu64
 #else
-  #error "Unrecognized PARTI_INDEX_TYPEWIDTH."
+  #error "Unrecognized PASTA_INDEX_TYPEWIDTH."
 #endif
 
-#if PARTI_VALUE_TYPEWIDTH == 32
+#if PASTA_VALUE_TYPEWIDTH == 32
   typedef float sptValue;
-  #define PARTI_PRI_VALUE "f"
-  #define PARTI_SCN_VALUE "f"
-#elif PARTI_VALUE_TYPEWIDTH == 64
+  #define PASTA_PRI_VALUE "f"
+  #define PASTA_SCN_VALUE "f"
+#elif PASTA_VALUE_TYPEWIDTH == 64
   typedef double sptValue;
-  #define PARTI_PRI_VALUE "lf"
-  #define PARTI_SCN_VALUE "lf"
+  #define PASTA_PRI_VALUE "lf"
+  #define PASTA_SCN_VALUE "lf"
 #else
-  #error "Unrecognized PARTI_VALUE_TYPEWIDTH."
+  #error "Unrecognized PASTA_VALUE_TYPEWIDTH."
 #endif
 
-#if PARTI_ELEMENT_INDEX_TYPEWIDTH == 8
+#if PASTA_ELEMENT_INDEX_TYPEWIDTH == 8
   typedef uint8_t sptElementIndex;
   typedef uint16_t sptBlockMatrixIndex;  // R < 256
-  #define PARTI_PRI_ELEMENT_INDEX PRIu8
-  #define PARTI_SCN_ELEMENT_INDEX SCNu8
-  #define PARTI_PRI_BLOCKMATRIX_INDEX PRIu16
-  #define PARTI_SCN_BLOCKMATRIX_INDEX SCNu16
-#elif PARTI_ELEMENT_INDEX_TYPEWIDTH == 16
+  #define PASTA_PRI_ELEMENT_INDEX PRIu8
+  #define PASTA_SCN_ELEMENT_INDEX SCNu8
+  #define PASTA_PRI_BLOCKMATRIX_INDEX PRIu16
+  #define PASTA_SCN_BLOCKMATRIX_INDEX SCNu16
+#elif PASTA_ELEMENT_INDEX_TYPEWIDTH == 16
   typedef uint16_t sptElementIndex;
   typedef uint32_t sptBlockMatrixIndex;
-  #define PARTI_PRI_ELEMENT_INDEX PRIu16
-  #define PARTI_SCN_ELEMENT_INDEX SCNu16
-  #define PARTI_PRI_BLOCKMATRIX_INDEX PRIu32
-  #define PARTI_SCN_BLOCKMATRIX_INDEX SCNu32
-#elif PARTI_ELEMENT_INDEX_TYPEWIDTH == 32
+  #define PASTA_PRI_ELEMENT_INDEX PRIu16
+  #define PASTA_SCN_ELEMENT_INDEX SCNu16
+  #define PASTA_PRI_BLOCKMATRIX_INDEX PRIu32
+  #define PASTA_SCN_BLOCKMATRIX_INDEX SCNu32
+#elif PASTA_ELEMENT_INDEX_TYPEWIDTH == 32
   typedef uint32_t sptElementIndex;
   typedef uint32_t sptBlockMatrixIndex;
-  #define PARTI_PRI_ELEMENT_INDEX PRIu32
-  #define PARTI_SCN_ELEMENT_INDEX SCNu32
-  #define PARTI_PRI_BLOCKMATRIX_INDEX PRIu32
-  #define PARTI_SCN_BLOCKMATRIX_INDEX SCNu32
+  #define PASTA_PRI_ELEMENT_INDEX PRIu32
+  #define PASTA_SCN_ELEMENT_INDEX SCNu32
+  #define PASTA_PRI_BLOCKMATRIX_INDEX PRIu32
+  #define PASTA_SCN_BLOCKMATRIX_INDEX SCNu32
 #else
-  #error "Unrecognized PARTI_ELEMENT_INDEX_TYPEWIDTH."
+  #error "Unrecognized PASTA_ELEMENT_INDEX_TYPEWIDTH."
 #endif
 
 typedef sptBlockIndex sptBlockNnzIndex;
-#define PARTI_PRI_BLOCKNNZ_INDEX PARTI_PRI_BLOCK_INDEX
-#define PARTI_SCN_BLOCKNNZ_INDEX PARTI_SCN_BLOCK_INDEX
+#define PASTA_PRI_BLOCKNNZ_INDEX PASTA_PRI_BLOCK_INDEX
+#define PASTA_SCN_BLOCKNNZ_INDEX PASTA_SCN_BLOCK_INDEX
 
 typedef uint64_t sptNnzIndex;
-#define PARTI_NNZ_INDEX_MAX UINT64_MAX
-#define PARTI_PRI_NNZ_INDEX PRIu64
-#define PARTI_SCN_NNZ_INDEX PRIu64
+#define PASTA_NNZ_INDEX_MAX UINT64_MAX
+#define PASTA_PRI_NNZ_INDEX PRIu64
+#define PASTA_SCN_NNZ_INDEX PRIu64
 
 typedef unsigned __int128 sptMortonIndex;
 // typedef __uint128_t sptMortonIndex;

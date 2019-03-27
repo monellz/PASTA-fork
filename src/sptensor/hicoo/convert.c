@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include "../sptensor.h"
 
 /**
@@ -393,7 +393,7 @@ int sptSparseTensorToHiCOO(
     sptStopTimer(sort_timer);
     sptPrintElapsedTime(sort_timer, "\tHiCOO sorting (Morton)");
     sptFreeTimer(sort_timer);
-#if PARTI_DEBUG >= 2
+#if PASTA_DEBUG >= 2
     printf("Blocks: Morton-order sorted:\n");
     sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
 #endif
@@ -430,20 +430,20 @@ int sptSparseTensorToHiCOO(
 
     /* Loop nonzeros in each kernel */
     for(sptNnzIndex z = 0; z < hitsr->nnz; ++z) {
-        #if PARTI_DEBUG == 5
-            printf("z: %"PARTI_PRI_NNZ_INDEX "\n", z);
+        #if PASTA_DEBUG == 5
+            printf("z: %"PASTA_PRI_NNZ_INDEX "\n", z);
         #endif
 
         for(sptIndex m=0; m<nmodes; ++m) 
             block_coord[m] = tsr->inds[m].data[z];    // first nonzero indices
-        #if PARTI_DEBUG == 5
+        #if PASTA_DEBUG == 5
             printf("block_coord:\n");
             sptAssert(sptDumpIndexArray(block_coord, nmodes, stdout) == 0);
         #endif
 
         result = sptLocateBeginCoord(block_begin, nmodes, block_coord, sb_bits);
         // spt_CheckError(result, "HiSpTns Convert", NULL);
-        #if PARTI_DEBUG == 5
+        #if PASTA_DEBUG == 5
             printf("block_begin_prior:\n");
             sptAssert(sptDumpIndexArray(block_begin_prior, nmodes, stdout) == 0);
             printf("block_begin:\n");
@@ -479,7 +479,7 @@ int sptSparseTensorToHiCOO(
             ++ nb;
             ne = 1;              
         } // End new block
-        #if PARTI_DEBUG == 5
+        #if PASTA_DEBUG == 5
             printf("nb: %u, ne: %u\n\n", nb, ne);
         #endif
 
@@ -646,7 +646,7 @@ int sptSparseTensorToHiCOOGeneral(
 
     /* Loop nonzeros in each kernel */
     for(sptNnzIndex z = 0; z < hitsr->nnz; ++z) {
-        // printf("z: %"PARTI_PRI_NNZ_INDEX "\n", z);
+        // printf("z: %"PASTA_PRI_NNZ_INDEX "\n", z);
         for(sptIndex m=0; m<ncmodes; ++m) {
             sptIndex fm = sortorder[m];
             block_coord[m] = tsr->inds[fm].data[z];    // first nonzero indices

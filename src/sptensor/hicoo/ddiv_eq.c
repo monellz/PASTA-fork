@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 
 /**
  * Element wise divide two sparse tensors, with exactly the same nonzero

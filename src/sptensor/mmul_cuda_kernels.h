@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_MMUL_KERNELS_H
-#define PARTI_MMUL_KERNELS_H
+#ifndef PASTA_MMUL_KERNELS_H
+#define PASTA_MMUL_KERNELS_H
 
 
 /* impl_num = 14 */

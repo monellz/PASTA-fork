@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include "../../cudawrap.h"
 #include "mttkrp_cuda_kernels.h"
 

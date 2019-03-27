@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 
 static void print_usage(char ** argv) {
@@ -84,22 +84,22 @@ int main(int argc, char ** argv)
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'b':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
+            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'm':
-            sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
+            sscanf(optarg, "%"PASTA_SCN_INDEX, &mode);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
             break;
         case 'r':
-            sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
+            sscanf(optarg, "%u"PASTA_SCN_INDEX, &R);
             break;
         case 'p':
             sscanf(optarg, "%d", &impl_num);
             break;
         case 's':
-            sscanf(optarg, "%"PARTI_SCN_NNZ_INDEX, &smem_size);
+            sscanf(optarg, "%"PASTA_SCN_NNZ_INDEX, &smem_size);
             break;
         case '?':   /* invalid option */
         case 'h':
@@ -109,8 +109,8 @@ int main(int argc, char ** argv)
         }
     }
 
-    printf("mode: %"PARTI_PRI_INDEX "\n", mode);
-    printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
+    printf("mode: %"PASTA_PRI_INDEX "\n", mode);
+    printf("Block size (bit-length): %"PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id);
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);
@@ -148,7 +148,7 @@ int main(int argc, char ** argv)
     if(dev_id == -2) {
         sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
     } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel
         {
             nthreads = omp_get_num_threads();
@@ -169,7 +169,7 @@ int main(int argc, char ** argv)
         if(dev_id == -2) {
             sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
         } else if(dev_id == -1) {
-    #ifdef PARTI_USE_OPENMP
+    #ifdef PASTA_USE_OPENMP
             sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
     #endif
         } else {

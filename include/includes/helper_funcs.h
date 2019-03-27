@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_HELPER_FUNCS_H
-#define PARTI_HELPER_FUNCS_H
+#ifndef PASTA_HELPER_FUNCS_H
+#define PASTA_HELPER_FUNCS_H
 
 int sptGetLastError(const char **module, const char **file, unsigned *line, const char **reason);
 void sptClearLastError(void);

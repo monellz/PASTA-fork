@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 
 /**
  * Create a new sparse tensor in HiCOO format
@@ -142,7 +142,7 @@ double SparseTensorFrobeniusNormSquaredHiCOO(sptSparseTensorHiCOO const * const 
   double norm = 0;
   sptValue const * const restrict vals = hitsr->values.data;
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
   #pragma omp parallel for reduction(+:norm)
 #endif
   for(size_t n=0; n < hitsr->nnz; ++n) {

@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -101,7 +101,7 @@ int sptCudaSparseTensorMulMatrix(
     sptNnzIndex all_nblocks = 0;
     sptNnzIndex nblocks = 0;
 
-    const char *env_PARTI_TTM_NTHREADS = getenv("PARTI_TTM_NTHREADS");
+    const char *env_PASTA_TTM_NTHREADS = getenv("PASTA_TTM_NTHREADS");
 
     switch(impl_num) {
     case 14:

@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 
 
@@ -31,9 +31,9 @@ int sptDumpSemiSparseTensor(sptSemiSparseTensor * const tsr, FILE *fp)
     int iores;
     sptIndex mode;
 
-    iores = fprintf(fp, "NNZ: %"PARTI_PRI_NNZ_INDEX"\n", tsr->nnz);
+    iores = fprintf(fp, "NNZ: %"PASTA_PRI_NNZ_INDEX"\n", tsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
-    iores = fprintf(fp, "dense mode: %"PARTI_PRI_INDEX"\n", tsr->mode);
+    iores = fprintf(fp, "dense mode: %"PASTA_PRI_INDEX"\n", tsr->mode);
     spt_CheckOSError(iores < 0, "SpTns Dump");
     fprintf(fp, "ndims:\n");
     for(mode = 0; mode < tsr->nmodes; ++mode) {

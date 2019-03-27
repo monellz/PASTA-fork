@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,7 +144,7 @@ int sptRankMatrixDotMulSeqTriangle(sptIndex const mode, sptIndex const nmodes, s
     }
 
     sptValue * ovals = mats[nmodes]->values;
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for schedule(static)
 #endif
     for(sptIndex i=0; i < nrows; ++i) {
@@ -157,7 +157,7 @@ int sptRankMatrixDotMulSeqTriangle(sptIndex const mode, sptIndex const nmodes, s
     for(sptIndex m=1; m < nmodes; ++m) {
         sptIndex const pm = (mode + m) % nmodes;
         sptValue const * vals = mats[pm]->values;
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for schedule(static)
 #endif
         for(sptIndex i=0; i < nrows; ++i) {
@@ -168,7 +168,7 @@ int sptRankMatrixDotMulSeqTriangle(sptIndex const mode, sptIndex const nmodes, s
     }
 
     /* Copy upper triangle to lower part */
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for schedule(static)
 #endif
     for(sptIndex i=0; i < nrows; ++i) {
@@ -191,14 +191,14 @@ int sptRankMatrix2Norm(sptRankMatrix * const A, sptValue * const lambda)
     sptValue * buffer_lambda;
     int nthreads = 1;
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for schedule(static)
 #endif
     for(sptElementIndex j=0; j < ncols; ++j) {
         lambda[j] = 0.0;
     }
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel
     {
         nthreads = omp_get_num_threads();
@@ -207,7 +207,7 @@ int sptRankMatrix2Norm(sptRankMatrix * const A, sptValue * const lambda)
 #endif
 
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel
     {
         #pragma omp for schedule(static)
@@ -243,14 +243,14 @@ int sptRankMatrix2Norm(sptRankMatrix * const A, sptValue * const lambda)
 
 #endif
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel for schedule(static)
 #endif
         for(sptElementIndex j=0; j < ncols; ++j) {
             lambda[j] = sqrt(lambda[j]);
         }
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel for
 #endif
         for(sptIndex i=0; i < nrows; ++i) {
@@ -260,7 +260,7 @@ int sptRankMatrix2Norm(sptRankMatrix * const A, sptValue * const lambda)
         }
 
     
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     free(buffer_lambda);
 #endif
 
@@ -278,14 +278,14 @@ int sptRankMatrixMaxNorm(sptRankMatrix * const A, sptValue * const lambda)
     sptValue * buffer_lambda;
     int nthreads = 1;
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for schedule(static)
 #endif
     for(sptElementIndex j=0; j < ncols; ++j) {
         lambda[j] = 0.0;
     }
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel
     {
         nthreads = omp_get_num_threads();
@@ -294,7 +294,7 @@ int sptRankMatrixMaxNorm(sptRankMatrix * const A, sptValue * const lambda)
 #endif
 
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel
     {
         #pragma omp for schedule(static)
@@ -331,7 +331,7 @@ int sptRankMatrixMaxNorm(sptRankMatrix * const A, sptValue * const lambda)
     }
 #endif
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel for schedule(static)
 #endif
         for(sptElementIndex j=0; j < ncols; ++j) {
@@ -339,7 +339,7 @@ int sptRankMatrixMaxNorm(sptRankMatrix * const A, sptValue * const lambda)
                 lambda[j] = 1;
         }
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel for
 #endif
         for(sptIndex i=0; i < nrows; ++i) {
@@ -348,7 +348,7 @@ int sptRankMatrixMaxNorm(sptRankMatrix * const A, sptValue * const lambda)
             }
         }
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     free(buffer_lambda);
 #endif
 

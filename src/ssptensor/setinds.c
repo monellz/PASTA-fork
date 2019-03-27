@@ -17,7 +17,7 @@
 */
 
 #include <assert.h>
-#include <ParTI.h>
+#include <pasta.h>
 #include "ssptensor.h"
 #include "../sptensor/sptensor.h"
 

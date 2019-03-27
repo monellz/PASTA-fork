@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -80,7 +80,7 @@ int sptConstantValueVector(sptValueVector * const vec, sptValue const val) {
 int sptCopyValueVector(sptValueVector *dest, const sptValueVector *src, int const nt) {
     int result = sptNewValueVector(dest, src->len, src->len);
     spt_CheckError(result, "ValVec Copy", NULL);
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for num_threads(nt)
     for (sptNnzIndex i=0; i<src->len; ++i) {
         dest->data[i] = src->data[i];
@@ -228,7 +228,7 @@ int sptConstantIndexVector(sptIndexVector * const vec, sptIndex const num) {
 int sptCopyIndexVector(sptIndexVector *dest, const sptIndexVector *src, int const nt) {
     int result = sptNewIndexVector(dest, src->len, src->len);
     spt_CheckError(result, "IdxVec Copy", NULL);
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #pragma omp parallel for num_threads(nt)
     for (sptNnzIndex i=0; i<src->len; ++i) {
         dest->data[i] = src->data[i];

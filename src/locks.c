@@ -15,7 +15,7 @@
     License along with ParTI!.
     If not, see <http://www.gnu.org/licenses/>.
 */
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdlib.h>
     
 sptMutexPool * SptMutexAllocCustom(
@@ -39,7 +39,7 @@ sptMutexPool * SptMutexAllocCustom(
 
 sptMutexPool * sptMutexAlloc()
 {
-  return SptMutexAllocCustom(PARTI_DEFAULT_NLOCKS, PARTI_DEFAULT_LOCK_PAD_SIZE);
+  return SptMutexAllocCustom(PASTA_DEFAULT_NLOCKS, PASTA_DEFAULT_LOCK_PAD_SIZE);
 }
 
 

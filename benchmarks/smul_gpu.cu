@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
             printf("X input file: %s\n", optarg); fflush(stdout);
             break;
         case 'a':
-            sscanf(optarg, "%"PARTI_SCN_VALUE, &a);
+            sscanf(optarg, "%"PASTA_SCN_VALUE, &a);
             break;
         case 'Z':
             fZ = fopen(optarg, "w");
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
-    printf("Scaling a: %"PARTI_PRI_VALUE"\n", a); 
+    printf("Scaling a: %"PASTA_PRI_VALUE"\n", a); 
     printf("dev_id: %d\n", dev_id); fflush(stdout);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     if(dev_id == -2) {
         sptAssert(sptSparseTensorMulScalar(&Z, &X, a) == 0);
     } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel
         {
             nthreads = omp_get_num_threads();
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
         if(dev_id == -2) {
             sptAssert(sptSparseTensorMulScalar(&Z, &X, a) == 0);
         } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
             sptAssert(sptOmpSparseTensorMulScalar(&Z, &X, a) == 0);
 #endif
         } else {

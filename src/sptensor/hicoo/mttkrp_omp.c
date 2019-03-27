@@ -16,9 +16,9 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <omp.h>
 
 #define CHUNKSIZE 1

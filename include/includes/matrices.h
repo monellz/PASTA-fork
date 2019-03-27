@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_MATRICES_H
-#define PARTI_MATRICES_H
+#ifndef PASTA_MATRICES_H
+#define PASTA_MATRICES_H
 
 /* Dense matrix */
 static inline sptNnzIndex sptGetMatrixLength(const sptMatrix *mtx) {

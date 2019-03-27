@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_STRUCTS_H
-#define PARTI_STRUCTS_H
+#ifndef PASTA_STRUCTS_H
+#define PASTA_STRUCTS_H
 
 
 
@@ -253,7 +253,7 @@ typedef struct
   sptIndex value;
 } sptKeyValuePair;
 
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
 /**
  * OpenMP lock pool.
  */

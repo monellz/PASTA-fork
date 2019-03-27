@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['parti_21',['ParTI!',['../index.html',1,'']]]
+  ['PASTA_21',['ParTI!',['../index.html',1,'']]]
 ];

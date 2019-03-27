@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 /**
  * Benchmark obtaining a COO tensor nonzero entry.
@@ -43,12 +43,12 @@ int main(int argc, char *argv[]) {
     sptNnzIndex loc = atol(argv[2]);
     sptIndex const nmodes = tsr.nmodes;
 
-    printf("Entry %"PARTI_PRI_NNZ_INDEX": ( ", loc);
+    printf("Entry %"PASTA_PRI_NNZ_INDEX": ( ", loc);
     for(sptIndex m = 0; m < nmodes - 1; ++m) {
-        printf("%" PARTI_PRI_INDEX ", ", tsr.inds[m].data[loc]);
+        printf("%" PASTA_PRI_INDEX ", ", tsr.inds[m].data[loc]);
     }
-    printf("%" PARTI_PRI_INDEX " ) ", tsr.inds[nmodes-1].data[loc]);
-    printf("%" PARTI_PRI_VALUE "\n", tsr.values.data[loc]);
+    printf("%" PASTA_PRI_INDEX " ) ", tsr.inds[nmodes-1].data[loc]);
+    printf("%" PASTA_PRI_VALUE "\n", tsr.values.data[loc]);
 
     sptFreeSparseTensor(&tsr);
 

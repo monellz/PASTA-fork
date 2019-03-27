@@ -19,7 +19,7 @@
 // This file will be compiled only if CUDA is not enabled,
 // or cuda_timer.cu will be compiled instead.
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

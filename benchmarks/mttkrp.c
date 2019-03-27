@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 #include "../src/sptensor/sptensor.h"
 
 static void print_usage(char ** argv) {
@@ -83,7 +83,7 @@ int main(int argc, char ** argv)
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'm':
-            sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
+            sscanf(optarg, "%"PASTA_SCN_INDEX, &mode);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
@@ -93,7 +93,7 @@ int main(int argc, char ** argv)
             }
             break;
         case 'r':
-            sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
+            sscanf(optarg, "%u"PASTA_SCN_INDEX, &R);
             break;
         case '?':   /* invalid option */
         case 'h':
@@ -103,7 +103,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    printf("mode: %"PARTI_PRI_INDEX "\n", mode);
+    printf("mode: %"PASTA_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
 
     /* Load a sparse tensor from file as it is */
@@ -138,7 +138,7 @@ int main(int argc, char ** argv)
         nthreads = 1;
         sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
     } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
         #pragma omp parallel
         {
             nthreads = omp_get_num_threads();
@@ -158,7 +158,7 @@ int main(int argc, char ** argv)
         if(dev_id == -2) {
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
             sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
 #endif
         }

@@ -17,7 +17,7 @@
 */
 
 #include <assert.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 static int spt_SparseTensorCompare(const sptSparseTensorHiCOOGeneral *tsr1, sptNnzIndex bloc1, sptNnzIndex eloc1, const sptSparseTensorHiCOOGeneral *tsr2, sptNnzIndex bloc2, sptNnzIndex eloc2) 
 {

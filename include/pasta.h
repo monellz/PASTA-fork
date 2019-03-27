@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_H
-#define PARTI_H
+#ifndef PASTA_H
+#define PASTA_H
 
 #include <stddef.h>
 #include <stdio.h>
@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <assert.h>
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
     #include <omp.h>
 #endif
 

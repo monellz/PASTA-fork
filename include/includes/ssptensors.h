@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_SSPTENSORS_H
-#define PARTI_SSPTENSORS_H
+#ifndef PASTA_SSPTENSORS_H
+#define PASTA_SSPTENSORS_H
 
 
 /**

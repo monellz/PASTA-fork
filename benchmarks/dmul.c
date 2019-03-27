@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 
 static void print_usage(char ** argv) {
     printf("Usage: %s [options] \n\n", argv[0]);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
         if(dev_id == -2) {
             sptAssert(sptSparseTensorDotMul(&Z, &X, &Y, collectZero) == 0);
         } else if(dev_id == -1) {
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
             #pragma omp parallel
             {
                 nthreads = omp_get_num_threads();

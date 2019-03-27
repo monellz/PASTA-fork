@@ -16,14 +16,14 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_SPTENSOR_H
-#define PARTI_SPTENSOR_H
+#ifndef PASTA_SPTENSOR_H
+#define PASTA_SPTENSOR_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ParTI.h>
+#include <pasta.h>
 
 double spt_SparseTensorNorm(const sptSparseTensor *X);
 int spt_SparseTensorCompareIndices(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2);

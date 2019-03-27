@@ -15,8 +15,8 @@
     License along with ParTI!.
     If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef PARTI_USE_OPENMP
-#include <ParTI.h>
+#ifdef PASTA_USE_OPENMP
+#include <pasta.h>
 
 /**
  * Multiply a sparse tensors with a scalar.

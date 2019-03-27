@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include "sptensor.h"
 #include <math.h>
 
@@ -37,11 +37,11 @@ double sptSparseTensorDensity(sptSparseTensor const * const tsr)
 void sptSparseTensorStatus(sptSparseTensor *tsr, FILE *fp)
 {
   fprintf(fp, "COO Sparse Tensor information (use sptIndex, sptValue))---------\n");
-  fprintf(fp, "DIMS=%"PARTI_PRI_INDEX, tsr->ndims[0]);
+  fprintf(fp, "DIMS=%"PASTA_PRI_INDEX, tsr->ndims[0]);
   for(sptIndex m=1; m < tsr->nmodes; ++m) {
-    fprintf(fp, "x%"PARTI_PRI_INDEX, tsr->ndims[m]);
+    fprintf(fp, "x%"PASTA_PRI_INDEX, tsr->ndims[m]);
   }
-  fprintf(fp, " NNZ=%"PARTI_PRI_NNZ_INDEX, tsr->nnz);
+  fprintf(fp, " NNZ=%"PASTA_PRI_NNZ_INDEX, tsr->nnz);
   fprintf(fp, " DENSITY=%e\n" , sptSparseTensorDensity(tsr));
 
   fprintf(fp, "Average slice length (c): ");

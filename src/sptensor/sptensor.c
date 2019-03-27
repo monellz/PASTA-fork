@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include "sptensor.h"
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +98,7 @@ double SparseTensorFrobeniusNormSquared(sptSparseTensor const * const spten)
   double norm = 0;
   sptValue const * const restrict vals = spten->values.data;
   
-#ifdef PARTI_USE_OPENMP
+#ifdef PASTA_USE_OPENMP
   #pragma omp parallel for reduction(+:norm)
 #endif
   for(sptNnzIndex n=0; n < spten->nnz; ++n) {

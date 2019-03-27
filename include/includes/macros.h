@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_MACROS_H
-#define PARTI_MACROS_H
+#ifndef PASTA_MACROS_H
+#define PASTA_MACROS_H
 
 /* User defined system configuration */
 #define NUM_CORES 32    // for L size and determine privatilization or not
@@ -27,12 +27,12 @@
 #define PAR_MAX_DEGREE 100 // for L size
 #define PAR_MIN_DEGREE 4 // for L size
 
-#ifndef PARTI_DEFAULT_NLOCKS
-#define PARTI_DEFAULT_NLOCKS 1024
+#ifndef PASTA_DEFAULT_NLOCKS
+#define PASTA_DEFAULT_NLOCKS 1024
 #endif
 
-#ifndef PARTI_DEFAULT_LOCK_PAD_SIZE
-#define PARTI_DEFAULT_LOCK_PAD_SIZE 16
+#ifndef PASTA_DEFAULT_LOCK_PAD_SIZE
+#define PASTA_DEFAULT_LOCK_PAD_SIZE 16
 #endif
 
 /**

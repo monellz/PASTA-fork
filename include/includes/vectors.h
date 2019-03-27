@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_VECTORS_H
-#define PARTI_VECTORS_H
+#ifndef PASTA_VECTORS_H
+#define PASTA_VECTORS_H
 
 /* Dense Array functions */
 sptNnzIndex sptMaxNnzIndexArray(sptNnzIndex const * const indices, sptNnzIndex const size);

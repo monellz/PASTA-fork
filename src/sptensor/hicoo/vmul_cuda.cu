@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,7 +92,7 @@ int sptCudaSparseTensorMulVectorHiCOO(
     sptNnzIndex all_nblocks = 0;
     sptNnzIndex nblocks = 0;
 
-    const char *env_PARTI_TTV_NTHREADS = getenv("PARTI_TTV_NTHREADS");
+    const char *env_PASTA_TTV_NTHREADS = getenv("PASTA_TTV_NTHREADS");
 
     switch(impl_num) {
     // case 1:

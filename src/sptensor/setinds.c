@@ -17,7 +17,7 @@
 */
 
 #include <assert.h>
-#include <ParTI.h>
+#include <pasta.h>
 #include "../sptensor/sptensor.h"
 
 static int spt_SparseTensorCompareExceptMode(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2, sptIndex mode) {

@@ -16,7 +16,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ParTI.h>
+#include <pasta.h>
 #include <stdio.h>
 #include "sptensor.h"
 
@@ -30,23 +30,23 @@ int sptDumpSparseTensor(const sptSparseTensor *tsr, sptIndex start_index, FILE *
     int iores;
     sptIndex mode;
     sptNnzIndex i;
-    iores = fprintf(fp, "%"PARTI_PRI_INDEX ", nnz: %"PARTI_PRI_NNZ_INDEX"\n", tsr->nmodes, tsr->nnz);
+    iores = fprintf(fp, "%"PASTA_PRI_INDEX ", nnz: %"PASTA_PRI_NNZ_INDEX"\n", tsr->nmodes, tsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
     for(mode = 0; mode < tsr->nmodes; ++mode) {
         if(mode != 0) {
             iores = fputs(" ", fp);
             spt_CheckOSError(iores < 0, "SpTns Dump");
         }
-        iores = fprintf(fp, "%"PARTI_PRI_INDEX, tsr->ndims[mode]);
+        iores = fprintf(fp, "%"PASTA_PRI_INDEX, tsr->ndims[mode]);
         spt_CheckOSError(iores < 0, "SpTns Dump");
     }
     fputs("\n", fp);
     for(i = 0; i < tsr->nnz; ++i) {
         for(mode = 0; mode < tsr->nmodes; ++mode) {
-            iores = fprintf(fp, "%"PARTI_PRI_INDEX "\t", tsr->inds[mode].data[i]+start_index);
+            iores = fprintf(fp, "%"PASTA_PRI_INDEX "\t", tsr->inds[mode].data[i]+start_index);
             spt_CheckOSError(iores < 0, "SpTns Dump");
         }
-        iores = fprintf(fp, "%"PARTI_PRI_VALUE "\n", (double) tsr->values.data[i]);
+        iores = fprintf(fp, "%"PASTA_PRI_VALUE "\n", (double) tsr->values.data[i]);
         spt_CheckOSError(iores < 0, "SpTns Dump");
     }
     return 0;

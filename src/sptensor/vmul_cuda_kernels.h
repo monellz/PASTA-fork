@@ -16,8 +16,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARTI_VMUL_KERNELS_H
-#define PARTI_VMUL_KERNELS_H
+#ifndef PASTA_VMUL_KERNELS_H
+#define PASTA_VMUL_KERNELS_H
 
 /* impl_num = 11 */
 __global__ void spt_TTVNnzKernel(

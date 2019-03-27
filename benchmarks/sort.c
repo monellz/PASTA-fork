@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <ParTI.h>
+#include <pasta.h>
 #include "../src/sptensor/sptensor.h"
 
 static void print_usage(char ** argv) {
@@ -91,13 +91,13 @@ int main(int argc, char ** argv) {
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'm':
-            sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
+            sscanf(optarg, "%"PASTA_SCN_INDEX, &mode);
             break;
         case 'b':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
+            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'k':
-            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sk_bits);
+            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sk_bits);
             break;
         case 's':
             sscanf(optarg, "%d", &sortcase);
@@ -112,11 +112,11 @@ int main(int argc, char ** argv) {
             exit(1);
         }
     }
-    printf("mode: %"PARTI_PRI_INDEX "\n", mode);
+    printf("mode: %"PASTA_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
     printf("sortcase: %d\n", sortcase);
     if(sortcase == 3) {
-        printf("sb_bits: %"PARTI_PRI_ELEMENT_INDEX", sk_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits, sk_bits);
+        printf("sb_bits: %"PASTA_PRI_ELEMENT_INDEX", sk_bits: %"PASTA_PRI_ELEMENT_INDEX"\n", sb_bits, sk_bits);
     }
 
     /* Load a sparse tensor from file as it is */
