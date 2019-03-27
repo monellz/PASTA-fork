@@ -136,8 +136,8 @@ int main(int argc, char *argv[]) {
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
             sptAssert(sptOmpSparseTensorDotAddEq(&Z, &X, &Y, collectZero) == 0);
-        }
 #endif
+        }
     }
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooDotAddEq");

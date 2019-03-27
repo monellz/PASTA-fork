@@ -120,11 +120,6 @@ int main(int argc, char *argv[]) {
             sptAssert(sptSparseTensorMulScalar(&Z, &X, a) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            #pragma omp parallel
-            {
-                nthreads = omp_get_num_threads();
-            }
-            printf("nthreads: %d\n", nthreads);
             sptAssert(sptOmpSparseTensorMulScalar(&Z, &X, a) == 0);
 #endif
         }

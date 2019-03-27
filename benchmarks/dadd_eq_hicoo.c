@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        // sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
+        sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
 #endif
     }
 
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
             sptAssert(sptSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            // sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
-        }
+            sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
 #endif
+        }
     }
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooDotAddEqHiCOO");

@@ -19,28 +19,27 @@
 #include <ParTI.h>
 
 /**
- * Element wise add two sparse tensors, with exactly the same nonzero
+ * Element wise divide two sparse tensors, with exactly the same nonzero
  * distribution.
  * @param[out] Z the result of X.+Y, should be uninitialized
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
+int sptOmpSparseTensorDotDivEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
 {
     sptAssert(collectZero == 0);
-    sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(hiY->nmodes != hiX->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDivHiCOO", "shape mismatch");
     }
-    for(i = 0; i < hiX->nmodes; ++i) {
+    for(sptIndex i = 0; i < hiX->nmodes; ++i) {
         if(hiY->ndims[i] != hiX->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDivHiCOO", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(hiY->nnz != hiX->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotDivHiCOO", "nonzero distribution mismatch");
     }
     sptNnzIndex nnz = hiX->nnz;
 
@@ -53,10 +52,11 @@ int sptSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTenso
     sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
 
     sptStartTimer(timer);
-    for(i=0; i< nnz; ++i)
-        hiZ->values.data[i] = hiX->values.data[i] + hiY->values.data[i];
+    #pragma omp parallel for schedule(static)
+    for(sptNnzIndex i=0; i< nnz; ++i)
+        hiZ->values.data[i] = hiX->values.data[i] / hiY->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns DotAddHiCOO");
+    sptPrintElapsedTime(timer, "Cpu SpTns DotDivHiCOO");
 
     /* TODO: Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.

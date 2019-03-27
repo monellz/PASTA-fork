@@ -25,15 +25,14 @@
  * @param[in]  X the input X
  * @param[in]  Y the input Y
  */
-int sptSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
+int sptOmpSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
 {
     sptAssert(collectZero == 0);
-    sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(hiY->nmodes != hiX->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
     }
-    for(i = 0; i < hiX->nmodes; ++i) {
+    for(sptIndex i = 0; i < hiX->nmodes; ++i) {
         if(hiY->ndims[i] != hiX->ndims[i]) {
             spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
         }
@@ -53,7 +52,8 @@ int sptSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTenso
     sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
 
     sptStartTimer(timer);
-    for(i=0; i< nnz; ++i)
+    #pragma omp parallel for schedule(static)
+    for(sptNnzIndex i=0; i< nnz; ++i)
         hiZ->values.data[i] = hiX->values.data[i] + hiY->values.data[i];
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Cpu SpTns DotAddHiCOO");

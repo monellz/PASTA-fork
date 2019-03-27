@@ -120,21 +120,27 @@ int main(int argc, char *argv[]) {
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Sort Input Tensors");
 
+
+    if(dev_id == -2) {
+        sptAssert(sptSparseTensorDotSub(&Z, &X, &Y, collectZero) == 0);
+    } else if(dev_id == -1) {
+#ifdef PARTI_USE_OPENMP
+        #pragma omp parallel
+        {
+            nthreads = omp_get_num_threads();
+        }
+        printf("\nnthreads: %d\n", nthreads);
+        sptAssert(sptOmpSparseTensorDotSub(&Z, &X, &Y, collectZero, nthreads) == 0);
+#endif
+    }
+
     sptStartTimer(timer);
     for(int i = 0; i < niters; ++i) {
-        // if niters > 1, then the old output tensor needs to be freed.
-        if(i > 0) {
-            sptFreeSparseTensor(&Z);
-        }
+        sptFreeSparseTensor(&Z);
         if(dev_id == -2) {
             sptAssert(sptSparseTensorDotSub(&Z, &X, &Y, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            #pragma omp parallel
-            {
-                nthreads = omp_get_num_threads();
-            }
-            printf("\nnthreads: %d\n", nthreads);
             sptAssert(sptOmpSparseTensorDotSub(&Z, &X, &Y, collectZero, nthreads) == 0);
 #endif
         }
