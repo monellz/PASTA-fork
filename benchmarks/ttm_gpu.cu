@@ -44,8 +44,8 @@ int main(int argc, char ** argv)
     sptIndex mode = 0;
     sptIndex R = 16;
     int dev_id = -2;
-    int impl_num = 0;
-    sptNnzIndex smem_size = 0;
+    int impl_num = 15;
+    sptNnzIndex smem_size = 40000;
     int niters = 5;
     int nthreads = 1;
     printf("niters: %d\n", niters);
@@ -117,7 +117,8 @@ int main(int argc, char ** argv)
     fclose(fX);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    sptAssert(sptRandomizeMatrix(&U) == 0);
+    sptAssert(sptConstantMatrix(&U, 1.0) == 0);
+    // sptAssert(sptRandomizeMatrix(&U) == 0);
 
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
@@ -141,7 +142,7 @@ int main(int argc, char ** argv)
     sptStartTimer(timer);
 
     for(int it=0; it<niters; ++it) {
-        // sptFreeSemiSparseTensor(&Y);
+        sptFreeSemiSparseTensor(&Y);
         if(dev_id == -2) {
             sptAssert(sptSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
         } else if(dev_id == -1) {
@@ -156,16 +157,19 @@ int main(int argc, char ** argv)
 
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooTtm");
-    sptFreeTimer(timer);
 
     if(fY != NULL) {
-        sptSparseTensor Y_coo;
-        sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-9) == 0);
-        sptAssert(sptDumpSparseTensor(&Y_coo, 1, fY) == 0);
-        sptFreeSparseTensor(&Y_coo);
+        sptAssert(sptDumpSemiSparseTensor(&Y, fY) == 0);
+
+        /* Convert Semi-COO to COO tensor */
+        // sptSparseTensor Y_coo;
+        // sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
+        // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fY) == 0);
+        // sptFreeSparseTensor(&Y_coo);
         fclose(fY);
     }
 
+    sptFreeTimer(timer);
     sptFreeSemiSparseTensor(&Y);
     sptFreeMatrix(&U);
     sptFreeSparseTensor(&X);

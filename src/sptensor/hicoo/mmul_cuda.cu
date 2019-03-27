@@ -29,7 +29,7 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     const sptMatrix *U,
     sptIndex const mode,
     sptIndex const impl_num,
-    sptNnzIndex const smen_size) 
+    sptNnzIndex const smem_size) 
 {
     if(mode >= hiX->nmodes) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "CUDA HiSpTns * Mtx", "shape mismatch");
@@ -107,41 +107,6 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     const char *env_PARTI_TTM_NTHREADS = getenv("PARTI_TTM_NTHREADS");
 
     switch(impl_num) {
-    // case 1:
-    case 11: // Naive, 1D
-        if(hiY->nnz < max_nthreads_per_block) {
-            nthreadsx = hiY->nnz;
-            nblocks = 1;
-        } else {
-            nthreadsx = max_nthreads_per_block;
-            all_nblocks = (hiY->nnz + nthreadsx -1) / nthreadsx;
-            if(all_nblocks < max_nblocks) {
-                nblocks = all_nblocks;
-            } else {
-                nblocks = max_nblocks;
-            }
-        }
-        break;
-    case 12:
-        if(U->ncols <= max_nthreadsy)
-            nthreadsy = U->ncols;
-        else
-            nthreadsy = max_nthreadsy;
-        nthreadsx = max_nthreads_per_block / nthreadsy;
-
-        if(hiY->nnz < nthreadsx) {
-            nthreadsx = hiY->nnz;
-            nblocks = 1;
-        } else {
-            all_nblocks = (hiY->nnz + nthreadsx -1) / nthreadsx;
-            if(all_nblocks < max_nblocks) {
-                nblocks = all_nblocks;
-            } else {
-                nblocks = max_nblocks;
-            }
-        }
-        break;
-    case 13:
     case 14:
         if(U->ncols <= max_nthreadsy)
             nthreadsx = U->ncols;
@@ -179,7 +144,7 @@ int sptCudaSparseTensorMulMatrixHiCOO(
                 nblocks = max_nblocks;
             }
         }
-        sptAssert(smen_size >= nthreadsx * nthreadsy * sizeof (sptValue));
+        sptAssert(smem_size >= nthreadsx * nthreadsy * sizeof (sptValue));
         break;
     }
     dim3 dimBlock(nthreadsx, nthreadsy);
@@ -191,31 +156,6 @@ int sptCudaSparseTensorMulMatrixHiCOO(
 
 
     switch(impl_num) {
-    // case 1:
-    case 11: // Naive
-        printf("[CUDA HiSpTns * Mtx] spt_TTMNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMNnzKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, hiY->nnz,
-            X_val, hiX->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break;
-    case 12:  
-        printf("[CUDA HiSpTns * Mtx] spt_TTMNnzRankKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMNnzRankKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, hiY->nnz,
-            X_val, hiX->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break; 
-    case 13:  
-        printf("[CUDA HiSpTns * Mtx] spt_TTMRankNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMRankNnzKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, hiY->nnz,
-            X_val, hiX->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break; 
     case 14:  
         printf("[CUDA HiSpTns * Mtx] spt_TTMRankRBNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
         spt_TTMRankRBNnzKernel<<<nblocks, dimBlock>>>(
@@ -225,8 +165,8 @@ int sptCudaSparseTensorMulMatrixHiCOO(
             U_val, U->nrows, U->ncols, stride);
         break; 
     case 15:  
-        printf("[CUDA HiSpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smen_size);
-        spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smen_size>>>(
+        printf("[CUDA HiSpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smem_size);
+        spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smem_size>>>(
             Y_val, stride, hiY->nnz,
             X_val, hiX->nnz, X_inds_m,
             fiberidx_val, fiberidx.len,

@@ -17,7 +17,6 @@
 */
 
 #include <ParTI.h>
-#include "sptensor.h"
 
 
 static __global__ void spt_dAddKernel(
@@ -52,21 +51,22 @@ static __global__ void spt_dAddKernel(
  * @param[in]  a the input scalar
  * @param[in]  X the input X
  */
-int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const sptSparseTensor *Y, int collectZero)
+int sptCudaSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
 {
-   sptNnzIndex i;
+    sptAssert(collectZero == 0);
+    sptNnzIndex i;
     /* Ensure X and Y are in same shape */
-    if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "shape mismatch");
+    if(hiY->nmodes != hiX->nmodes) {
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
     }
-    for(i = 0; i < X->nmodes; ++i) {
-        if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "shape mismatch");
+    for(i = 0; i < hiX->nmodes; ++i) {
+        if(hiY->ndims[i] != hiX->ndims[i]) {
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
-    if(Y->nnz != X->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "nonzero distribution mismatch");
+    if(hiY->nnz != hiX->nnz) {
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAddHiCOO", "nonzero distribution mismatch");
     }
     int result;
 
@@ -74,23 +74,23 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptNewTimer(&timer, 0);
 
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorHiCOO(hiZ, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
 
 
     sptStartTimer(timer);
     sptValue *Z_val = NULL;
-    result = cudaMalloc((void **) &Z_val, Z->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    result = cudaMalloc((void **) &Z_val, hiZ->nnz * sizeof (sptValue));
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
     sptValue *X_val = NULL;
-    result = cudaMalloc((void **) &X_val, X->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
-    cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
+    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *Y_val = NULL;
-    result = cudaMalloc((void **) &Y_val, Y->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
-    cudaMemcpy(Y_val, Y->values.data, Y->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    result = cudaMalloc((void **) &Y_val, hiY->nnz * sizeof (sptValue));
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
+    cudaMemcpy(Y_val, hiY->values.data, hiY->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Device malloc and copy");
 
@@ -104,12 +104,12 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptNnzIndex all_nblocks = 0;
     sptNnzIndex nblocks = 0;
 
-    if(X->nnz < max_nthreads_per_block) {
-        nthreadsx = X->nnz;
+    if(hiX->nnz < max_nthreads_per_block) {
+        nthreadsx = hiX->nnz;
         nblocks = 1;
     } else {
         nthreadsx = max_nthreads_per_block;
-        all_nblocks = (X->nnz + nthreadsx -1) / nthreadsx;
+        all_nblocks = (hiX->nnz + nthreadsx -1) / nthreadsx;
         if(all_nblocks < max_nblocks) {
             nblocks = all_nblocks;
         } else {
@@ -119,34 +119,26 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     dim3 dimBlock(nthreadsx);
     printf("all_nblocks: %lu, nthreadsx: %lu\n", all_nblocks, nthreadsx);
 
-    printf("[CUDA SpTns DotAdd] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
-    spt_dAddKernel<<<nblocks, dimBlock>>>(Z_val, X_val, Y_val, X->nnz);
+    printf("[CUDA SpTns DotAddHiCOO] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
+    spt_dAddKernel<<<nblocks, dimBlock>>>(Z_val, X_val, Y_val, hiX->nnz);
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd kernel");
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda SpTns DotAdd");
+    sptPrintElapsedTime(timer, "Cuda SpTns DotAddHiCOO");
 
-    /* Check whether elements become zero after adding.
+    /* TODO: Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
-    sptStartTimer(timer);
-    if(collectZero == 1) {
-        sptSparseTensorCollectZeros(Z);
-    }
-    sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
-    sptFreeTimer(timer);
-    printf("\n");
 
 
-    cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    cudaMemcpy(hiZ->values.data, Z_val, hiZ->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
     result = cudaFree(Y_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
     result = cudaFree(Z_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "CUDA SpTns DotAddHiCOO");
 
     return 0;
 }

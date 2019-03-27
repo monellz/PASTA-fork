@@ -27,14 +27,14 @@ static void print_usage(char ** argv) {
     printf("         -Y INPUT (.tns file)\n");
     printf("         -Z OUTPUT (output file name)\n");
     printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
-    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
+    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel; >=0:GPU parallel)\n");
     printf("         -c collectZero (0:default; 1)\n");
     printf("         --help\n");
     printf("\n");
 }
 
 /**
- * Benchmark element-wise HiCOO tensor addition. 
+ * Benchmark element-wise HiCOO tensor division. 
  * Require two tensors has the same number of dimensions, the same shape and the same nonzero distribution.
  */
 int main(int argc, char *argv[]) {
@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
-            if(dev_id < -2 || dev_id >= 0) {
-                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+            if(dev_id < -2) {
+                fprintf(stderr, "Error: set dev_id to -2/-1/>=0.\n");
                 exit(1);
             }
             break;
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
-        sptAssert(sptSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
+        sptAssert(sptSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -152,23 +152,29 @@ int main(int argc, char *argv[]) {
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
+        sptAssert(sptOmpSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
 #endif
+    } else {
+        sptCudaSetDevice(dev_id);
+        sptAssert(sptCudaSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
     }
 
     sptStartTimer(timer);
     for(int it=0; it<niters; ++it) {
         sptFreeSparseTensorHiCOO(&hiZ);
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
+            sptAssert(sptSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            sptAssert(sptOmpSparseTensorDotAddEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
+            sptAssert(sptOmpSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
 #endif
+        } else {
+            sptCudaSetDevice(dev_id);
+            sptAssert(sptCudaSparseTensorDotDivEqHiCOO(&hiZ, &hiX, &hiY, collectZero) == 0);
         }
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooDotAddEqHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average CooDotDivEqHiCOO");
 
     if(fZ != NULL) {
         // sptDumpSparseTensorHiCOO(&hiZ, stdout);

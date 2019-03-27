@@ -176,7 +176,6 @@ int main(int argc, char *argv[]) {
         /* Convert HiCOO to COO tensor */
         sptStartTimer(timer);
         sptAssert(sptHiCOOToSparseTensor(&Z, &hiZ) == 0);
-        sptFreeSparseTensorHiCOO(&hiZ);
         // sptSparseTensorStatus(&Z, stdout);
         // sptAssert(sptDumpSparseTensor(&Z, stdout) == 0);
         sptStopTimer(timer);
@@ -189,6 +188,7 @@ int main(int argc, char *argv[]) {
     }
 
     sptFreeTimer(timer);
+    sptFreeSparseTensorHiCOO(&hiZ);
     sptFreeSparseTensorHiCOO(&hiX);
     sptFreeSparseTensorHiCOO(&hiY);
 

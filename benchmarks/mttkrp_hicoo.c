@@ -95,6 +95,10 @@ int main(int argc, char ** argv)
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
+            if(dev_id < -2 || dev_id >= 0) {
+                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+                exit(1);
+            }
             break;
         case 'r':
             sscanf(optarg, "%"PARTI_SCN_INDEX, &R);

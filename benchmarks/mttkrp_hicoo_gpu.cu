@@ -22,55 +22,63 @@
 #include <ParTI.h>
 #include "../src/sptensor/sptensor.h"
 
-static void print_usage(char ** argv) {
-    printf("Usage: %s [options] \n\n", argv[0]);
-    printf("Options: -i INPUT, --input=INPUT (.tns file)\n");
-    printf("         -o OUTPUT, --output=OUTPUT (output file name)\n");
-    printf("         -m MODE, --mode=MODE (specify a mode, e.g., 0 (default) or 1 or 2 for third-order tensors.)\n");
-    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
+void print_usage(int argc, char ** argv) {
+    printf("Usage: %s [options] \n", argv[0]);
+    printf("Options: -i INPUT, --input=INPUT\n");
+    printf("         -o OUTPUT, --output=OUTPUT\n");
+    printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
+    printf("         -m MODE, --mode=MODE\n");
+    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel; >=0:GPU parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
     printf("         CUDA options: \n");
     printf("         -p IMPL_NUM, --impl-num=IMPL_NUM\n");
-    printf("         --help\n");
+    printf("         -s SMEM_SIZE, --smem-size=SMEM_SIZE\n");
     printf("\n");
 }
 
 /**
- * Benchmark Matriced Tensor Times Khatri-Rao Product (MTTKRP), tensor in COO format, matrices are dense.
+ * Benchmark Matriced Tensor Times Khatri-Rao Product (MTTKRP), tensor in HiCOO format, matrices are dense.
  */
-int main(int argc, char ** argv) {
+int main(int argc, char ** argv) 
+{
     FILE *fi = NULL, *fo = NULL;
-    sptSparseTensor X;
+    sptSparseTensor tsr;
     sptMatrix ** U;
+    sptSparseTensorHiCOO hitsr;
+    sptElementIndex sb_bits = 7;
 
     sptIndex mode = 0;
     sptIndex R = 16;
     int dev_id = -2;
+    int impl_num = 14;
+    sptNnzIndex smem_size = 40000;
     int niters = 5;
     int nthreads = 1;
-    int impl_num = 15;
+    int sort_impl = 1;  // 1: Morton order; 2: Rowblock sorting
     printf("niters: %d\n", niters);
+    int retval;
 
     if(argc <= 3) { // #Required arguments
-        print_usage(argv);
+        print_usage(argc, argv);
         exit(1);
     }
 
-    static struct option long_options[] = {
-        {"input", required_argument, 0, 'i'},
-        {"mode", required_argument, 0, 'm'},
-        {"output", optional_argument, 0, 'o'},
-        {"dev-id", optional_argument, 0, 'd'},
-        {"rank", optional_argument, 0, 'r'},
-        {"use-reduce", optional_argument, 0, 'u'},
-        {"impl-num", optional_argument, 0, 'p'},
-        {"help", no_argument, 0, 0},
-        {0, 0, 0, 0}
-    };
-    int c;
     for(;;) {
+        static struct option long_options[] = {
+            {"input", required_argument, 0, 'i'},
+            {"output", required_argument, 0, 'o'},
+            {"bs", optional_argument, 0, 'b'},
+            {"mode", optional_argument, 0, 'm'},
+            {"dev-id", optional_argument, 0, 'd'},
+            {"rank", optional_argument, 0, 'r'},
+            {"impl-num", optional_argument, 0, 'p'},
+            {"smem-size", optional_argument, 0, 's'},
+            {0, 0, 0, 0}
+        };
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:d:r:p:", long_options, &option_index);
+        int c = 0;
+        // c = getopt_long(argc, argv, "i:o:b:k:c:m:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:o:b:m:d:r:p:s:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -78,12 +86,13 @@ int main(int argc, char ** argv) {
         case 'i':
             fi = fopen(optarg, "r");
             sptAssert(fi != NULL);
-            printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
             fo = fopen(optarg, "w");
             sptAssert(fo != NULL);
-            printf("output file: %s\n", optarg); fflush(stdout);
+            break;
+        case 'b':
+            sscanf(optarg, "%"PARTI_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'm':
             sscanf(optarg, "%"PARTI_SCN_INDEX, &mode);
@@ -96,53 +105,73 @@ int main(int argc, char ** argv) {
             }
             break;
         case 'r':
-            sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
+            sscanf(optarg, "%"PARTI_SCN_INDEX, &R);
             break;
         case 'p':
             sscanf(optarg, "%d", &impl_num);
             break;
+        case 's':
+            sscanf(optarg, "%"PARTI_SCN_NNZ_INDEX, &smem_size);
+            break;
         case '?':   /* invalid option */
         case 'h':
         default:
-            print_usage(argv);
+            print_usage(argc, argv);
             exit(1);
         }
     }
-
     printf("mode: %"PARTI_PRI_INDEX "\n", mode);
+    printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id);
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);
+    // printf("Sorting implementation: %d\n", sort_impl);
 
-    /* Load a sparse tensor from file as it is */
-    sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
+    sptAssert(sptLoadSparseTensor(&tsr, 1, fi) == 0);
+    // sptSparseTensorSortIndex(&tsr, 1);
     fclose(fi);
-    sptSparseTensorStatus(&X, stdout);
+    sptSparseTensorStatus(&tsr, stdout);
+    // sptAssert(sptDumpSparseTensor(&tsr, 0, stdout) == 0);
 
-    sptIndex nmodes = X.nmodes;
+    sptTimer convert_timer;
+    sptNewTimer(&convert_timer, 0);
+    sptStartTimer(convert_timer);
+
+    /* Convert to HiCOO tensor */
+    sptNnzIndex max_nnzb = 0;
+    sptAssert(sptSparseTensorToHiCOO(&hitsr, &max_nnzb, &tsr, sb_bits, sort_impl, nthreads) == 0);
+    sptFreeSparseTensor(&tsr);
+    sptSparseTensorStatusHiCOO(&hitsr, stdout);
+    // sptAssert(sptDumpSparseTensorHiCOO(&hitsr, stdout) == 0);
+
+    sptStopTimer(convert_timer);
+    sptPrintElapsedTime(convert_timer, "Convert HiCOO");
+    sptFreeTimer(convert_timer);
+
+    sptIndex nmodes = hitsr.nmodes;
     U = (sptMatrix **)malloc((nmodes+1) * sizeof(sptMatrix*));
     for(sptIndex m=0; m<nmodes+1; ++m) {
       U[m] = (sptMatrix *)malloc(sizeof(sptMatrix));
     }
     sptIndex max_ndims = 0;
     for(sptIndex m=0; m<nmodes; ++m) {
-      // sptAssert(sptRandomizeMatrix(U[m], X.ndims[m], R) == 0);
-      sptAssert(sptNewMatrix(U[m], X.ndims[m], R) == 0);
+      // sptAssert(sptRandomizeMatrix(U[m], tsr.ndims[m], R) == 0);
+      sptAssert(sptNewMatrix(U[m], hitsr.ndims[m], R) == 0);
       sptAssert(sptConstantMatrix(U[m], 1) == 0);
-      if(X.ndims[m] > max_ndims)
-        max_ndims = X.ndims[m];
+      if(hitsr.ndims[m] > max_ndims)
+        max_ndims = hitsr.ndims[m];
     }
     sptAssert(sptNewMatrix(U[nmodes], max_ndims, R) == 0);
     sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
 
-    sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
+    sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(*mats_order));
     mats_order[0] = mode;
     for(sptIndex i=1; i<nmodes; ++i)
         mats_order[i] = (mode+i) % nmodes;
 
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
-        sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
+        sptAssert(sptMTTKRPHiCOO(&hitsr, U, mats_order, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -150,58 +179,47 @@ int main(int argc, char ** argv) {
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
+        sptAssert(sptOmpMTTKRPHiCOO(&hitsr, U, mats_order, mode, nthreads) == 0);
 #endif
     } else {
         sptCudaSetDevice(dev_id);
-        sptAssert(sptCudaMTTKRP(&X, U, mats_order, mode, impl_num) == 0);
+        sptAssert(sptCudaMTTKRPHiCOO(&hitsr, U, mats_order, mode, max_nnzb, impl_num) == 0);
     }
 
-    
     sptTimer timer;
     sptNewTimer(&timer, 0);
     sptStartTimer(timer);
 
     for(int it=0; it<niters; ++it) {
-        // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
         if(dev_id == -2) {
-            sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
+            sptAssert(sptMTTKRPHiCOO(&hitsr, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
+            sptAssert(sptOmpMTTKRPHiCOO(&hitsr, U, mats_order, mode, nthreads) == 0);
 #endif
         } else {
             sptCudaSetDevice(dev_id);
-            sptAssert(sptCudaMTTKRP(&X, U, mats_order, mode, impl_num) == 0);
+            sptAssert(sptCudaMTTKRPHiCOO(&hitsr, U, mats_order, mode, max_nnzb, impl_num) == 0);
         }
     }
 
     sptStopTimer(timer);
+    sptPrintAverageElapsedTime(timer, niters, "CPU  SpTns MTTKRP HiCOO");
     sptFreeTimer(timer);
-
-    double aver_time = sptPrintAverageElapsedTime(timer, niters, "Average CooMTTKRP");
-    double gflops = (double)nmodes * R * X.nnz / aver_time / 1e9;
-    uint64_t bytes = ( nmodes * sizeof(sptIndex) + sizeof(sptValue) ) * X.nnz; 
-    for (sptIndex m=0; m<nmodes; ++m) {
-        bytes += X.ndims[m] * R * sizeof(sptValue);
-    }
-    double gbw = (double)bytes / aver_time / 1e9;
-    printf("Performance: %.2lf GFlop/s, Bandwidth: %.2lf GB/s\n\n", gflops, gbw);
 
     if(fo != NULL) {
         sptAssert(sptDumpMatrix(U[nmodes], fo) == 0);
-    }
-
-    if(fo != NULL) {
         fclose(fo);
     }
+
+
     for(sptIndex m=0; m<nmodes; ++m) {
         sptFreeMatrix(U[m]);
     }
-    sptFreeSparseTensor(&X);
     free(mats_order);
     sptFreeMatrix(U[nmodes]);
     free(U);
+    sptFreeSparseTensorHiCOO(&hitsr);
 
     return 0;
 }

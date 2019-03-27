@@ -29,9 +29,6 @@ static void print_usage(char ** argv) {
     printf("         -m MODE, --mode=MODE (specify a mode, e.g., 0 (default) or 1 or 2 for third-order tensors.)\n");
     printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
     printf("         -r RANK (the number of matrix columns, 16:default)\n");
-    printf("         OpenMP options: \n");
-    printf("         -t NTHREADS, --nthreads=NT (1:default)\n");
-    printf("         -u use_reduce, --ur=use_reduce (use privatization or not)\n");
     printf("         --help\n");
     printf("\n");
 }
@@ -44,14 +41,12 @@ int main(int argc, char ** argv)
     FILE *fi = NULL, *fo = NULL;
     sptSparseTensor X;
     sptMatrix ** U;
-    sptMatrix ** copy_U;
 
     sptIndex mode = 0;
     sptIndex R = 16;
     int dev_id = -2;
     int niters = 5;
     int nthreads = 1;
-    int use_reduce = 1; // Need to choose from two omp parallel approaches
     printf("niters: %d\n", niters);
 
     if(argc <= 3) { // #Required arguments
@@ -66,14 +61,13 @@ int main(int argc, char ** argv)
         {"dev-id", optional_argument, 0, 'd'},
         {"rank", optional_argument, 0, 'r'},
         {"nthreads", optional_argument, 0, 't'},
-        {"use-reduce", optional_argument, 0, 'u'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
     int c;
     for(;;) {
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:d:r:t:u:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:m:o:d:r:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -93,15 +87,13 @@ int main(int argc, char ** argv)
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
+            if(dev_id < -2 || dev_id >= 0) {
+                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+                exit(1);
+            }
             break;
         case 'r':
             sscanf(optarg, "%u"PARTI_SCN_INDEX, &R);
-            break;
-        case 'u':
-            sscanf(optarg, "%d", &use_reduce);
-            break;
-        case 't':
-            sscanf(optarg, "%d", &nthreads);
             break;
         case '?':   /* invalid option */
         case 'h':
@@ -136,21 +128,6 @@ int main(int argc, char ** argv)
     sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
     sptIndex stride = U[0]->stride;
 
-    /* Set zeros for temporary copy_U, for mode-"mode" */
-    char * bytestr;
-    if(dev_id == -1 && use_reduce == 1) {
-        copy_U = (sptMatrix **)malloc(nthreads * sizeof(sptMatrix*));
-        for(int t=0; t<nthreads; ++t) {
-            copy_U[t] = (sptMatrix *)malloc(sizeof(sptMatrix));
-            sptAssert(sptNewMatrix(copy_U[t], X.ndims[mode], R) == 0);
-            sptAssert(sptConstantMatrix(copy_U[t], 0) == 0);
-        }
-        sptNnzIndex bytes = nthreads * X.ndims[mode] * R * sizeof(sptValue);
-        bytestr = sptBytesString(bytes);
-        printf("MODE MATRIX COPY=%s\n", bytestr);
-        free(bytestr);
-    }
-
     sptIndex * mats_order = (sptIndex*)malloc(nmodes * sizeof(sptIndex));
     mats_order[0] = mode;
     for(sptIndex i=1; i<nmodes; ++i)
@@ -162,14 +139,12 @@ int main(int argc, char ** argv)
         sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-        printf("nthreads: %d\n", nthreads);
-        if(use_reduce == 1) {
-            printf("sptOmpMTTKRP_Reduce:\n");
-            sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nthreads) == 0);
-        } else {
-            printf("sptOmpMTTKRP:\n");
-            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
+        #pragma omp parallel
+        {
+            nthreads = omp_get_num_threads();
         }
+        printf("\nnthreads: %d\n", nthreads);
+        sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
 #endif
     }
 
@@ -184,11 +159,7 @@ int main(int argc, char ** argv)
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            if(use_reduce == 1) {
-                sptAssert(sptOmpMTTKRP_Reduce(&X, U, copy_U, mats_order, mode, nthreads) == 0);
-            } else {
-                sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
-            }
+            sptAssert(sptOmpMTTKRP(&X, U, mats_order, mode, nthreads) == 0);
 #endif
         }
     }
@@ -210,14 +181,6 @@ int main(int argc, char ** argv)
         fclose(fo);
     }
 
-    if(dev_id == -1) {
-        if (use_reduce == 1) {
-            for(int t=0; t<nthreads; ++t) {
-                sptFreeMatrix(copy_U[t]);
-            }
-            free(copy_U);
-        }
-    }
     for(sptIndex m=0; m<nmodes; ++m) {
         sptFreeMatrix(U[m]);
     }

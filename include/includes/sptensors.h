@@ -253,18 +253,6 @@ int sptOmpMTTKRP(
     sptIndex const mats_order[],    // Correspond to the mode order of X.
     sptIndex const mode,
     const int tk);
-int sptOmpMTTKRP_Reduce(sptSparseTensor const * const X,
-    sptMatrix * mats[],     // mats[nmodes] as temporary space.
-    sptMatrix * copy_mats[],    // temporary matrices for reduction
-    sptIndex const mats_order[],    // Correspond to the mode order of X.
-    sptIndex const mode,
-    const int tk);
-int sptOmpMTTKRP_Lock(sptSparseTensor const * const X,
-    sptMatrix * mats[],     // mats[nmodes] as temporary space.
-    sptIndex const mats_order[],    // Correspond to the mode order of X.
-    sptIndex const mode,
-    const int tk,
-    sptMutexPool * lock_pool);
 int sptCudaMTTKRP(
     sptSparseTensor const * const X,
     sptMatrix ** const mats,     // mats[nmodes] as temporary space.
@@ -294,27 +282,6 @@ int sptCudaMTTKRPHiCOO(
     sptIndex const mode,
     sptNnzIndex const max_nnzb,
     int const impl_num);
-int sptMTTKRPKernelHiCOO(
-    const sptIndex mode,
-    const sptIndex nmodes,
-    const sptNnzIndex nnz,
-    const sptNnzIndex max_nnzb,
-    const sptIndex R,
-    const sptIndex stride,
-    const sptElementIndex sb_bits,
-    const sptElementIndex sc_bits,
-    const sptIndex blength,
-    const int impl_num,
-    const sptNnzIndex kptr_begin,
-    const sptNnzIndex kptr_end,
-    sptIndex * const dev_ndims,
-    sptNnzIndex * const dev_cptr,
-    sptNnzIndex * const dev_bptr,
-    sptBlockIndex ** const dev_binds,
-    sptElementIndex ** const dev_einds,
-    sptValue * const dev_values,
-    sptIndex * const dev_mats_order,
-    sptValue ** const dev_mats);
 
 
 #endif

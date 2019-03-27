@@ -128,7 +128,6 @@ int main(int argc, char ** argv)
 
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooTtm");
-    sptFreeTimer(timer);
 
     if(fo != NULL) {
         sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
@@ -141,6 +140,7 @@ int main(int argc, char ** argv)
         fclose(fo);      
     }
 
+    sptFreeTimer(timer);
     sptFreeSemiSparseTensor(&Y);
     sptFreeSparseTensor(&X);
     sptFreeMatrix(&U);

@@ -30,7 +30,7 @@ int sptCudaSparseTensorMulMatrix(
     const sptMatrix *U,
     sptIndex const mode,
     sptIndex const impl_num,
-    sptNnzIndex const smen_size) 
+    sptNnzIndex const smem_size) 
 {
     int result;
     sptIndex *ind_buf;
@@ -104,41 +104,6 @@ int sptCudaSparseTensorMulMatrix(
     const char *env_PARTI_TTM_NTHREADS = getenv("PARTI_TTM_NTHREADS");
 
     switch(impl_num) {
-    // case 1:
-    case 11: // Naive, 1D
-        if(Y->nnz < max_nthreads_per_block) {
-            nthreadsx = Y->nnz;
-            nblocks = 1;
-        } else {
-            nthreadsx = max_nthreads_per_block;
-            all_nblocks = (Y->nnz + nthreadsx -1) / nthreadsx;
-            if(all_nblocks < max_nblocks) {
-                nblocks = all_nblocks;
-            } else {
-                nblocks = max_nblocks;
-            }
-        }
-        break;
-    case 12:
-        if(U->ncols <= max_nthreadsy)
-            nthreadsy = U->ncols;
-        else
-            nthreadsy = max_nthreadsy;
-        nthreadsx = max_nthreads_per_block / nthreadsy;
-
-        if(Y->nnz < nthreadsx) {
-            nthreadsx = Y->nnz;
-            nblocks = 1;
-        } else {
-            all_nblocks = (Y->nnz + nthreadsx -1) / nthreadsx;
-            if(all_nblocks < max_nblocks) {
-                nblocks = all_nblocks;
-            } else {
-                nblocks = max_nblocks;
-            }
-        }
-        break;
-    case 13:
     case 14:
         if(U->ncols <= max_nthreadsy)
             nthreadsx = U->ncols;
@@ -176,7 +141,7 @@ int sptCudaSparseTensorMulMatrix(
                 nblocks = max_nblocks;
             }
         }
-        sptAssert(smen_size >= nthreadsx * nthreadsy * sizeof (sptValue));
+        sptAssert(smem_size >= nthreadsx * nthreadsy * sizeof (sptValue));
         break;
     }
     dim3 dimBlock(nthreadsx, nthreadsy);
@@ -187,32 +152,7 @@ int sptCudaSparseTensorMulMatrix(
     sptStartTimer(timer);
 
 
-    switch(impl_num) {
-    // case 1:
-    case 11: // Naive
-        printf("[CUDA SpTns * Mtx] spt_TTMNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMNnzKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, Y->nnz,
-            X_val, X->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break;
-    case 12:  
-        printf("[CUDA SpTns * Mtx] spt_TTMNnzRankKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMNnzRankKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, Y->nnz,
-            X_val, X->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break; 
-    case 13:  
-        printf("[CUDA SpTns * Mtx] spt_TTMRankNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
-        spt_TTMRankNnzKernel<<<nblocks, dimBlock>>>(
-            Y_val, stride, Y->nnz,
-            X_val, X->nnz, X_inds_m,
-            fiberidx_val, fiberidx.len,
-            U_val, U->nrows, U->ncols, stride);
-        break; 
+    switch(impl_num) { 
     case 14:  
         printf("[CUDA SpTns * Mtx] spt_TTMRankRBNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
         spt_TTMRankRBNnzKernel<<<nblocks, dimBlock>>>(
@@ -222,8 +162,8 @@ int sptCudaSparseTensorMulMatrix(
             U_val, U->nrows, U->ncols, stride);
         break; 
     case 15:  
-        printf("[CUDA SpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smen_size);
-        spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smen_size>>>(
+        printf("[CUDA SpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smem_size);
+        spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smem_size>>>(
             Y_val, stride, Y->nnz,
             X_val, X->nnz, X_inds_m,
             fiberidx_val, fiberidx.len,

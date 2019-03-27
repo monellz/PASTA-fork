@@ -19,69 +19,6 @@
 #ifndef PARTI_MMUL_KERNELS_H
 #define PARTI_MMUL_KERNELS_H
 
-/* impl_num = 01 */
-__global__ void spt_TTMNaiveKernel(
-    sptValue *Y_val, sptIndex Y_stride, sptNnzIndex Y_nnz,
-    const sptValue *X_val, sptNnzIndex X_nnz, const sptIndex *X_inds_m,
-    const sptNnzIndex *fiberidx_val, sptNnzIndex fiberidx_len,
-    const sptValue *U_val, sptIndex U_nrows, sptIndex U_ncols, sptIndex U_stride,
-    sptNnzIndex block_offset) ;
-
-/* impl_num = 02 */
-__global__ void spt_TTMKernel(
-    sptValue *Y_val, sptIndex Y_stride, sptNnzIndex Y_nnz,
-    const sptValue *X_val, sptNnzIndex X_nnz, const sptIndex *X_inds_m,
-    const sptNnzIndex *fiberidx_val, sptNnzIndex fiberidx_len,
-    const sptValue *U_val, sptIndex U_nrows, sptIndex U_ncols, sptIndex U_stride,
-    sptNnzIndex block_offset);
-
-
-
-/* impl_num = 11 */
-__global__ void spt_TTMNnzKernel(
-    sptValue *Y_val, 
-    sptIndex Y_stride, 
-    sptNnzIndex Y_nnz,
-    const sptValue * __restrict__ X_val, 
-    sptNnzIndex X_nnz, 
-    const sptIndex * __restrict__ X_inds_m,
-    const sptNnzIndex * __restrict__ fiberidx_val, 
-    sptNnzIndex fiberidx_len,
-    const sptValue * __restrict__ U_val, 
-    sptIndex U_nrows, 
-    sptIndex U_ncols, 
-    sptIndex U_stride);
-
-/* impl_num = 12 */
-__global__ void spt_TTMNnzRankKernel(
-    sptValue *Y_val, 
-    sptIndex Y_stride, 
-    sptNnzIndex Y_nnz,
-    const sptValue * __restrict__ X_val, 
-    sptNnzIndex X_nnz, 
-    const sptIndex * __restrict__ X_inds_m,
-    const sptNnzIndex * __restrict__ fiberidx_val, 
-    sptNnzIndex fiberidx_len,
-    const sptValue * __restrict__ U_val, 
-    sptIndex U_nrows, 
-    sptIndex U_ncols, 
-    sptIndex U_stride);
-
-/* impl_num = 13 */
-__global__ void spt_TTMRankNnzKernel(
-    sptValue *Y_val, 
-    sptIndex Y_stride, 
-    sptNnzIndex Y_nnz,
-    const sptValue * __restrict__ X_val, 
-    sptNnzIndex X_nnz, 
-    const sptIndex * __restrict__ X_inds_m,
-    const sptNnzIndex * __restrict__ fiberidx_val, 
-    sptNnzIndex fiberidx_len,
-    const sptValue * __restrict__ U_val, 
-    sptIndex U_nrows, 
-    sptIndex U_ncols, 
-    sptIndex U_stride);
-
 
 /* impl_num = 14 */
 __global__ void spt_TTMRankRBNnzKernel(

@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
     sptElementIndex sb_bits = 7;
     sptIndex R = 16;
     int dev_id = -2;
-    int impl_num = 11;
+    int impl_num = 15;
     sptNnzIndex smem_size = 40000;
     int niters = 5;
     int nthreads = 1;
