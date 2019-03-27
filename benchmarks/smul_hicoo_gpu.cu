@@ -27,13 +27,13 @@ static void print_usage(char ** argv) {
     printf("         -a INPUT (a scalar)\n");
     printf("         -Z OUTPUT (output file name)\n");
     printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
-    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel)\n");
+    printf("         -d DEV_ID, --dev-id=DEV_ID (-2:sequential,default; -1:OpenMP parallel; >=0:GPU parallel)\n");
     printf("         --help\n");
     printf("\n");
 }
 
 /**
- * Benchmark HiCOO tensor addition with a scalar. 
+ * Benchmark HiCOO tensor multiplication with a scalar. 
  */
 int main(int argc, char *argv[]) 
 {
@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
-            if(dev_id < -2 || dev_id >= 0) {
-                fprintf(stderr, "Error: set dev_id to -2/-1.\n");
+            if(dev_id < -2) {
+                fprintf(stderr, "Error: set dev_id to -2/-1/>=0.\n");
                 exit(1);
             }
             break;
@@ -103,15 +103,13 @@ int main(int argc, char *argv[])
     }
     printf("Scaling a: %"PARTI_PRI_VALUE"\n", a); 
     printf("Block size (bit-length): %"PARTI_PRI_ELEMENT_INDEX"\n", sb_bits);
-    printf("dev_id: %d\n", dev_id); 
-    printf("Sorting implementation: %d\n", sort_impl);
-    fflush(stdout);
+    printf("dev_id: %d\n", dev_id);
+    printf("Sorting implementation: %d\n", sort_impl); fflush(stdout);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
     fclose(fX);
     sptSparseTensorStatus(&X, stdout);
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
-
 
     /* Convert to HiCOO tensor */
     sptStartTimer(timer);
@@ -125,7 +123,7 @@ int main(int argc, char *argv[])
 
     /* For warm-up caches, timing not included */
     if(dev_id == -2) {
-        sptAssert(sptSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
+        sptAssert(sptSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -133,23 +131,34 @@ int main(int argc, char *argv[])
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        sptAssert(sptOmpSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
+        sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
 #endif
+    } else {
+        sptCudaSetDevice(dev_id);
+        sptAssert(sptCudaSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
     }
 
     sptStartTimer(timer);
     for(int it=0; it<niters; ++it) {
         sptFreeSparseTensorHiCOO(&hiZ);
         if(dev_id == -2) {
-            sptAssert(sptSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
+            sptAssert(sptSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
         } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
-            sptAssert(sptOmpSparseTensorAddScalarHiCOO(&hiZ, &hiX, a) == 0);
+            #pragma omp parallel
+            {
+                nthreads = omp_get_num_threads();
+            }
+            printf("nthreads: %d\n", nthreads);
+            sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
 #endif
+        } else {
+            sptCudaSetDevice(dev_id);
+            sptAssert(sptCudaSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
         }
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooAddScalarHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average CooMulScalarHiCOO");
 
 
     if(fZ != NULL) {
@@ -158,6 +167,7 @@ int main(int argc, char *argv[])
         /* Convert HiCOO to COO tensor */
         sptStartTimer(timer);
         sptAssert(sptHiCOOToSparseTensor(&Z, &hiZ) == 0);
+        sptFreeSparseTensorHiCOO(&hiZ);
         // sptSparseTensorStatus(&Z, stdout);
         // sptAssert(sptDumpSparseTensor(&Z, stdout) == 0);
         sptStopTimer(timer);
@@ -170,7 +180,6 @@ int main(int argc, char *argv[])
         sptFreeSparseTensor(&Z);
     }
 
-    sptFreeSparseTensorHiCOO(&hiZ);
     sptFreeSparseTensorHiCOO(&hiX);
 
     return 0;

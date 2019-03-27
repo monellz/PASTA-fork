@@ -19,7 +19,7 @@
 #include <ParTI.h>
 
 
-__global__ void spt_sMulKernel(
+static __global__ void spt_sMulKernel(
     sptValue *Z_val, 
     const sptValue * __restrict__ X_val, 
     sptNnzIndex X_nnz,

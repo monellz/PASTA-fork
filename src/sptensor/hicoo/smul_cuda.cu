@@ -19,7 +19,7 @@
 #include <ParTI.h>
 
 
-static __global__ void spt_sAddKernel(
+static __global__ void spt_sMulKernel(
     sptValue *Z_val, 
     const sptValue * __restrict__ X_val, 
     sptNnzIndex X_nnz,
@@ -37,7 +37,7 @@ static __global__ void spt_sAddKernel(
     for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
         x = blockIdx.x * blockDim.x + tidx + nl * nnz_per_loop;
         if(x < X_nnz) {
-            Z_val[x] += a;
+            Z_val[x] *= a;
         }
         __syncthreads();
     }
@@ -51,7 +51,7 @@ static __global__ void spt_sAddKernel(
  * @param[in]  a the input scalar
  * @param[in]  X the input X
  */
-int sptCudaSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
+int sptCudaSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensorHiCOO *hiX, sptValue a)
 {
     sptAssert(a != 0.0);
     int result;
@@ -60,19 +60,19 @@ int sptCudaSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
     sptNewTimer(&timer, 0);
 
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorHiCOO(hiZ, hiX);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
     sptValue *Z_val = NULL;
-    result = cudaMalloc((void **) &Z_val, Z->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
-    cudaMemcpy(Z_val, Z->values.data, Z->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    result = cudaMalloc((void **) &Z_val, hiZ->nnz * sizeof (sptValue));
+    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    cudaMemcpy(Z_val, hiZ->values.data, hiZ->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *X_val = NULL;
-    result = cudaMalloc((void **) &X_val, X->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
-    cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
+    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Device malloc and copy");
 
@@ -85,12 +85,12 @@ int sptCudaSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
     sptNnzIndex all_nblocks = 0;
     sptNnzIndex nblocks = 0;
 
-    if(X->nnz < max_nthreads_per_block) {
-        nthreadsx = X->nnz;
+    if(hiX->nnz < max_nthreads_per_block) {
+        nthreadsx = hiX->nnz;
         nblocks = 1;
     } else {
         nthreadsx = max_nthreads_per_block;
-        all_nblocks = (X->nnz + nthreadsx -1) / nthreadsx;
+        all_nblocks = (hiX->nnz + nthreadsx -1) / nthreadsx;
         if(all_nblocks < max_nblocks) {
             nblocks = all_nblocks;
         } else {
@@ -100,21 +100,21 @@ int sptCudaSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
     dim3 dimBlock(nthreadsx);
     printf("all_nblocks: %lu, nthreadsx: %lu\n", all_nblocks, nthreadsx);
 
-    printf("[CUDA SpTns AddScalar] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
-    spt_sAddKernel<<<nblocks, dimBlock>>>(Z_val, X_val, X->nnz, a);
+    printf("[CUDA SpTns MulScalar] spt_sMulKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
+    spt_sMulKernel<<<nblocks, dimBlock>>>(Z_val, X_val, hiX->nnz, a);
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar kernel");
+    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns AddScalar");
+    sptPrintElapsedTime(timer, "Cpu SpTns MulScalar");
     sptFreeTimer(timer);
     printf("\n");
 
-    cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    cudaMemcpy(hiZ->values.data, Z_val, hiZ->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
     result = cudaFree(Z_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
 
     return 0;
 }
