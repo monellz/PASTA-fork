@@ -40,7 +40,7 @@
   typedef uint64_t sptIndex;
   typedef uint64_t sptBlockIndex;
   #define PARTI_INDEX_MAX UINT64_MAX
-  #define PARTI_PFI_INDEX PRIu64
+  #define PARTI_PRI_INDEX PRIu64
   #define PARTI_SCN_INDEX SCNu64
   #define PARTI_PRI_BLOCK_INDEX PRIu64
   #define PARTI_SCN_BLOCK_INDEX SCNu64
@@ -70,14 +70,14 @@
 #elif PARTI_ELEMENT_INDEX_TYPEWIDTH == 16
   typedef uint16_t sptElementIndex;
   typedef uint32_t sptBlockMatrixIndex;
-  #define PARTI_PFI_ELEMENT_INDEX PRIu16
+  #define PARTI_PRI_ELEMENT_INDEX PRIu16
   #define PARTI_SCN_ELEMENT_INDEX SCNu16
   #define PARTI_PRI_BLOCKMATRIX_INDEX PRIu32
   #define PARTI_SCN_BLOCKMATRIX_INDEX SCNu32
 #elif PARTI_ELEMENT_INDEX_TYPEWIDTH == 32
   typedef uint32_t sptElementIndex;
   typedef uint32_t sptBlockMatrixIndex;
-  #define PARTI_PFI_ELEMENT_INDEX PRIu32
+  #define PARTI_PRI_ELEMENT_INDEX PRIu32
   #define PARTI_SCN_ELEMENT_INDEX SCNu32
   #define PARTI_PRI_BLOCKMATRIX_INDEX PRIu32
   #define PARTI_SCN_BLOCKMATRIX_INDEX SCNu32

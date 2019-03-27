@@ -58,9 +58,9 @@ int spt_SemiSparseTensorAppend(sptSemiSparseTensor *tsr, const sptIndex indices[
         }
         result = sptAppendMatrix(&tsr->values, NULL);
         spt_CheckError(result, "SspTns Append", NULL);
-        memset(&tsr->values.values[tsr->nnz * tsr->stride], 0, tsr->nmodes * sizeof (sptValue));
+        memset(&tsr->values.values[tsr->nnz * tsr->values.stride], 0, tsr->nmodes * sizeof (sptValue));
         ++tsr->nnz;
     }
-    tsr->values.values[(tsr->nnz-1) * tsr->stride + indices[tsr->mode]] = value;
+    tsr->values.values[(tsr->nnz-1) * tsr->values.stride + indices[tsr->mode]] = value;
     return 0;
 }

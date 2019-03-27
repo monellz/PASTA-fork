@@ -42,14 +42,13 @@ int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex m
     memcpy(tsr->ndims, ndims, nmodes * sizeof *tsr->ndims);
     tsr->mode = mode;
     tsr->nnz = 0;
-    tsr->inds = malloc(nmodes * sizeof *tsr->inds);
+    tsr->inds = malloc((nmodes - 1) * sizeof *tsr->inds);
     spt_CheckOSError(!tsr->inds, "SspTns New");
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < nmodes - 1; ++i) {
         result = sptNewIndexVector(&tsr->inds[i], 0, 0);
         spt_CheckError(result, "SspTns New", NULL);
     }
-    tsr->stride = ((ndims[mode]-1)/8+1)*8;
-    result = sptNewMatrix(&tsr->values, 0, tsr->stride);
+    result = sptNewMatrix(&tsr->values, 0, tsr->ndims[mode]);
     spt_CheckError(result, "SspTns New", NULL);
     return 0;
 }
@@ -69,13 +68,12 @@ int sptCopySemiSparseTensor(sptSemiSparseTensor *dest, const sptSemiSparseTensor
     memcpy(dest->ndims, src->ndims, src->nmodes * sizeof *src->ndims);
     dest->mode = src->mode;
     dest->nnz = src->nnz;
-    dest->inds = malloc(dest->nmodes * sizeof *dest->inds);
+    dest->inds = malloc((dest->nmodes - 1) * sizeof *dest->inds);
     spt_CheckOSError(!dest->inds, "SspTns Copy");
-    for(i = 0; i < dest->nmodes; ++i) {
+    for(i = 0; i < dest->nmodes - 1; ++i) {
         result = sptCopyIndexVector(&dest->inds[i], &src->inds[i], 1);
         spt_CheckError(result, "SspTns Copy", NULL);
     }
-    dest->stride = src->stride;
     result = sptCopyMatrix(&dest->values, &src->values);
     spt_CheckError(result, "SspTns Copy", NULL);
     return 0;
@@ -87,7 +85,7 @@ int sptCopySemiSparseTensor(sptSemiSparseTensor *dest, const sptSemiSparseTensor
  */
 void sptFreeSemiSparseTensor(sptSemiSparseTensor *tsr) {
     sptIndex i;
-    for(i = 0; i < tsr->nmodes; ++i) {
+    for(i = 0; i < tsr->nmodes - 1; ++i) {
         sptFreeIndexVector(&tsr->inds[i]);
     }
     free(tsr->ndims);
@@ -95,60 +93,3 @@ void sptFreeSemiSparseTensor(sptSemiSparseTensor *tsr) {
     sptFreeMatrix(&tsr->values);
 }
 
-
-
-/**
- * Create a new semi sparse tensor
- * @param tsr    a pointer to an uninitialized semi sparse tensor
- * @param nmodes number of modes the tensor will have
- * @param mode   the mode which will be stored in dense format
- * @param ndims  the dimension of each mode the tensor will have
- */
-int sptNewSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr, sptIndex nmodes, const sptIndex ndims[], sptIndex ndmodes, const sptIndex dmodes[]) {
-    sptIndex i;
-    int result;
-    if(nmodes < 2) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SspTns New", "nmodes < 2");
-    }
-    tsr->nmodes = nmodes;
-    tsr->ndims = malloc(nmodes * sizeof *tsr->ndims);
-    spt_CheckOSError(!tsr->ndims, "SspTns New");
-    memcpy(tsr->ndims, ndims, nmodes * sizeof *tsr->ndims);
-
-    tsr->ndmodes = ndmodes;
-    tsr->dmodes = malloc(nmodes * sizeof *tsr->dmodes);
-    spt_CheckOSError(!tsr->dmodes, "SspTns New");
-    memcpy(tsr->dmodes, dmodes, nmodes * sizeof *tsr->dmodes);
-
-    sptIndex nsmodes = nmodes - ndmodes;
-    tsr->nnz = 0;
-    tsr->inds = malloc(nsmodes * sizeof *tsr->inds);
-    spt_CheckOSError(!tsr->inds, "SspTns New");
-    for(i = 0; i < nsmodes; ++i) {
-        result = sptNewIndexVector(&tsr->inds[i], 0, 0);
-        spt_CheckError(result, "SspTns New", NULL);
-    }
-    tsr->strides = malloc(ndmodes * sizeof *tsr->strides);
-    for(i = 0; i < ndmodes; ++i) {
-        tsr->strides[i] = ((ndims[dmodes[i]]-1)/8+1)*8;
-    }
-    result = sptNewMatrix(&tsr->values, 0, tsr->strides[0]);
-    spt_CheckError(result, "SspTns New", NULL);
-    return 0;
-}
-
-/**
- * Release any memory the semi sparse tensor is holding
- * @param tsr the tensor to release
- */
-void sptFreeSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr) {
-    sptIndex i;
-    for(i = 0; i < (tsr->nmodes - tsr->ndmodes); ++i) {
-        sptFreeIndexVector(&tsr->inds[i]);
-    }
-    free(tsr->ndims);
-    free(tsr->dmodes);
-    free(tsr->strides);
-    free(tsr->inds);
-    sptFreeMatrix(&tsr->values);
-}

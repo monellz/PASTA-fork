@@ -29,7 +29,7 @@ static void spt_SwapValues(sptSemiSparseTensor *tsr, sptNnzIndex ind1, sptNnzInd
  * @param tsr  the semi sparse tensor to operate on
  */
 int sptSemiSparseTensorSortIndex(sptSemiSparseTensor *tsr) {
-    sptValue *buffer = malloc(tsr->stride * sizeof (sptValue));
+    sptValue *buffer = malloc(tsr->values.stride * sizeof (sptValue));
     spt_CheckOSError(!buffer, "SspTns SortIndex");
     spt_QuickSortIndex(tsr, 0, tsr->nnz, buffer);
     free(buffer);
@@ -65,17 +65,16 @@ static void spt_QuickSortIndex(sptSemiSparseTensor *tsr, sptNnzIndex l, sptNnzIn
 
 static void spt_SwapValues(sptSemiSparseTensor *tsr, sptNnzIndex ind1, sptNnzIndex ind2, sptValue buffer[]) {
     sptIndex i;
-    for(i = 0; i < tsr->nmodes; ++i) {
-        if(i != tsr->mode) {
-            sptIndex eleind1 = tsr->inds[i].data[ind1];
-            sptIndex eleind2 = tsr->inds[i].data[ind2];
-            tsr->inds[i].data[ind1] = eleind2;
-            tsr->inds[i].data[ind2] = eleind1;
-        }
+    sptIndex stride = tsr->values.stride;
+    for(i = 0; i < tsr->nmodes - 1; ++i) {
+        sptIndex eleind1 = tsr->inds[i].data[ind1];
+        sptIndex eleind2 = tsr->inds[i].data[ind2];
+        tsr->inds[i].data[ind1] = eleind2;
+        tsr->inds[i].data[ind2] = eleind1;
     }
     if(ind1 != ind2) {
-        memcpy(buffer, &tsr->values.values[ind1*tsr->stride], tsr->stride * sizeof (sptNnzIndex));
-        memcpy(&tsr->values.values[ind1*tsr->stride], &tsr->values.values[ind2*tsr->stride], tsr->stride * sizeof (sptNnzIndex));
-        memcpy(&tsr->values.values[ind2*tsr->stride], buffer, tsr->stride * sizeof (sptNnzIndex));
+        memcpy(buffer, &tsr->values.values[ind1*stride], stride * sizeof (sptValue));
+        memcpy(&tsr->values.values[ind1*stride], &tsr->values.values[ind2*stride], stride * sizeof (sptValue));
+        memcpy(&tsr->values.values[ind2*stride], buffer, stride * sizeof (sptValue));
     }
 }

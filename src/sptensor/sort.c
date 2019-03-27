@@ -27,7 +27,7 @@
  * PRIVATE FUNCTIONS
  *************************************************/
 static void spt_QuickSortIndex(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r);
-static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, const sptElementIndex sk_bits);
+static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, const sptElementIndex sk_bits, sptIndex *flags);
 static void spt_QuickSortIndexSingleMode(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, sptIndex mode);
 static void spt_QuickSortIndexExceptSingleMode(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, sptIndex * mode_order);
 static void spt_QuickSortAtMode(sptSparseTensor *tsr, sptNnzIndex const l, sptNnzIndex const r, sptIndex const mode);
@@ -42,7 +42,8 @@ static int spt_SparseTensorCompareIndicesRowBlock(
     sptNnzIndex loc1, 
     const sptSparseTensor *tsr2, 
     sptNnzIndex loc2,
-    const sptElementIndex sk_bits);
+    const sptElementIndex sk_bits,
+    sptIndex *flags);
 static int spt_SparseTensorCompareIndicesMorton3D(
     const sptSparseTensor *tsr1, 
     uint64_t loc1, 
@@ -293,7 +294,7 @@ int sptSparseTensorMixedOrder(
     int result;
 
     /* Sort tsr in a Row-major Block order to get all kernels. Not use Morton-order for kernels: 1. better support for higher-order tensors by limiting kernel size, because Morton key bit <= 128; */
-    sptSparseTensorSortIndexRowBlock(tsr, 1, 0, nnz, sk_bits);
+    sptSparseTensorSortIndexRowBlock(tsr, 1, 0, nnz, sk_bits, NULL);
 
     sptNnzIndexVector kptr, knnzs;
     result = sptNewNnzIndexVector(&kptr, 0, 0);
@@ -325,14 +326,15 @@ int sptSparseTensorMixedOrder(
 int sptSparseTensorSortPartialIndex(
     sptSparseTensor *tsr, 
     sptIndex const * mode_order,
-    const sptElementIndex sb_bits)
+    const sptElementIndex sb_bits,
+    sptIndex *flags)
 {
     sptNnzIndex nnz = tsr->nnz;
     sptIndex * ndims = tsr->ndims;
     sptIndex const mode = mode_order[0];
     int result;
 
-    sptSparseTensorSortIndexCustomOrder(tsr, mode_order, 1);
+    sptSparseTensorSortIndexCustomOrder(tsr, mode_order, 0, tsr->nnz, 1);
 
     sptNnzIndexVector sptr;
     result = sptNewNnzIndexVector(&sptr, 0, 0);
@@ -356,7 +358,7 @@ int sptSparseTensorSortPartialIndex(
         s_begin = sptr.data[s];
         s_end = sptr.data[s+1];   // exclusive
         /* Sort blocks in each kernel in plain row-order */
-        sptSparseTensorSortIndexRowBlock(tsr, 1, s_begin, s_end, sb_bits);
+        sptSparseTensorSortIndexRowBlock(tsr, 1, s_begin, s_end, sb_bits, flags);
     }
 
     return 0;
@@ -485,7 +487,8 @@ void sptSparseTensorSortIndexRowBlock(
     int force,
     const sptNnzIndex begin,
     const sptNnzIndex end,
-    const sptElementIndex sk_bits) 
+    const sptElementIndex sb_bits,
+    sptIndex *flags) 
 {
     size_t m;
     int needsort = 0;
@@ -497,7 +500,7 @@ void sptSparseTensorSortIndexRowBlock(
         }
     }
     if(needsort || force) {
-        spt_QuickSortIndexRowBlock(tsr, begin, end, sk_bits);
+        spt_QuickSortIndexRowBlock(tsr, begin, end, sb_bits, flags);
     }
 }
 
@@ -549,7 +552,8 @@ void sptSparseTensorSortIndexExceptSingleMode(sptSparseTensor *tsr, int force, s
  * Reorder the elements in a sparse tensor lexicographically in a customized order.
  * @param tsr  the sparse tensor to operate on
  */
-void sptSparseTensorSortIndexCustomOrder(sptSparseTensor *tsr, sptIndex const *  mode_order, int force) {
+void sptSparseTensorSortIndexCustomOrder(sptSparseTensor *tsr, sptIndex const *  mode_order, sptNnzIndex begin, sptNnzIndex end, int force) 
+{
     sptIndex nmodes = tsr->nmodes;
     sptIndex m;
     sptSparseTensor tsr_temp; // Only copy pointers, not real data.
@@ -570,7 +574,7 @@ void sptSparseTensorSortIndexCustomOrder(sptSparseTensor *tsr, sptIndex const * 
         tsr_temp.inds[m] = tsr->inds[mode_order[m]];
     }
 
-    sptSparseTensorSortIndex(&tsr_temp, 1);
+    sptSparseTensorSortIndex(&tsr_temp, begin, end, 1);
 
     free(tsr_temp.inds);
     free(tsr_temp.ndims);
@@ -585,7 +589,7 @@ void sptSparseTensorSortIndexCustomOrder(sptSparseTensor *tsr, sptIndex const * 
  * Reorder the elements in a sparse tensor lexicographically
  * @param tsr  the sparse tensor to operate on
  */
-void sptSparseTensorSortIndex(sptSparseTensor *tsr, int force) {
+void sptSparseTensorSortIndex(sptSparseTensor *tsr, sptNnzIndex begin, sptNnzIndex end, int force) {
     sptIndex m;
     int needsort = 0;
 
@@ -597,7 +601,7 @@ void sptSparseTensorSortIndex(sptSparseTensor *tsr, int force) {
     }
 
     if(needsort || force) {
-        spt_QuickSortIndex(tsr, 0, tsr->nnz);
+        spt_QuickSortIndex(tsr, begin, end);
     }
 }
 
@@ -691,21 +695,24 @@ static int spt_SparseTensorCompareIndicesRowBlock(
     sptNnzIndex loc1, 
     const sptSparseTensor *tsr2, 
     sptNnzIndex loc2,
-    const sptElementIndex sk_bits) 
+    const sptElementIndex sb_bits,
+    sptIndex * flags) 
 {
     sptIndex i;
     assert(tsr1->nmodes == tsr2->nmodes);
 
     for(i = 0; i < tsr1->nmodes; ++i) {
-        sptIndex eleind1 = tsr1->inds[i].data[loc1];
-        sptIndex eleind2 = tsr2->inds[i].data[loc2];
-        sptIndex blkind1 = eleind1 >> sk_bits;
-        sptIndex blkind2 = eleind2 >> sk_bits;
+        if(flags != NULL && flags[i] == 1) {
+            sptIndex eleind1 = tsr1->inds[i].data[loc1];
+            sptIndex eleind2 = tsr2->inds[i].data[loc2];
+            sptIndex blkind1 = eleind1 >> sb_bits;
+            sptIndex blkind2 = eleind2 >> sb_bits;
 
-        if(blkind1 < blkind2) {
-            return -1;
-        } else if(blkind1 > blkind2) {
-            return 1;
+            if(blkind1 < blkind2) {
+                return -1;
+            } else if(blkind1 > blkind2) {
+                return 1;
+            }
         }
     }
     return 0;
@@ -1060,7 +1067,7 @@ static void spt_QuickSortIndexMorton4D(sptSparseTensor *tsr, sptNnzIndex l, sptN
 }
 
 
-static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, const sptElementIndex sk_bits) {
+static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, const sptElementIndex sb_bits, sptIndex *flags) {
 
     sptNnzIndex i, j, p;
     if(r-l < 2) {
@@ -1068,10 +1075,10 @@ static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptN
     }
     p = (l+r) / 2;
     for(i = l, j = r-1; ; ++i, --j) {
-        while(spt_SparseTensorCompareIndicesRowBlock(tsr, i, tsr, p, sk_bits) < 0) {
+        while(spt_SparseTensorCompareIndicesRowBlock(tsr, i, tsr, p, sb_bits, flags) < 0) {
             ++i;
         }
-        while(spt_SparseTensorCompareIndicesRowBlock(tsr, p, tsr, j, sk_bits) < 0) {
+        while(spt_SparseTensorCompareIndicesRowBlock(tsr, p, tsr, j, sb_bits, flags) < 0) {
             --j;
         }
         if(i >= j) {
@@ -1084,8 +1091,8 @@ static void spt_QuickSortIndexRowBlock(sptSparseTensor *tsr, sptNnzIndex l, sptN
             p = i;
         }
     }
-    spt_QuickSortIndexRowBlock(tsr, l, i, sk_bits);
-    spt_QuickSortIndexRowBlock(tsr, i, r, sk_bits);
+    spt_QuickSortIndexRowBlock(tsr, l, i, sb_bits, flags);
+    spt_QuickSortIndexRowBlock(tsr, i, r, sb_bits, flags);
 }
 
 

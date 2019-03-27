@@ -115,8 +115,8 @@ int main(int argc, char *argv[]) {
 
     /* Sort the indices, not much work here */
     sptStartTimer(timer);
-    sptSparseTensorSortIndex(&X, 1);
-    sptSparseTensorSortIndex(&Y, 1);
+    sptSparseTensorSortIndex(&X, 0, X.nnz, 1);
+    sptSparseTensorSortIndex(&Y, 0, Y.nnz, 1);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Sort Input Tensors");
 

@@ -31,16 +31,13 @@
 int spt_SemiSparseTensorCompareIndices(const sptSemiSparseTensor *tsr1, sptNnzIndex ind1, const sptSemiSparseTensor *tsr2, sptNnzIndex ind2) {
     sptIndex i;
     assert(tsr1->nmodes == tsr2->nmodes);
-    assert(tsr1->mode == tsr2->mode);
-    for(i = 0; i < tsr1->nmodes; ++i) {
-        if(i != tsr1->mode) {
-            sptIndex eleind1 = tsr1->inds[i].data[ind1];
-            sptIndex eleind2 = tsr2->inds[i].data[ind2];
-            if(eleind1 < eleind2) {
-                return -1;
-            } else if(eleind1 > eleind2) {
-                return 1;
-            }
+    for(i = 0; i < tsr1->nmodes - 1; ++i) {
+        sptIndex eleind1 = tsr1->inds[i].data[ind1];
+        sptIndex eleind2 = tsr2->inds[i].data[ind2];
+        if(eleind1 < eleind2) {
+            return -1;
+        } else if(eleind1 > eleind2) {
+            return 1;
         }
     }
     return 0;

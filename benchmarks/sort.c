@@ -134,15 +134,15 @@ int main(int argc, char ** argv) {
     sptStartTimer(timer);
     switch (sortcase) {
         case 0:
-            sptSparseTensorSortIndex(&X, 1);
+            sptSparseTensorSortIndex(&X, 0, X.nnz, 1);
             break;
         case 1:
             sptGetBestModeOrder(mode_order, mode, X.ndims, X.nmodes);
-            sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
+            sptSparseTensorSortIndexCustomOrder(&X, mode_order, 0, X.nnz, 1);
             break;
         case 2:
             sptGetWorstModeOrder(mode_order, mode, X.ndims, X.nmodes);
-            sptSparseTensorSortIndexCustomOrder(&X, mode_order, 1);
+            sptSparseTensorSortIndexCustomOrder(&X, mode_order, 0, X.nnz, 1);
             break;
         case 3:
             /* Pre-process tensor, the same with the one used in HiCOO.

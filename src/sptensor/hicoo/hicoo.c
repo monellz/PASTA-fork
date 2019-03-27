@@ -174,9 +174,21 @@ int sptNewSparseTensorHiCOOGeneral(
     hitsr->nmodes = nmodes;
     hitsr->ncmodes = ncmodes;
     hitsr->sortorder = malloc(nmodes * sizeof hitsr->sortorder[0]);
+    sptIndex fm = 0;
     for(i = 0; i < nmodes; ++i) {
-        hitsr->sortorder[i] = i;
+        if(flags[i] == 1) {
+            hitsr->sortorder[fm] = i;
+            ++ fm;
+        }
     }
+    for(i = 0; i < nmodes; ++i) {
+        if(flags[i] == 0) {
+            hitsr->sortorder[fm] = i;
+            ++ fm;
+        }
+    }
+    sptAssert(fm == nmodes);
+    
     hitsr->ndims = malloc(nmodes * sizeof *hitsr->ndims);
     spt_CheckOSError(!hitsr->ndims, "HiSpTnsGen New");
     memcpy(hitsr->ndims, ndims, nmodes * sizeof *hitsr->ndims);
@@ -192,14 +204,14 @@ int sptNewSparseTensorHiCOOGeneral(
     spt_CheckError(result, "HiSpTnsGen New", NULL);
     hitsr->binds = malloc( ncmodes * sizeof *hitsr->binds);
     spt_CheckOSError(!hitsr->binds, "HiSpTnsGen New");
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < ncmodes; ++i) {
         result = sptNewBlockIndexVector(&hitsr->binds[i], 0, 0);
         spt_CheckError(result, "HiSpTnsGen New", NULL);
     }
 
     hitsr->einds = malloc( ncmodes * sizeof *hitsr->einds);
     spt_CheckOSError(!hitsr->einds, "HiSpTnsGen New");
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < ncmodes; ++i) {
         result = sptNewElementIndexVector(&hitsr->einds[i], 0, 0);
         spt_CheckError(result, "HiSpTnsGen New", NULL);
     }

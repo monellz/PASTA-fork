@@ -30,8 +30,11 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp)
     int iores;
     sptIndex mode;
 
-    iores = fprintf(fp, "%u\n", hitsr->nmodes);
+    iores = fprintf(fp, "%"PARTI_PRI_INDEX ", NNZ: %"PARTI_PRI_NNZ_INDEX"\n", hitsr->nmodes, hitsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
+    iores = fprintf(fp, "sb_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    fprintf(fp, "ndims:\n");
     for(mode = 0; mode < hitsr->nmodes; ++mode) {
         if(mode != 0) {
             iores = fputs(" ", fp);
@@ -50,6 +53,77 @@ int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp)
     fprintf(fp, "einds:\n");
     for(mode = 0; mode < hitsr->nmodes; ++mode) {
         sptDumpElementIndexVector(&hitsr->einds[mode], fp);
+    }
+    fprintf(fp, "values:\n");
+    sptDumpValueVector(&hitsr->values, fp);
+
+    return 0;
+}
+
+
+/**
+ * Save the contents of a HiCOO-General sparse tensor into a text file
+ * @param hitsr         th sparse tensor used to write
+ * @param start_index the index of the first element in array. Set to 1 for MATLAB compability, else set to 0
+ * @param fp          the file to write into
+ */
+int sptDumpSparseTensorHiCOOGeneral(sptSparseTensorHiCOOGeneral * const hitsr, FILE *fp) 
+{
+    int iores;
+    sptIndex mode;
+
+    iores = fprintf(fp, "%u (Compressed %u) \n", hitsr->nmodes, hitsr->ncmodes);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    iores = fprintf(fp, "NNZ: %"PARTI_PRI_NNZ_INDEX"\n", hitsr->nnz);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    iores = fprintf(fp, "sb_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    fprintf(fp, "ndims:\n");
+    for(mode = 0; mode < hitsr->nmodes; ++mode) {
+        if(mode != 0) {
+            iores = fputs(" ", fp);
+            spt_CheckOSError(iores < 0, "SpTns Dump");
+        }
+        iores = fprintf(fp, "%u", hitsr->ndims[mode]);
+        spt_CheckOSError(iores < 0, "SpTns Dump");
+    }
+    fputs("\n", fp);
+
+    fprintf(fp, "flags:\n");
+    for(mode = 0; mode < hitsr->nmodes; ++mode) {
+        if(mode != 0) {
+            iores = fputs(" ", fp);
+            spt_CheckOSError(iores < 0, "SpTns Dump");
+        }
+        iores = fprintf(fp, "%u", hitsr->flags[mode]);
+        spt_CheckOSError(iores < 0, "SpTns Dump");
+    }
+    fputs("\n", fp);
+    
+    fprintf(fp, "sortorder:\n");
+    for(mode = 0; mode < hitsr->nmodes; ++mode) {
+        if(mode != 0) {
+            iores = fputs(" ", fp);
+            spt_CheckOSError(iores < 0, "SpTns Dump");
+        }
+        iores = fprintf(fp, "%u", hitsr->sortorder[mode]);
+        spt_CheckOSError(iores < 0, "SpTns Dump");
+    }
+    fputs("\n", fp);
+
+    fprintf(fp, "bptr:\n");
+    sptDumpNnzIndexVector(&hitsr->bptr, fp);
+    fprintf(fp, "binds:\n");
+    for(mode = 0; mode < hitsr->ncmodes; ++mode) {
+        sptDumpBlockIndexVector(&hitsr->binds[mode], fp);
+    }
+    fprintf(fp, "einds:\n");
+    for(mode = 0; mode < hitsr->ncmodes; ++mode) {
+        sptDumpElementIndexVector(&hitsr->einds[mode], fp);
+    }
+    fprintf(fp, "inds:\n");
+    for(mode = 0; mode < hitsr->nmodes - hitsr->ncmodes; ++mode) {
+        sptDumpIndexVector(&hitsr->inds[mode], fp);
     }
     fprintf(fp, "values:\n");
     sptDumpValueVector(&hitsr->values, fp);

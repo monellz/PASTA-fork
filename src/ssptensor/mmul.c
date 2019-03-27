@@ -43,6 +43,7 @@ int sptSemiSparseTensorMulMatrix(
     if(X->ndims[mode] != U->nrows) {
         return -1;
     }
+
     // jli: try to avoid malloc in all operation functions.
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
     if(!ind_buf) {
@@ -72,12 +73,12 @@ int sptSemiSparseTensorMulMatrix(
         return result;
     }
     Y->nnz = X->nnz;
-    memset(Y->values.values, 0, Y->nnz * Y->stride * sizeof (sptValue));
+    memset(Y->values.values, 0, Y->nnz * Y->values.stride * sizeof (sptValue));
     for(i = 0; i < X->nnz; ++i) {
         sptIndex r, k;
         for(k = 0; k < U->ncols; ++k) {
             for(r = 0; r < U->nrows; ++r) {
-                Y->values.values[i*Y->stride + k] += X->values.values[i*X->stride + r] * U->values[r*U->stride + k];
+                Y->values.values[i*Y->values.stride + k] += X->values.values[i*X->values.stride + r] * U->values[r*U->stride + k];
             }
         }
     }

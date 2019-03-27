@@ -41,7 +41,7 @@ int spt_SemiSparseTensorToSparseMatrixCSR(
         where [a, b, c] will map to [a * X + c, b].
     */
 
-    const sptIndex stride = tsr->stride;
+    const sptIndex stride = tsr->values.stride;
     const sptIndex ncols = tsr->ndims[tsr->mode];
     for(sptNnzIndex row = 0; row < tsr->nnz; ++row) {
         for(sptIndex col = 0; col < ncols; ++col) {

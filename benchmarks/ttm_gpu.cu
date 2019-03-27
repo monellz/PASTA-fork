@@ -120,7 +120,6 @@ int main(int argc, char ** argv)
     sptAssert(sptRandomizeMatrix(&U) == 0);
 
     /* For warm-up caches, timing not included */
-    int result;
     if(dev_id == -2) {
         sptAssert(sptSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
     } else if(dev_id == -1) {

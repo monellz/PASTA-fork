@@ -63,10 +63,12 @@ int sptSemiSparseTensorSetIndices(
     dest->nnz = 0;
     for(i = 0; i < ref->nnz; ++i) {
         if(lastidx == ref->nnz || spt_SparseTensorCompareExceptMode(ref, lastidx, ref, i, dest->mode) != 0) {
+            sptIndex fm = 0;
             for(m = 0; m < dest->nmodes; ++m) {
                 if(m != dest->mode) {
-                    result = sptAppendIndexVector(&dest->inds[m], ref->inds[m].data[i]);
+                    result = sptAppendIndexVector(&dest->inds[fm], ref->inds[m].data[i]);
                     spt_CheckError(result, "SspTns SetIndices", NULL);
+                    ++ fm;
                 }
             }
             lastidx = i;
@@ -83,7 +85,7 @@ int sptSemiSparseTensorSetIndices(
     }
     result = sptResizeMatrix(&dest->values, dest->nnz);
     spt_CheckError(result, "SspTns SetIndices", NULL);
-    memset(dest->values.values, 0, dest->nnz * dest->stride * sizeof (sptValue));
+    memset(dest->values.values, 0, dest->nnz * dest->values.stride * sizeof (sptValue));
 
     return 0;
 }

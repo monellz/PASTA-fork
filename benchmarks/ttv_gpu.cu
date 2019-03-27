@@ -111,7 +111,6 @@ int main(int argc, char ** argv)
     sptAssert(sptRandomizeValueVector(&V) == 0);
 
     /* For warm-up caches, timing not included */
-    int result;
     if(dev_id == -2) {
         sptAssert(sptSparseTensorMulVector(&Y, &X, &V, mode) == 0);
     } else if(dev_id == -1) {

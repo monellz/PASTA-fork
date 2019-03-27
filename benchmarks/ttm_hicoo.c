@@ -106,6 +106,7 @@ int main(int argc, char ** argv)
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
+    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
     sptAssert(sptRandomizeMatrix(&U) == 0);
 
     sptIndex ncmodes = 2;
@@ -119,16 +120,18 @@ int main(int argc, char ** argv)
     sptStartTimer(timer);
     sptNnzIndex max_nnzb = 0;
     sptAssert(sptSparseTensorToHiCOOGeneral(&hiX, &max_nnzb, &X, sb_bits, ncmodes, flags, 1) == 0);
+    // printf("Sort inside blocks:\n");
+    // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
     sptFreeSparseTensor(&X);
-    // sptSparseTensorStatusHiCOO(&hiX, stdout);
-    // sptAssert(sptDumpSparseTensorHiCOO(&hiX, stdout) == 0);
+    sptSparseTensorStatusHiCOOGeneral(&hiX, stdout);
+    // sptAssert(sptDumpSparseTensorHiCOOGeneral(&hiX, stdout) == 0);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Convert COO -> HiCOO");
 
     /* For warm-up caches, timing not included */
     int result;
     if(dev_id == -2) {
-        // sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
+        sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PARTI_USE_OPENMP
         #pragma omp parallel
@@ -144,8 +147,9 @@ int main(int argc, char ** argv)
     sptStartTimer(timer);
 
     for(int i = 0; i < niters; i++) {
+        sptFreeSemiSparseTensorHiCOO(&hiY);
         if(dev_id == -2) {
-            // sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
+            sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
         } else if(dev_id == -1) {
     #ifdef PARTI_USE_OPENMP
             // sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
@@ -155,35 +159,34 @@ int main(int argc, char ** argv)
 
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooTtmHiCOO");
-    sptFreeTimer(timer);
 
     if(fo != NULL) {
-        // sptDumpSparseTensorHiCOO(&hiY, stdout);
+        // sptDumpSemiSparseTensorHiCOO(&hiY, stdout);
 
         /* Convert Semi-HiCOO to Semi-COO tensor */
         sptStartTimer(timer);
         sptAssert(sptSemiHiCOOToSemiSparseTensor(&Y, &hiY) == 0);
-        sptFreeSemiSparseTensorHiCOO(&hiY);
-        // sptSparseTensorStatus(&Y, stdout);
-        // sptAssert(sptDumpSparseTensor(&Y, stdout) == 0);
+        sptSemiSparseTensorSortIndex(&Y);
         sptStopTimer(timer);
         sptPrintElapsedTime(timer, "Convert Semi-HiCOO -> Semi-COO");
-        sptFreeTimer(timer);
+        sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
 
         /* Convert Semi-COO to COO tensor */
-        sptStartTimer(timer);
-        sptSparseTensor Y_coo;
-        sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
-        sptStopTimer(timer);
-        sptPrintElapsedTime(timer, "Convert Semi-COO -> COO");
-        sptFreeTimer(timer);
+        // sptStartTimer(timer);
+        // sptSparseTensor Y_coo;
+        // sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
+        // sptStopTimer(timer);
+        // sptPrintElapsedTime(timer, "Convert Semi-COO -> COO");
         sptFreeSemiSparseTensor(&Y);
 
-        sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
-        sptFreeSparseTensor(&Y_coo);  
+        // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
+        // sptFreeSparseTensor(&Y_coo);  
         fclose(fo);      
     }
 
+    sptFreeSemiSparseTensorHiCOO(&hiY);
+    sptFreeSparseTensorHiCOOGeneral(&hiX);
+    sptFreeTimer(timer);
     sptFreeMatrix(&U);
 
     return 0;

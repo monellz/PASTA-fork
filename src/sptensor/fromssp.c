@@ -51,7 +51,7 @@ int sptSemiSparseTensorToSparseTensor(sptSparseTensor *dest, const sptSemiSparse
     for(i = 0; i < src->nnz; ++i) {
         sptIndex j;
         for(j = 0; j < src->ndims[src->mode]; ++j) {
-            sptValue data = src->values.values[i*src->stride + j];
+            sptValue data = src->values.values[i*src->values.stride + j];
             int data_class = fpclassify(data);
             if(
                 data_class == FP_NAN ||
@@ -73,6 +73,6 @@ int sptSemiSparseTensorToSparseTensor(sptSparseTensor *dest, const sptSemiSparse
             }
         }
     }
-    sptSparseTensorSortIndex(dest, 1);
+    sptSparseTensorSortIndex(dest, 0, dest->nnz, 1);
     return 0;
 }

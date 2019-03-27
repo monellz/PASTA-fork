@@ -18,36 +18,40 @@
 
 #include <ParTI.h>
 #include <stdio.h>
-#include "sptensor.h"
+
 
 /**
- * Save the contents of a sparse tensor into a text file
- * @param tsr         th sparse tensor used to write
+ * Save the contents of a HiCOO-General sparse tensor into a text file
+ * @param hitsr         th sparse tensor used to write
  * @param start_index the index of the first element in array. Set to 1 for MATLAB compability, else set to 0
  * @param fp          the file to write into
  */
-int sptDumpSparseTensor(const sptSparseTensor *tsr, sptIndex start_index, FILE *fp) {
+int sptDumpSemiSparseTensor(sptSemiSparseTensor * const tsr, FILE *fp) 
+{
     int iores;
     sptIndex mode;
-    sptNnzIndex i;
-    iores = fprintf(fp, "%"PARTI_PRI_INDEX ", nnz: %"PARTI_PRI_NNZ_INDEX"\n", tsr->nmodes, tsr->nnz);
+
+    iores = fprintf(fp, "NNZ: %"PARTI_PRI_NNZ_INDEX"\n", tsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
+    iores = fprintf(fp, "dense mode: %"PARTI_PRI_INDEX"\n", tsr->mode);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    fprintf(fp, "ndims:\n");
     for(mode = 0; mode < tsr->nmodes; ++mode) {
         if(mode != 0) {
-            iores = fputs(" ", fp);
+            iores = fputs("x", fp);
             spt_CheckOSError(iores < 0, "SpTns Dump");
         }
-        iores = fprintf(fp, "%"PARTI_PRI_INDEX, tsr->ndims[mode]);
+        iores = fprintf(fp, "%u", tsr->ndims[mode]);
         spt_CheckOSError(iores < 0, "SpTns Dump");
     }
     fputs("\n", fp);
-    for(i = 0; i < tsr->nnz; ++i) {
-        for(mode = 0; mode < tsr->nmodes; ++mode) {
-            iores = fprintf(fp, "%"PARTI_PRI_INDEX "\t", tsr->inds[mode].data[i]+start_index);
-            spt_CheckOSError(iores < 0, "SpTns Dump");
-        }
-        iores = fprintf(fp, "%"PARTI_PRI_VALUE "\n", (double) tsr->values.data[i]);
-        spt_CheckOSError(iores < 0, "SpTns Dump");
+
+    fprintf(fp, "inds:\n");
+    for(mode = 0; mode < tsr->nmodes - 1; ++mode) {
+        sptDumpIndexVector(&tsr->inds[mode], fp);
     }
+    fprintf(fp, "values:\n");
+    sptDumpMatrix(&tsr->values, fp);
+
     return 0;
 }

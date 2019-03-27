@@ -28,6 +28,7 @@ static void spt_SwapValues(sptSemiSparseTensor *tsr, sptNnzIndex ind1, sptNnzInd
  * @param tsr the semi sparse tensor to operate on
  */
 int spt_SemiSparseTensorMergeValues(sptSemiSparseTensor *tsr) {
+    sptIndex stride = tsr->values.stride;
     int result;
     sptNnzIndex i;
     sptNnzIndexVector collided;
@@ -37,7 +38,7 @@ int spt_SemiSparseTensorMergeValues(sptSemiSparseTensor *tsr) {
         return 0;
     }
 
-    buffer = malloc(tsr->stride * sizeof (sptValue));
+    buffer = malloc(stride * sizeof (sptValue));
     spt_CheckOSError(!buffer, "SspTns Merge");
 
     result = sptNewNnzIndexVector(&collided, 0, 0);
@@ -50,9 +51,9 @@ int spt_SemiSparseTensorMergeValues(sptSemiSparseTensor *tsr) {
         // If two nnz has the same indices
         if(spt_SemiSparseTensorCompareIndices(tsr, i, tsr, i+1) == 0) {
             sptIndex col;
-            for(col = 0; col < tsr->stride; ++col) {
+            for(col = 0; col < stride; ++col) {
                 // Add them together
-                tsr->values.values[(i+1)*tsr->stride + col] += tsr->values.values[i*tsr->stride + col];
+                tsr->values.values[(i+1)*stride + col] += tsr->values.values[i*stride + col];
             }
             sptAppendNnzIndexVector(&collided, i);
         }
@@ -85,6 +86,7 @@ int spt_SemiSparseTensorMergeValues(sptSemiSparseTensor *tsr) {
 
 static void spt_SwapValues(sptSemiSparseTensor *tsr, sptNnzIndex ind1, sptNnzIndex ind2, sptValue buffer[]) {
     sptIndex i;
+    sptIndex stride = tsr->values.stride;
     for(i = 0; i < tsr->nmodes; ++i) {
         if(i != tsr->mode) {
             sptIndex eleind1 = tsr->inds[i].data[ind1];
@@ -94,8 +96,8 @@ static void spt_SwapValues(sptSemiSparseTensor *tsr, sptNnzIndex ind1, sptNnzInd
         }
     }
     if(ind1 != ind2) {
-        memcpy(buffer, &tsr->values.values[ind1*tsr->stride], tsr->stride * sizeof (sptValue));
-        memmove(&tsr->values.values[ind1*tsr->stride], &tsr->values.values[ind2*tsr->stride], tsr->stride * sizeof (sptValue));
-        memcpy(&tsr->values.values[ind2*tsr->stride], buffer, tsr->stride * sizeof (sptValue));
+        memcpy(buffer, &tsr->values.values[ind1*stride], stride * sizeof (sptValue));
+        memmove(&tsr->values.values[ind1*stride], &tsr->values.values[ind2*stride], stride * sizeof (sptValue));
+        memcpy(&tsr->values.values[ind2*stride], buffer, stride * sizeof (sptValue));
     }
 }

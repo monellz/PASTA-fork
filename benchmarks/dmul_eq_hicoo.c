@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
         sptStopTimer(timer);
         sptPrintElapsedTime(timer, "Convert HiCOO -> COO");
 
-        sptSparseTensorSortIndex(&Z, 1);
+        sptSparseTensorSortIndex(&Z, 0, Z.nnz, 1);
         sptAssert(sptDumpSparseTensor(&Z, 1, fZ) == 0);
         fclose(fZ);
         sptFreeSparseTensor(&Z);

@@ -25,28 +25,27 @@ int sptSemiHiCOOToSemiSparseTensor(
     sptIndex const nmodes = histsr->nmodes;
     sptIndex const mode = histsr->mode;
     sptNnzIndex const nnz = histsr->nnz;
-    sptIndex const stride = histsr->stride;
+    sptIndex const stride = histsr->values.stride;
     int result;
 
     result = sptNewSemiSparseTensor(stsr, nmodes, mode, histsr->ndims);
     spt_CheckOSError(result, "Convert Semi-HiCOO -> Semi-COO");
     stsr->nnz = histsr->nnz;
-    stsr->stride = stride;
-    for(sptIndex m=0; m<nmodes; ++m) {
+    for(sptIndex m=0; m<nmodes - 1; ++m) {
         result = sptResizeIndexVector(&(stsr->inds[m]), nnz);
         spt_CheckOSError(result, "Convert Semi-HiCOO -> Semi-COO");
     }
-    result = sptResizeMatrix(&stsr->values, nnz);
+    result = sptResizeMatrix(&(stsr->values), nnz);
     spt_CheckOSError(result, "Convert Semi-HiCOO -> Semi-COO");
 
-    sptIndex * block_coord = (sptIndex*)malloc(nmodes * sizeof(*block_coord));
+    sptIndex * block_coord = (sptIndex*)malloc((nmodes - 1) * sizeof(*block_coord));
     sptIndex ele_coord;
 
 
     /* Loop blocks in a kernel */
     for(sptIndex b=0; b<histsr->bptr.len - 1; ++b) {
         /* Block indices */
-        for(sptIndex m=0; m<nmodes; ++m)
+        for(sptIndex m=0; m<nmodes - 1; ++m)
             block_coord[m] = histsr->binds[m].data[b] << histsr->sb_bits;
 
         sptNnzIndex bptr_begin = histsr->bptr.data[b];
@@ -54,11 +53,11 @@ int sptSemiHiCOOToSemiSparseTensor(
         /* Loop entries in a block */
         for(sptNnzIndex z=bptr_begin; z<bptr_end; ++z) {
             /* Element indices */
-            for(sptIndex m=0; m<nmodes; ++m) {
+            for(sptIndex m=0; m<nmodes - 1; ++m) {
                 ele_coord = block_coord[m] + histsr->einds[m].data[z];
                 stsr->inds[m].data[z] = ele_coord;
             }
-            for(sptIndex s=0; s<stride; ++s) {
+            for(sptIndex s=0; s<histsr->values.ncols; ++s) {
                 stsr->values.values[z * stride + s] = histsr->values.values[z * stride + s];
             }   
         }

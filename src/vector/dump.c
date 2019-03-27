@@ -38,6 +38,7 @@ int sptDumpElementIndexVector(sptElementIndexVector *vec, FILE *fp) {
         spt_CheckOSError(iores < 0, "EleIdxVec Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -60,6 +61,7 @@ int sptDumpIndexVector(sptIndexVector *vec, FILE *fp) {
         spt_CheckOSError(iores < 0, "IdxVec Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -82,6 +84,7 @@ int sptDumpBlockIndexVector(sptBlockIndexVector *vec, FILE *fp) {
         spt_CheckOSError(iores < 0, "BlkIdxVec Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -104,6 +107,7 @@ int sptDumpNnzIndexVector(sptNnzIndexVector *vec, FILE *fp) {
         spt_CheckOSError(iores < 0, "NnzIdxVec Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -126,6 +130,7 @@ int sptDumpValueVector(sptValueVector *vec, FILE *fp) {
         spt_CheckOSError(iores < 0, "ValVec Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -148,6 +153,7 @@ int sptDumpIndexArray(sptIndex *array, sptNnzIndex const n, FILE *fp) {
         spt_CheckOSError(iores < 0, "IdxArray Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }
@@ -170,6 +176,7 @@ int sptDumpNnzIndexArray(sptNnzIndex *array, sptNnzIndex const n, FILE *fp) {
         spt_CheckOSError(iores < 0, "NnzIdxArray Dump");
     }
     iores = fprintf(fp, "\n");
+    fflush(fp);
 
     return 0;
 }

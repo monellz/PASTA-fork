@@ -93,6 +93,7 @@ int main(int argc, char ** argv)
     fclose(fi);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
+    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
     sptAssert(sptRandomizeMatrix(&U) == 0);
 
     /* For warm-up caches, timing not included */
@@ -129,10 +130,13 @@ int main(int argc, char ** argv)
     sptFreeTimer(timer);
 
     if(fo != NULL) {
-        sptSparseTensor Y_coo;
-        sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
-        sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
-        sptFreeSparseTensor(&Y_coo);  
+        sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
+
+        /* Convert Semi-COO to COO tensor */
+        // sptSparseTensor Y_coo;
+        // sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
+        // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
+        // sptFreeSparseTensor(&Y_coo);  
         fclose(fo);      
     }
 

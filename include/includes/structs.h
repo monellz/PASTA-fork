@@ -133,7 +133,6 @@ typedef struct {
     sptIndex mode;   /// the mode where data is stored in dense format
     sptNnzIndex nnz;    /// # non-zero fibers
     sptIndexVector *inds;  /// indices of each dense fiber, length [nmodes][nnz], the mode-th value is ignored
-    sptIndex stride; /// ndims[mode] rounded up to 8
     sptMatrix     values; /// dense fibers, size nnz*ndims[mode]
 } sptSemiSparseTensor;
 
@@ -180,7 +179,7 @@ typedef struct {
 typedef struct {
     /* Basic information */
     sptIndex            nmodes;      /// # modes
-    sptIndex            *sortorder;  /// the order in which the indices are sorted
+    sptIndex            *sortorder;  /// the order (compressed->uncompressed modes) in which the indices are sorted
     sptIndex            *ndims;      /// size of each mode, length nmodes
     sptIndex            ncmodes;     /// #HiCOO compressed modes
     sptIndex            *flags;       /// indicate compressed modes in HiCOO
@@ -213,9 +212,8 @@ typedef struct {
 
     /* Index data arrays */
     sptNnzIndexVector         bptr;      /// Block pointers to all nonzeros
-    sptBlockIndexVector       *binds;    /// Block indices within each group
-    sptElementIndexVector     *einds;    /// Element indices within each block 
-    sptIndex                  stride;    /// ndims[mode] rounded up to 8
+    sptBlockIndexVector       *binds;    /// Block indices within each group, length (nmodes - 1)
+    sptElementIndexVector     *einds;    /// Element indices within each block, length (nmodes - 1) 
     sptMatrix                 values;    /// dense fibers, size nnz*ndims[mode]
 } sptSemiSparseTensorHiCOO;
 

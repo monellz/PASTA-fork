@@ -21,7 +21,9 @@
 #include <stdlib.h>
 #include "sptensor.h"
 
-int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode) {
+int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode) 
+{
+    sptIndex stride = U->stride;
     int result;
     sptIndex *ind_buf;
     sptIndex m;
@@ -42,8 +44,11 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
     ind_buf[mode] = U->ncols;
     // jli: use pre-processing to allocate Y size outside this function.
     result = sptNewSemiSparseTensor(Y, X->nmodes, mode, ind_buf);
-    free(ind_buf);
     spt_CheckError(result, "OMP  SpTns * Mtx", NULL);
+    free(ind_buf);
+    if(Y->values.stride != stride) {
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+    }
     sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
 
     sptTimer timer;
@@ -58,7 +63,7 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
         for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
             sptIndex r = X->inds[mode].data[j];
             for(sptIndex k = 0; k < U->ncols; ++k) {
-                Y->values.values[i*Y->stride + k] += X->values.data[j] * U->values[r*U->stride + k];
+                Y->values.values[i * stride + k] += X->values.data[j] * U->values[r * stride + k];
             }
         }
     }

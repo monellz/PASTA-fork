@@ -18,36 +18,48 @@
 
 #include <ParTI.h>
 #include <stdio.h>
-#include "sptensor.h"
+
 
 /**
- * Save the contents of a sparse tensor into a text file
- * @param tsr         th sparse tensor used to write
+ * Save the contents of a HiCOO-General sparse tensor into a text file
+ * @param hitsr         th sparse tensor used to write
  * @param start_index the index of the first element in array. Set to 1 for MATLAB compability, else set to 0
  * @param fp          the file to write into
  */
-int sptDumpSparseTensor(const sptSparseTensor *tsr, sptIndex start_index, FILE *fp) {
+int sptDumpSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO * const hitsr, FILE *fp) 
+{
     int iores;
     sptIndex mode;
-    sptNnzIndex i;
-    iores = fprintf(fp, "%"PARTI_PRI_INDEX ", nnz: %"PARTI_PRI_NNZ_INDEX"\n", tsr->nmodes, tsr->nnz);
+
+    iores = fprintf(fp, "NNZ: %"PARTI_PRI_NNZ_INDEX"\n", hitsr->nnz);
     spt_CheckOSError(iores < 0, "SpTns Dump");
-    for(mode = 0; mode < tsr->nmodes; ++mode) {
+    iores = fprintf(fp, "sb_bits: %"PARTI_PRI_ELEMENT_INDEX"\n", hitsr->sb_bits);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    iores = fprintf(fp, "dense mode: %"PARTI_PRI_INDEX"\n", hitsr->mode);
+    spt_CheckOSError(iores < 0, "SpTns Dump");
+    fprintf(fp, "ndims:\n");
+    for(mode = 0; mode < hitsr->nmodes; ++mode) {
         if(mode != 0) {
-            iores = fputs(" ", fp);
+            iores = fputs("x", fp);
             spt_CheckOSError(iores < 0, "SpTns Dump");
         }
-        iores = fprintf(fp, "%"PARTI_PRI_INDEX, tsr->ndims[mode]);
+        iores = fprintf(fp, "%u", hitsr->ndims[mode]);
         spt_CheckOSError(iores < 0, "SpTns Dump");
     }
     fputs("\n", fp);
-    for(i = 0; i < tsr->nnz; ++i) {
-        for(mode = 0; mode < tsr->nmodes; ++mode) {
-            iores = fprintf(fp, "%"PARTI_PRI_INDEX "\t", tsr->inds[mode].data[i]+start_index);
-            spt_CheckOSError(iores < 0, "SpTns Dump");
-        }
-        iores = fprintf(fp, "%"PARTI_PRI_VALUE "\n", (double) tsr->values.data[i]);
-        spt_CheckOSError(iores < 0, "SpTns Dump");
+
+    fprintf(fp, "bptr:\n");
+    sptDumpNnzIndexVector(&hitsr->bptr, fp);
+    fprintf(fp, "binds:\n");
+    for(mode = 0; mode < hitsr->nmodes - 1; ++mode) {
+        sptDumpBlockIndexVector(&hitsr->binds[mode], fp);
     }
+    fprintf(fp, "einds:\n");
+    for(mode = 0; mode < hitsr->nmodes - 1; ++mode) {
+        sptDumpElementIndexVector(&hitsr->einds[mode], fp);
+    }
+    fprintf(fp, "values:\n");
+    sptDumpMatrix(&hitsr->values, fp);
+
     return 0;
 }

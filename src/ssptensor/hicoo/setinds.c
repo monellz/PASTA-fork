@@ -19,18 +19,37 @@
 #include <assert.h>
 #include <ParTI.h>
 
-#if 0
-static int spt_SparseTensorCompareExceptMode(const sptSparseTensor *tsr1, sptNnzIndex ind1, const sptSparseTensor *tsr2, sptNnzIndex ind2, sptIndex mode) {
+static int spt_SparseTensorCompare(const sptSparseTensorHiCOOGeneral *tsr1, sptNnzIndex bloc1, sptNnzIndex eloc1, const sptSparseTensorHiCOOGeneral *tsr2, sptNnzIndex bloc2, sptNnzIndex eloc2) 
+{
     sptIndex i;
-    sptIndex eleind1, eleind2;
+    sptIndex index1, index2;
+    sptBlockIndex bidx1, bidx2;
+    sptElementIndex eidx1, eidx2;
     assert(tsr1->nmodes == tsr2->nmodes);
-    for(i = 0; i < tsr1->nmodes; ++i) {
-        if(i != mode) {
-            eleind1 = tsr1->inds[i].data[ind1];
-            eleind2 = tsr2->inds[i].data[ind2];
-            if(eleind1 < eleind2) {
+    assert(tsr1->ncmodes == tsr2->ncmodes);
+    for(i = 0; i < tsr1->ncmodes; ++i) {
+        bidx1 = tsr1->binds[i].data[bloc1];
+        bidx2 = tsr1->binds[i].data[bloc2];
+        eidx1 = tsr1->einds[i].data[eloc1];
+        eidx2 = tsr1->einds[i].data[eloc2];
+        // printf("[m%u, Loc (%lu, %lu)] bind: %u, eind: %u\n", i, bloc1, eloc1, bidx1, (sptIndex)eidx1);
+        // printf("[m%u, Loc (%lu, %lu)] bind: %u, eind: %u\n", i, bloc2, eloc2, bidx2, (sptIndex)eidx2);
+        // index1 = bidx1 << (tsr1->sb_bits) + (sptIndex)eidx1;
+        // index2 = bidx2 << (tsr2->sb_bits) + (sptIndex)eidx2;
+        // printf("[m%u] index1: %u, index2: %u\n", i, index1, index2);
+        // if(index1 < index2) {
+        //     return -1;
+        // } else if(index1 > index2) {
+        //     return 1;
+        // }
+        if(bidx1 < bidx2) {
+            return -1;
+        } else if(bidx1 > bidx2) {
+            return 1;
+        } else {
+            if(eidx1 < eidx2) {
                 return -1;
-            } else if(eleind1 > eleind2) {
+            } else if(eidx1 > eidx2) {
                 return 1;
             }
         }
@@ -48,40 +67,54 @@ static int spt_SparseTensorCompareExceptMode(const sptSparseTensor *tsr1, sptNnz
 int sptSemiSparseTensorSetIndicesHiCOO(
     sptSemiSparseTensorHiCOO *dest,
     sptNnzIndexVector *fiberidx,
-    sptSparseTensorHiCOO *ref) 
+    sptSparseTensorHiCOOGeneral *ref) 
 {
     sptNnzIndex lastidx = ref->nnz;
-    sptNnzIndex i;
+    sptNnzIndex lastbidx = ref->bptr.len - 1;
     sptIndex m;
     int result;
     assert(dest->nmodes == ref->nmodes);
-    sptSparseTensorHiCOOSortIndexBlock(ref, 1, ref->sb_bits);
+
     result = sptNewNnzIndexVector(fiberidx, 0, 0);
     spt_CheckError(result, "SspTns SetIndices", NULL);
+
+    for(sptIndex m = 0; m < ref->ncmodes; ++m) {
+        result = sptCopyBlockIndexVector(&dest->binds[m], &ref->binds[m]);
+        spt_CheckError(result, "SspTns SetIndices", NULL);
+    }
+    
     dest->nnz = 0;
-    for(i = 0; i < ref->nnz; ++i) {
-        if(lastidx == ref->nnz || spt_SparseTensorCompareExceptMode(ref, lastidx, ref, i, dest->mode) != 0) {
-            for(m = 0; m < dest->nmodes; ++m) {
-                if(m != dest->mode) {
-                    result = sptAppendIndexVector(&dest->inds[m], ref->inds[m].data[i]);
+    result = sptAppendNnzIndexVector(&dest->bptr, 0);
+    for(sptNnzIndex b = 0; b < ref->bptr.len - 1; ++ b) {
+        sptNnzIndex b_begin = ref->bptr.data[b];
+        sptNnzIndex b_end = ref->bptr.data[b + 1];
+        for(sptNnzIndex z = b_begin; z < b_end; ++z) {
+
+            if(lastidx == ref->nnz || spt_SparseTensorCompare(ref, lastbidx, lastidx, ref, b, z) != 0) 
+            {
+                lastidx = z;
+                lastbidx = b;
+                ++ dest->nnz;
+                for(sptIndex m = 0; m < ref->ncmodes; ++m) {
+                    result = sptAppendElementIndexVector(&dest->einds[m], ref->einds[m].data[z]);
+                    spt_CheckError(result, "SspTns SetIndices", NULL);
+                }
+                if(fiberidx != NULL) {
+                    result = sptAppendNnzIndexVector(fiberidx, z);
                     spt_CheckError(result, "SspTns SetIndices", NULL);
                 }
             }
-            lastidx = i;
-            ++dest->nnz;
-            if(fiberidx != NULL) {
-                result = sptAppendNnzIndexVector(fiberidx, i);
-                spt_CheckError(result, "SspTns SetIndices", NULL);
-            }
         }
+        result = sptAppendNnzIndexVector(&dest->bptr, dest->nnz);
+        spt_CheckError(result, "SspTns SetIndices", NULL);
     }
+
     if(fiberidx != NULL) {
         result = sptAppendNnzIndexVector(fiberidx, ref->nnz);
         spt_CheckError(result, "SspTns SetIndices", NULL);
     }
     result = sptResizeMatrix(&dest->values, dest->nnz);
     spt_CheckError(result, "SspTns SetIndices", NULL);
-    memset(dest->values.values, 0, dest->nnz * dest->stride * sizeof (sptValue));
+    memset(dest->values.values, 0, dest->nnz * dest->values.stride * sizeof (sptValue));
     return 0;
 }
-#endif

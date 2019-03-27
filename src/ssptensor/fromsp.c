@@ -52,10 +52,9 @@ int sptSparseTensorToSemiSparseTensor(sptSemiSparseTensor *dest, const sptSparse
     }
     result = sptNewMatrix(&dest->values, dest->nnz, dest->ndims[mode]);
     spt_CheckError(result, "SpTns -> SspTns", NULL);
-    dest->stride = dest->values.stride;
-    memset(dest->values.values, 0, dest->nnz * dest->stride * sizeof (sptValue));
+    memset(dest->values.values, 0, dest->nnz * dest->values.stride * sizeof (sptValue));
     for(i = 0; i < dest->nnz; ++i) {
-        dest->values.values[i*dest->stride + src->inds[mode].data[i]] = src->values.data[i];
+        dest->values.values[i * dest->values.stride + src->inds[mode].data[i]] = src->values.data[i];
     }
     sptSemiSparseTensorSortIndex(dest);
     spt_SemiSparseTensorMergeValues(dest);

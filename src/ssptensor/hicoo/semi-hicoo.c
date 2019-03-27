@@ -33,6 +33,7 @@ int sptNewSemiSparseTensorHiCOO(
     const sptIndex mode,
     const sptElementIndex sb_bits)
 {
+    sptIndex ncmodes = nmodes - 1;
     sptIndex i;
     int result;
     if(nmodes < 2) {
@@ -45,27 +46,26 @@ int sptNewSemiSparseTensorHiCOO(
     memcpy(histsr->ndims, ndims, nmodes * sizeof *histsr->ndims);
     histsr->mode = mode;
     histsr->nnz = 0;
-    histsr->stride = ((ndims[mode] -1 + 8) / 8 ) * 8;
 
     /* Parameters */
     histsr->sb_bits = sb_bits; // block size by nnz
 
     result = sptNewNnzIndexVector(&histsr->bptr, 0, 0);
     spt_CheckError(result, "HiSpTns New", NULL);
-    histsr->binds = malloc(nmodes * sizeof *histsr->binds);
+    histsr->binds = malloc(ncmodes * sizeof *histsr->binds);
     spt_CheckOSError(!histsr->binds, "HiSpTns New");
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < ncmodes; ++i) {
         result = sptNewBlockIndexVector(&histsr->binds[i], 0, 0);
         spt_CheckError(result, "HiSpTns New", NULL);
     }
 
-    histsr->einds = malloc(nmodes * sizeof *histsr->einds);
+    histsr->einds = malloc(ncmodes * sizeof *histsr->einds);
     spt_CheckOSError(!histsr->einds, "HiSpTns New");
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < ncmodes; ++i) {
         result = sptNewElementIndexVector(&histsr->einds[i], 0, 0);
         spt_CheckError(result, "HiSpTns New", NULL);
     }
-    result = sptNewMatrix(&histsr->values, 0, histsr->stride);
+    result = sptNewMatrix(&histsr->values, 0, histsr->ndims[mode]);
     spt_CheckError(result, "HiSpTns New", NULL);
 
     return 0;
@@ -82,7 +82,7 @@ void sptFreeSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO *histsr)
     sptIndex nmodes = histsr->nmodes;
 
     sptFreeNnzIndexVector(&histsr->bptr);
-    for(i = 0; i < nmodes; ++i) {
+    for(i = 0; i < nmodes - 1; ++i) {
         sptFreeBlockIndexVector(&histsr->binds[i]);
         sptFreeElementIndexVector(&histsr->einds[i]);
     }

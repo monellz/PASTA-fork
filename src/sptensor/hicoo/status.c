@@ -27,12 +27,10 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
   for(sptIndex m=1; m < nmodes; ++m) {
     fprintf(fp, "x%"PARTI_PRI_INDEX, hitsr->ndims[m]);
   }
-  fprintf(fp, " NNZ=%"PARTI_PRI_NNZ_INDEX, hitsr->nnz);
   fprintf(fp, "\n");
-  fprintf(fp, "sb=%"PARTI_PRI_INDEX, (sptIndex)pow(2, hitsr->sb_bits));
-  fprintf(fp, "\n");
-  fprintf(fp, "nb=%"PARTI_PRI_NNZ_INDEX, hitsr->bptr.len - 1);
-  fprintf(fp, "\n");
+  fprintf(fp, "NNZ=%"PARTI_PRI_NNZ_INDEX"\n", hitsr->nnz);
+  fprintf(fp, "sb=%"PARTI_PRI_INDEX"\n", (sptIndex)pow(2, hitsr->sb_bits));
+  fprintf(fp, "nb=%"PARTI_PRI_NNZ_INDEX"\n", hitsr->bptr.len - 1);
 
   sptNnzIndex bytes = hitsr->nnz * ( sizeof(sptValue) + nmodes * sizeof(sptElementIndex) );
   bytes += hitsr->binds[0].len * nmodes * sizeof(sptBlockIndex);
@@ -83,5 +81,32 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
   fprintf(fp, "Suggest cb > 1, large is better. For MTTKRP performance\n");
   fprintf(fp, "Suggest num_tasks should in [%d, %d] PAR_DEGREE: [%d, %d]. For parallel efficiency\n", PAR_MIN_DEGREE * NUM_CORES, PAR_MAX_DEGREE * NUM_CORES, PAR_MIN_DEGREE, PAR_MAX_DEGREE);
   fprintf(fp, "\n\n");
+
+}
+
+
+
+void sptSparseTensorStatusHiCOOGeneral(sptSparseTensorHiCOOGeneral *hitsr, FILE *fp)
+{
+  sptIndex nmodes = hitsr->nmodes;
+  sptIndex ncmodes = hitsr->ncmodes;
+  fprintf(fp, "HiCOO-General Sparse Tensor information ---------\n");
+  fprintf(fp, "%u (Compressed %u) \n", hitsr->nmodes, hitsr->ncmodes);
+  fprintf(fp, "DIMS=%"PARTI_PRI_INDEX, hitsr->ndims[0]);
+  for(sptIndex m=1; m < nmodes; ++m) {
+    fprintf(fp, "x%"PARTI_PRI_INDEX, hitsr->ndims[m]);
+  }
+  fprintf(fp, "\n");
+  fprintf(fp, "NNZ=%"PARTI_PRI_NNZ_INDEX"\n", hitsr->nnz);
+  fprintf(fp, "sb=%"PARTI_PRI_INDEX"\n", (sptIndex)pow(2, hitsr->sb_bits));
+  fprintf(fp, "nb=%"PARTI_PRI_NNZ_INDEX"\n", hitsr->bptr.len - 1);
+
+  sptNnzIndex bytes = hitsr->nnz * ( sizeof(sptValue) + ncmodes * sizeof(sptElementIndex) + (nmodes - ncmodes) * sizeof(sptIndex) );
+  bytes += hitsr->binds[0].len * ncmodes * sizeof(sptBlockIndex);
+  bytes += hitsr->bptr.len * sizeof(sptNnzIndex);
+
+  char * bytestr = sptBytesString(bytes);
+  fprintf(fp, "HiCOO-STORAGE=%s\n", bytestr);
+  free(bytestr);
 
 }

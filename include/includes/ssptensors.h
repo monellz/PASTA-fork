@@ -28,6 +28,7 @@ int sptSemiSparseTensorToSparseTensor(sptSparseTensor *dest, const sptSemiSparse
 int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[]);
 int sptCopySemiSparseTensor(sptSemiSparseTensor *dest, const sptSemiSparseTensor *src);
 void sptFreeSemiSparseTensor(sptSemiSparseTensor *tsr);
+int sptDumpSemiSparseTensor(sptSemiSparseTensor * const tsr, FILE *fp);
 int sptSparseTensorToSemiSparseTensor(sptSemiSparseTensor *dest, const sptSparseTensor *src, sptIndex mode);
 int sptSemiSparseTensorSortIndex(sptSemiSparseTensor *tsr);
 
@@ -42,16 +43,17 @@ void sptFreeSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO *histsr);
 int sptSemiHiCOOToSemiSparseTensor(
     sptSemiSparseTensor *stsr, 
     sptSemiSparseTensorHiCOO *histsr);
-
-int sptNewSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr, sptIndex nmodes, const sptIndex ndims[], sptIndex ndmodes, const sptIndex dmodes[]);
-void sptFreeSemiSparseTensorGeneral(sptSemiSparseTensorGeneral *tsr);
+int sptDumpSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO * const hitsr, FILE *fp);
 
 /**
  * Set indices of a semi-sparse according to a reference sparse
  * Call sptSparseTensorSortIndexAtMode on ref first
  */
 int sptSemiSparseTensorSetIndices(sptSemiSparseTensor *dest, sptNnzIndexVector *fiberidx, sptSparseTensor *ref);
-
+int sptSemiSparseTensorSetIndicesHiCOO(
+    sptSemiSparseTensorHiCOO *dest,
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensorHiCOOGeneral *ref);
 
 /**
  * Semi-sparse tensor times a dense matrix (TTM)

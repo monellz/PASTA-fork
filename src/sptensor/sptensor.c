@@ -118,7 +118,7 @@ int spt_DistSparseTensor(sptSparseTensor * tsr,
     memset(dist_nnzs, 0, (nthreads + 1) * sizeof(sptNnzIndex));
     memset(dist_nrows, 0, nthreads*sizeof(sptIndex));
 
-    sptSparseTensorSortIndex(tsr, 0);
+    sptSparseTensorSortIndex(tsr, 0, tsr->nnz, 0);
     sptIndex * ind0 = tsr->inds[0].data;
 
     int tid = 0;
@@ -157,7 +157,7 @@ int spt_DistSparseTensorFixed(sptSparseTensor * tsr,
 
     memset(dist_nnzs, 0, (nthreads + 1) * sizeof(sptNnzIndex));
 
-    sptSparseTensorSortIndex(tsr, 0);
+    sptSparseTensorSortIndex(tsr, 0, tsr->nnz, 0);
     sptIndex * ind0 = tsr->inds[0].data;
 
     int tid = 0;
