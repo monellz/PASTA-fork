@@ -106,8 +106,8 @@ int main(int argc, char ** argv)
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
-    sptAssert(sptRandomizeMatrix(&U) == 0);
+    sptAssert(sptConstantMatrix(&U, 1.0) == 0);
+    // sptAssert(sptRandomizeMatrix(&U) == 0);
 
     sptIndex ncmodes = 2;
     sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));
@@ -139,7 +139,7 @@ int main(int argc, char ** argv)
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        // sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
+        sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
 #endif
     }  
 
@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
             sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
         } else if(dev_id == -1) {
     #ifdef PARTI_USE_OPENMP
-            // sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
+            sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
     #endif
         }
     }

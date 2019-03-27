@@ -134,7 +134,7 @@ int main(int argc, char ** argv)
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        // sptAssert(sptOmpSparseTensorMulVectorHiCOO(&hiY, &hiX, &V, mode) == 0);
+        sptAssert(sptOmpSparseTensorMulVectorHiCOO(&hiY, &hiX, &V, mode) == 0);
 #endif
     }  
 
@@ -147,7 +147,7 @@ int main(int argc, char ** argv)
             sptAssert(sptSparseTensorMulVectorHiCOO(&hiY, &hiX, &V, mode) == 0);
         } else if(dev_id == -1) {
     #ifdef PARTI_USE_OPENMP
-            // sptAssert(sptOmpSparseTensorMulVectorHiCOO(&hiY, &hiX, &V, mode) == 0);
+            sptAssert(sptOmpSparseTensorMulVectorHiCOO(&hiY, &hiX, &V, mode) == 0);
     #endif
         }
     }
@@ -167,7 +167,7 @@ int main(int argc, char ** argv)
         sptSparseTensorSortIndex(&Y, 0, Y.nnz, 1);
         sptAssert(sptDumpSparseTensor(&Y, 1, fo) == 0);
         sptFreeSparseTensor(&Y); 
-        fclose(fo);      
+        fclose(fo);
     }
 
     sptFreeTimer(timer);

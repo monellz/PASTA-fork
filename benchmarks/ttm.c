@@ -93,8 +93,8 @@ int main(int argc, char ** argv)
     fclose(fi);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
-    sptAssert(sptRandomizeMatrix(&U) == 0);
+    sptAssert(sptConstantMatrix(&U, 1.0) == 0);
+    // sptAssert(sptRandomizeMatrix(&U) == 0);
 
     /* For warm-up caches, timing not included */
     int result;
