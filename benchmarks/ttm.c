@@ -116,6 +116,7 @@ int main(int argc, char ** argv)
     sptStartTimer(timer);
 
     for(int i = 0; i < niters; i++) {
+        sptFreeSemiSparseTensor(&Y);
         if(dev_id == -2) {
             sptAssert(sptSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
         } else if(dev_id == -1) {

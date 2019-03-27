@@ -110,6 +110,11 @@ int sptHiCOOToSparseTensor(
     sptSparseTensor *tsr, 
     sptSparseTensorHiCOO *hitsr);
 int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp);
+int sptSparseTensorSetIndicesHiCOO(
+    sptSparseTensorHiCOO *dest,
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensorHiCOOGeneral *ref);
+
 int sptNewSparseTensorHiCOOGeneral(
     sptSparseTensorHiCOOGeneral *hitsr, 
     const sptIndex nmodes, 
@@ -194,10 +199,10 @@ int sptCudaSparseTensorMulMatrix(
     sptIndex const impl_num,
     sptNnzIndex const smen_size);
 int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode);
-int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOO *X, const sptMatrix *U, sptIndex const mode);
+int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode);
 int sptCudaSparseTensorMulMatrixHiCOO(
     sptSemiSparseTensorHiCOO *Y,
-    sptSparseTensorHiCOO *X,
+    sptSparseTensorHiCOOGeneral *X,
     const sptMatrix *U,
     sptIndex const mode,
     sptIndex const impl_num,
@@ -208,6 +213,15 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
 int sptCudaSparseTensorMulVector(
     sptSparseTensor *Y,
     sptSparseTensor *X,
+    const sptValueVector *V,
+    sptIndex const mode,
+    sptIndex const impl_num,
+    sptNnzIndex const smen_size);
+int sptSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptValueVector *V, sptIndex mode);
+int sptOmpSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptValueVector *V, sptIndex mode);
+int sptCudaSparseTensorMulVectorHiCOO(
+    sptSparseTensorHiCOO *Y,
+    sptSparseTensorHiCOOGeneral *X,
     const sptValueVector *V,
     sptIndex const mode,
     sptIndex const impl_num,
