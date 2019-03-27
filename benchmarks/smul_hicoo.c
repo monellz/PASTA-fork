@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             nthreads = omp_get_num_threads();
         }
         printf("\nnthreads: %d\n", nthreads);
-        // sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
+        sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
 #endif
     }
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 nthreads = omp_get_num_threads();
             }
             printf("nthreads: %d\n", nthreads);
-            // sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
+            sptAssert(sptOmpSparseTensorMulScalarHiCOO(&hiZ, &hiX, a) == 0);
 #endif
         }
     }
@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
         sptPrintElapsedTime(timer, "Convert HiCOO -> COO");
         sptFreeTimer(timer);
 
+        sptSparseTensorSortIndex(&Z, 0, Z.nnz, 1);
         sptAssert(sptDumpSparseTensor(&Z, 1, fZ) == 0);
         fclose(fZ);
         sptFreeSparseTensor(&Z);

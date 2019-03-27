@@ -161,10 +161,10 @@ int main(int argc, char ** argv)
         /* Convert Semi-HiCOO to Semi-COO tensor */
         sptStartTimer(timer);
         sptAssert(sptHiCOOToSparseTensor(&Y, &hiY) == 0);
-        sptSparseTensorSortIndex(&Y, 0, Y.nnz, 1);
         sptStopTimer(timer);
         sptPrintElapsedTime(timer, "Convert HiCOO -> COO");
 
+        sptSparseTensorSortIndex(&Y, 0, Y.nnz, 1);
         sptAssert(sptDumpSparseTensor(&Y, 1, fo) == 0);
         sptFreeSparseTensor(&Y); 
         fclose(fo);      
