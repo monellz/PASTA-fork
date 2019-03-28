@@ -146,7 +146,7 @@ int main(int argc, char ** argv)
     /* For warm-up caches, timing not included */
     int result;
     if(dev_id == -2) {
-        sptAssert(sptOmpSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
+        sptAssert(sptSparseTensorMulMatrixHiCOO(&hiY, &hiX, &U, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PASTA_USE_OPENMP
         #pragma omp parallel

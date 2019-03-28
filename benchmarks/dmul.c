@@ -109,6 +109,8 @@ int main(int argc, char *argv[]) {
     fclose(fX);
     sptAssert(sptLoadSparseTensor(&Y, 1, fY) == 0);
     fclose(fY);
+    sptSparseTensorStatus(&X, stdout);
+    sptSparseTensorStatus(&Y, stdout);
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
