@@ -62,7 +62,6 @@ int main(int argc, char ** argv) {
         {"output", optional_argument, 0, 'o'},
         {"dev-id", optional_argument, 0, 'd'},
         {"rank", optional_argument, 0, 'r'},
-        {"use-reduce", optional_argument, 0, 'u'},
         {"impl-num", optional_argument, 0, 'p'},
         {"help", no_argument, 0, 0},
         {0, 0, 0, 0}
