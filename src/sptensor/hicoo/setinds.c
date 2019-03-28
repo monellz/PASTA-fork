@@ -29,9 +29,9 @@ static int spt_SparseTensorCompare(const sptSparseTensorHiCOOGeneral *tsr1, sptN
     assert(tsr1->ncmodes == tsr2->ncmodes);
     for(i = 0; i < tsr1->ncmodes; ++i) {
         bidx1 = tsr1->binds[i].data[bloc1];
-        bidx2 = tsr1->binds[i].data[bloc2];
+        bidx2 = tsr2->binds[i].data[bloc2];
         eidx1 = tsr1->einds[i].data[eloc1];
-        eidx2 = tsr1->einds[i].data[eloc2];
+        eidx2 = tsr2->einds[i].data[eloc2];
 
         if(bidx1 < bidx2) {
             return -1;

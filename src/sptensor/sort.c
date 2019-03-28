@@ -36,7 +36,6 @@ static void spt_QuickSortIndexMorton3D(sptSparseTensor *tsr, sptNnzIndex l, sptN
 static void spt_QuickSortIndexMorton4D(sptSparseTensor *tsr, sptNnzIndex l, sptNnzIndex r, const sptElementIndex sb_bits);
 
 static int spt_SparseTensorCompareIndicesExceptSingleMode(const sptSparseTensor *tsr1, sptNnzIndex loc1, const sptSparseTensor *tsr2, sptNnzIndex loc2, sptIndex * mode_order);
-static int spt_SparseTensorCompareIndicesRange(const sptSparseTensor *tsr, sptNnzIndex loc, sptIndex * const inds1, sptIndex * const inds2);
 static int spt_SparseTensorCompareIndicesRowBlock(
     const sptSparseTensor *tsr1, 
     sptNnzIndex loc1, 
@@ -660,25 +659,6 @@ static int spt_SparseTensorCompareIndicesExceptSingleMode(const sptSparseTensor 
         }
     }
     return 0;
-}
-
-/**
- * Comapre two index arrays lexicographically
- * @param inds1 the first indices to be compared
- * @param inds2 the second indices to be compared
- * @param len the length of both inds1 and inds2
- * @return 1 for in the range; otherwise return -1.
- */
-static int spt_SparseTensorCompareIndicesRange(const sptSparseTensor *tsr, sptNnzIndex loc, sptIndex * const inds1, sptIndex * const inds2) {
-
-    sptIndex i;
-    for(i = 0; i < tsr->nmodes; ++i) {
-        sptIndex eleind = tsr->inds[i].data[loc];
-        if(eleind < inds1[i] || eleind >= inds2[i]) {
-            return -1;
-        }
-    }
-    return 1;
 }
 
 

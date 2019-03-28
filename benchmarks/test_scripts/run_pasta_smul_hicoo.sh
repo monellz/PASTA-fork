@@ -10,6 +10,8 @@ declare -a test_tsr_names=("vast-2015-mc1")
 tsr_path="${SCRATCH}/BIGTENSORS"
 out_path="/global/homes/j/jiajiali/Work/SpTenBench/timing-results/pasta/coo"
 
+echo "./prog_name nmodes nt gpu_dev_id"
+
 nmodes=$1 		# 3, or 4
 nt=$2			# 32
 gpu_dev_id=$3	# 0, 1, ...
@@ -31,20 +33,20 @@ do
 
 	# Sequetial code
 	dev_id=-2
-	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}_nnz.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-seq.txt"
+	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-seq.txt"
 	echo ${myprogram}
 	# ${myprogram}
 
 	# OpenMP code
 	dev_id=-1
 	export OMP_NUM_THREADS=${nt}
-	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}_nnz.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-t${nt}.txt"
+	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-t${nt}.txt"
 	echo ${myprogram}
 	# ${myprogram}
 
 	# CUDA code
 	dev_id=${gpu_dev_id}
-	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}_nnz.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-gpu.txt"
+	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.tns -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-gpu.txt"
 	echo ${myprogram}
 	# ${myprogram}
 

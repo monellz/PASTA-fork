@@ -86,19 +86,19 @@ int main(int argc, char ** argv)
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'm':
-            sscanf(optarg, "%"PASTA_SCN_INDEX, &mode);
+            sscanf(optarg, "%" PASTA_SCN_INDEX, &mode);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
             break;
         case 'r':
-            sscanf(optarg, "%u"PASTA_SCN_INDEX, &R);
+            sscanf(optarg, "%u" PASTA_SCN_INDEX, &R);
             break;
         case 'p':
             sscanf(optarg, "%d", &impl_num);
             break;
         case 's':
-            sscanf(optarg, "%"PASTA_SCN_NNZ_INDEX, &smem_size);
+            sscanf(optarg, "%" PASTA_SCN_NNZ_INDEX, &smem_size);
             break;
         case '?':   /* invalid option */
         case 'h':
@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    printf("mode: %"PASTA_PRI_INDEX "\n", mode);
+    printf("mode: %" PASTA_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);

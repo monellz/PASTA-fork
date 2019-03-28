@@ -29,7 +29,7 @@ int sptCudaSparseTensorMulVectorHiCOO(
     const sptValueVector *V,
     sptIndex const mode,
     sptIndex const impl_num,
-    sptNnzIndex const smen_size) 
+    sptNnzIndex const smem_size) 
 {
 
     if(mode >= hiX->nmodes) {

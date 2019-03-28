@@ -60,7 +60,7 @@ int sptOmpSparseTensorDotMul(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTe
 
     spt_DistSparseTensor(X, nthreads, dist_nnzs_X, dist_nrows_X);
     spt_DistSparseTensorFixed(Y, nthreads, dist_nrows_X, dist_nnzs_Y);
-    for(sptIndex i = 0; i < nthreads; ++ i)
+    for(int i = 0; i < nthreads; ++ i)
         if(dist_nrows_X[i] == 0) {
             printf("Error: Reduce nthreads to remove 0 rows allocation or put the larger tensor first.\n");
             exit(1);
@@ -160,6 +160,17 @@ int sptOmpSparseTensorDotMul(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTe
     free(local_vals);
     free(dist_nnzs_X);
     free(dist_nnzs_Y);
+
+
+    /* Check whether elements become zero after adding.
+       If so, fill the gap with the [nnz-1]'th element.
+    */
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Z);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
     return 0;
 }

@@ -27,6 +27,7 @@
  */
 int sptSparseTensorDotDivEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTensorHiCOO *hiX, const sptSparseTensorHiCOO *hiY, int collectZero)
 {
+    sptAssert(collectZero == 0);
     sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(hiY->nmodes != hiX->nmodes) {

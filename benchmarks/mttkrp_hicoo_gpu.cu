@@ -22,7 +22,7 @@
 #include <pasta.h>
 #include "../src/sptensor/sptensor.h"
 
-void print_usage(int argc, char ** argv) {
+void print_usage(char ** argv) {
     printf("Usage: %s [options] \n", argv[0]);
     printf("Options: -i INPUT, --input=INPUT\n");
     printf("         -o OUTPUT, --output=OUTPUT\n");
@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
     int retval;
 
     if(argc <= 3) { // #Required arguments
-        print_usage(argc, argv);
+        print_usage(argv);
         exit(1);
     }
 
@@ -92,10 +92,10 @@ int main(int argc, char ** argv)
             sptAssert(fo != NULL);
             break;
         case 'b':
-            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
+            sscanf(optarg, "%" PASTA_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'm':
-            sscanf(optarg, "%"PASTA_SCN_INDEX, &mode);
+            sscanf(optarg, "%" PASTA_SCN_INDEX, &mode);
             break;
         case 'd':
             sscanf(optarg, "%d", &dev_id);
@@ -105,23 +105,23 @@ int main(int argc, char ** argv)
             }
             break;
         case 'r':
-            sscanf(optarg, "%"PASTA_SCN_INDEX, &R);
+            sscanf(optarg, "%" PASTA_SCN_INDEX, &R);
             break;
         case 'p':
             sscanf(optarg, "%d", &impl_num);
             break;
         case 's':
-            sscanf(optarg, "%"PASTA_SCN_NNZ_INDEX, &smem_size);
+            sscanf(optarg, "%" PASTA_SCN_NNZ_INDEX, &smem_size);
             break;
         case '?':   /* invalid option */
         case 'h':
         default:
-            print_usage(argc, argv);
+            print_usage(argv);
             exit(1);
         }
     }
-    printf("mode: %"PASTA_PRI_INDEX "\n", mode);
-    printf("Block size (bit-length): %"PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
+    printf("mode: %" PASTA_PRI_INDEX "\n", mode);
+    printf("Block size (bit-length): %" PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("dev_id: %d\n", dev_id);
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);

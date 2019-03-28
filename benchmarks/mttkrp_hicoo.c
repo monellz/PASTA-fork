@@ -22,7 +22,7 @@
 #include <pasta.h>
 #include "../src/sptensor/sptensor.h"
 
-void print_usage(int argc, char ** argv) {
+void print_usage(char ** argv) {
     printf("Usage: %s [options] \n", argv[0]);
     printf("Options: -i INPUT, --input=INPUT\n");
     printf("         -o OUTPUT, --output=OUTPUT\n");
@@ -56,7 +56,7 @@ int main(int argc, char ** argv)
     int retval;
 
     if(argc <= 3) { // #Required arguments
-        print_usage(argc, argv);
+        print_usage(argv);
         exit(1);
     }
 
@@ -109,7 +109,7 @@ int main(int argc, char ** argv)
         case '?':   /* invalid option */
         case 'h':
         default:
-            print_usage(argc, argv);
+            print_usage(argv);
             exit(1);
         }
     }

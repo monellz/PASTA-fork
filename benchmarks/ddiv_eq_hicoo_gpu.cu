@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
             printf("Z output file: %s\n", optarg); fflush(stdout);
             break;
         case 'b':
-            sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
+            sscanf(optarg, "%" PASTA_SCN_ELEMENT_INDEX, &sb_bits);
             break;
         case 'c':
             sscanf(optarg, "%d", &collectZero);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
         }
     }
     printf("dev_id: %d\n", dev_id);
-    printf("Block size (bit-length): %"PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
+    printf("Block size (bit-length): %" PASTA_PRI_ELEMENT_INDEX"\n", sb_bits);
     printf("collectZero: %d\n", collectZero); 
     printf("Sorting implementation: %d\n", sort_impl); fflush(stdout);
 

@@ -77,5 +77,15 @@ int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const s
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Cpu  SpTns DotMul");
 
+    /* Check whether elements become zero after adding.
+       If so, fill the gap with the [nnz-1]'th element.
+    */
+    sptStartTimer(timer);
+    if(collectZero == 1) {
+        sptSparseTensorCollectZeros(Z);
+    }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
+
     return 0;
 }

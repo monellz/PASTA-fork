@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
             printf("X input file: %s\n", optarg); fflush(stdout);
             break;
         case 'a':
-            sscanf(optarg, "%"PASTA_SCN_VALUE, &a);
+            sscanf(optarg, "%" PASTA_SCN_VALUE, &a);
             break;
         case 'Z':
             fZ = fopen(optarg, "w");
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
-    printf("Scaling a: %"PASTA_PRI_VALUE"\n", a); 
+    printf("Scaling a: %" PASTA_PRI_VALUE"\n", a); 
     printf("dev_id: %d\n", dev_id); fflush(stdout);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
