@@ -115,8 +115,8 @@ int main(int argc, char ** argv)
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
     sptAssert(sptNewValueVector(&V, X.ndims[mode], X.ndims[mode]) == 0);
-    sptAssert(sptConstantValueVector(&V, 1.0) == 0);
-    // sptAssert(sptRandomizeValueVector(&V) == 0);
+    // sptAssert(sptConstantValueVector(&V, 1.0) == 0);
+    sptAssert(sptRandomizeValueVector(&V) == 0);
 
 
     sptIndex ncmodes = 2;

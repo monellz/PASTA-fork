@@ -87,8 +87,8 @@ int main(int argc, char ** argv)
     fclose(fi);
 
     sptAssert(sptNewValueVector(&V, X.ndims[mode], X.ndims[mode]) == 0);
-    sptAssert(sptConstantValueVector(&V, 1.0) == 0);
-    // sptAssert(sptRandomizeValueVector(&V) == 0);
+    // sptAssert(sptConstantValueVector(&V, 1.0) == 0);
+    sptAssert(sptRandomizeValueVector(&V) == 0);
 
     /* For warm-up caches, timing not included */
     int result;
