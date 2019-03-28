@@ -35,6 +35,6 @@ gpu_dev_id=$3	# 0, 1, ...
 ./run_pasta_ttm_hicoo ${nmodes} ${nt} ${gpu_dev_id}
 
 # MTTKRP
-# ./run_pasta_mttkrp ${nmodes} ${nt} ${gpu_dev_id}
-# ./run_pasta_mttkrp_hicoo ${nmodes} ${nt} ${gpu_dev_id}
+./run_pasta_mttkrp ${nmodes} ${nt} ${gpu_dev_id}
+./run_pasta_mttkrp_hicoo ${nmodes} ${nt} ${gpu_dev_id}
 
