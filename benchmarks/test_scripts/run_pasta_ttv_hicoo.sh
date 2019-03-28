@@ -16,7 +16,8 @@ nmodes=$1 		# 3, or 4
 nt=$2			# 32
 gpu_dev_id=$3	# 0, 1, ...
 
-prog_name="ttv_gpu"
+prog_name="ttv_hicoo_gpu"
+sb=7
 modes="$(seq -s ' ' 0 $((${nmodes}-1)))"
 if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs[@]}") 
@@ -26,25 +27,29 @@ fi
 
 for tsr_name in "${run_tsrs[@]}"
 do
+	if [ ${tsr_name} = "chicago-crime-comm-4d" ] || [ ${tsr_name} = "uber-4d" ]; then
+		sb=4
+	fi
+	
 	for mode in ${modes[@]}
 	do
 
 		# Sequetial code
 		dev_id=-2
-		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-seq.txt"
+		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-b${sb}-seq.txt"
 		echo ${myprogram}
 		# ${myprogram}
 
 		# OpenMP code
 		dev_id=-1
 		export OMP_NUM_THREADS=${nt}
-		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-t${nt}.txt"
+		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-b${sb}-t${nt}.txt"
 		echo ${myprogram}
 		# ${myprogram}
 
 		# CUDA code
 		dev_id=${gpu_dev_id}
-		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-gpu.txt"
+		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}_nnz.tns -m ${mode} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-b${sb}-gpu.txt"
 		echo ${myprogram}
 		# ${myprogram}
 
