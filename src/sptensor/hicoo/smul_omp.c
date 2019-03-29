@@ -43,7 +43,7 @@ int sptOmpSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensorH
         hiZ->values.data[i] *= a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns AddScalarHiCOO");
+    sptPrintElapsedTime(timer, "Omp HiSpTns MulScalar");
     sptFreeTimer(timer);
     printf("\n");
 

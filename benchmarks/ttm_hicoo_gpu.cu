@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
     sptElementIndex sb_bits = 7;
     sptIndex R = 16;
     int dev_id = -2;
-    int impl_num = 15;
+    int impl_num = 14;
     sptNnzIndex smem_size = 40000;
     int niters = 5;
     int nthreads = 1;
@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
     // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
     sptAssert(sptRandomizeMatrix(&U) == 0);
 
-    sptIndex ncmodes = 2;
+    sptIndex ncmodes = X.nmodes - 1;
     sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));
     for(sptIndex m = 0; m < X.nmodes; ++m) {
         flags[m] = 1;
@@ -179,7 +179,7 @@ int main(int argc, char ** argv)
     }
 
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooTtmHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average HiCooTtm");
 
     if(fo != NULL) {
         // sptDumpSemiSparseTensorHiCOO(&hiY, stdout);

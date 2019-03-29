@@ -67,11 +67,11 @@ int sptCudaSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
     sptStartTimer(timer);
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, Z->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MulScalar");
     cudaMemcpy(Z_val, Z->values.data, Z->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, X->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MulScalar");
     cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Device malloc and copy");
@@ -100,21 +100,21 @@ int sptCudaSparseTensorMulScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValu
     dim3 dimBlock(nthreadsx);
     printf("all_nblocks: %lu, nthreadsx: %lu\n", all_nblocks, nthreadsx);
 
-    printf("[CUDA SpTns MulScalar] spt_sMulKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
+    printf("[Cuda SpTns MulScalar] spt_sMulKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
     spt_sMulKernel<<<nblocks, dimBlock>>>(Z_val, X_val, X->nnz, a);
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar kernel");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MulScalar kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns MulScalar");
+    sptPrintElapsedTime(timer, "Cuda SpTns MulScalar");
     sptFreeTimer(timer);
     printf("\n");
 
     cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MulScalar");
     result = cudaFree(Z_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MulScalar");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MulScalar");
 
     return 0;
 }

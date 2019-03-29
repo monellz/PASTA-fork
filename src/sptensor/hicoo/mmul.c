@@ -35,13 +35,13 @@
 int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode) 
 {
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
     if(X->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
     if(X->nmodes != X->ncmodes + 1) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
     
     sptIndex stride = U->stride;
@@ -51,16 +51,16 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     sptIndex *ind_buf;
 
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  HiSpTns * Mtx");
+    spt_CheckOSError(!ind_buf, "Cpu HiSpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
     result = sptNewSemiSparseTensorHiCOO(Y, X->nmodes, ind_buf, mode, X->sb_bits);
-    spt_CheckError(result, "CPU  HiSpTns * Mtx", NULL);
+    spt_CheckError(result, "Cpu HiSpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
 
     sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
@@ -83,7 +83,7 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     }
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  HiSpTns * Mtx");
+    sptPrintElapsedTime(timer, "Cpu HiSpTns * Mtx");
     
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);

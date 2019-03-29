@@ -35,13 +35,13 @@
 int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHiCOOGeneral *X, const sptMatrix *U, sptIndex const mode) 
 {
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns * Mtx", "shape mismatch");
     }
     if(X->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns * Mtx", "shape mismatch");
     }
     if(X->nmodes != X->ncmodes + 1) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns * Mtx", "shape mismatch");
     }
     
     sptIndex stride = U->stride;
@@ -51,16 +51,16 @@ int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTenso
     sptIndex *ind_buf;
 
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  HiSpTns * Mtx");
+    spt_CheckOSError(!ind_buf, "Omp HiSpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
     result = sptNewSemiSparseTensorHiCOO(Y, X->nmodes, ind_buf, mode, X->sb_bits);
-    spt_CheckError(result, "CPU  HiSpTns * Mtx", NULL);
+    spt_CheckError(result, "Omp HiSpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns * Mtx", "shape mismatch");
     }
 
     sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
@@ -84,7 +84,7 @@ int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTenso
     }
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  HiSpTns * Mtx");
+    sptPrintElapsedTime(timer, "Omp HiSpTns * Mtx");
     
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);

@@ -30,16 +30,16 @@ int sptOmpSparseTensorDotSubEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTe
     sptAssert(collectZero == 0);
     /* Ensure X and Y are in same shape */
     if(hiY->nmodes != hiX->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSubHiCOO", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns DotSub", "shape mismatch");
     }
     for(sptIndex i = 0; i < hiX->nmodes; ++i) {
         if(hiY->ndims[i] != hiX->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSubHiCOO", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns DotSub", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(hiY->nnz != hiX->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSubHiCOO", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns DotSub", "nonzero distribution mismatch");
     }
     sptNnzIndex nnz = hiX->nnz;
 
@@ -56,7 +56,7 @@ int sptOmpSparseTensorDotSubEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTe
     for(sptNnzIndex i=0; i< nnz; ++i)
         hiZ->values.data[i] = hiX->values.data[i] - hiY->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns DotSubHiCOO");
+    sptPrintElapsedTime(timer, "Omp HiSpTns DotSub");
 
     /* TODO: Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.

@@ -60,10 +60,10 @@ int sptOmpMTTKRP(sptSparseTensor const * const X,
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -72,6 +72,10 @@ int sptOmpMTTKRP(sptSparseTensor const * const X,
     sptIndex const * const mode_ind = X->inds[mode].data;
     sptValue * const restrict mvals = mats[nmodes]->values;
     memset(mvals, 0, tmpI*stride*sizeof(sptValue));
+
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
 
     #pragma omp parallel for schedule(static) num_threads(tk)
     for(sptNnzIndex x=0; x<nnz; ++x) {
@@ -111,6 +115,11 @@ int sptOmpMTTKRP(sptSparseTensor const * const X,
         sptFreeValueVector(&scratch);
     }   // End loop nnzs
 
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
+    
+    sptFreeTimer(timer);
+
     return 0;
 }
 
@@ -131,10 +140,10 @@ int sptOmpMTTKRP_3D(sptSparseTensor const * const X,
     sptAssert(nmodes ==3);
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -151,6 +160,9 @@ int sptOmpMTTKRP_3D(sptSparseTensor const * const X,
     sptMatrix * restrict times_mat_2 = mats[times_mat_index_2];
     sptIndex * restrict times_inds_2 = X->inds[times_mat_index_2].data;
 
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
     #pragma omp parallel for schedule(static) num_threads(tk)
     for(sptNnzIndex x=0; x<nnz; ++x) {
         sptIndex mode_i = mode_ind[x];
@@ -164,6 +176,9 @@ int sptOmpMTTKRP_3D(sptSparseTensor const * const X,
             mvals_row[r] += entry * times_mat_1->values[tmp_i_1 * stride + r] * times_mat_2->values[tmp_i_2 * stride + r];
         }
     }
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
+    sptFreeTimer(timer);
 
     return 0;
 }

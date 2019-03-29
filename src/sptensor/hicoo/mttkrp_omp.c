@@ -66,10 +66,10 @@ int sptOmpMTTKRPHiCOO(
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP  HiCOO SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP  HiCOO SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -81,6 +81,10 @@ int sptOmpMTTKRPHiCOO(
 
     // omp_lock_t lock;
     // omp_init_lock(&lock);
+
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
 
     /* Loop kernels */
     #pragma omp parallel for num_threads(nthreads)
@@ -136,6 +140,10 @@ int sptOmpMTTKRPHiCOO(
         sptFreeValueVector(&scratch);
     }   // End loop blocks
 
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
+    sptFreeTimer(timer);
+
     // omp_destroy_lock(&lock);
 
     return 0;
@@ -158,10 +166,10 @@ int sptOmpMTTKRPHiCOO_3D(
     sptAssert(nmodes ==3);
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp HiSpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -177,6 +185,10 @@ int sptOmpMTTKRPHiCOO_3D(
     sptMatrix * restrict times_mat_2 = mats[times_mat_index_2];
 
 
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
+    
     /* Loop kernels */
     #pragma omp parallel for num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
@@ -201,6 +213,10 @@ int sptOmpMTTKRPHiCOO_3D(
             
         }   // End loop entries
     }   // End loop blocks
+
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
+    sptFreeTimer(timer);
 
     return 0;
 }

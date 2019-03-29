@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
         }
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooDotDivEqHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average HiCooDotDivEq");
 
     if(fZ != NULL) {
         // sptDumpSparseTensorHiCOO(&hiZ, stdout);

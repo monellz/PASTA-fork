@@ -29,25 +29,25 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
     sptIndex m;
     sptNnzIndexVector fiberidx;
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns * Mtx", "shape mismatch");
     }
     if(X->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns * Mtx", "shape mismatch");
     }
     sptSparseTensorSortIndexAtMode(X, mode, 0);
     // jli: try to avoid malloc in all operation functions.
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "OMP  SpTns * Mtx");
+    spt_CheckOSError(!ind_buf, "Omp SpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
     // jli: use pre-processing to allocate Y size outside this function.
     result = sptNewSemiSparseTensor(Y, X->nmodes, mode, ind_buf);
-    spt_CheckError(result, "OMP  SpTns * Mtx", NULL);
+    spt_CheckError(result, "Omp SpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns * Mtx", "shape mismatch");
     }
     sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
 
@@ -69,7 +69,7 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
     }
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp  SpTns * Mtx");
+    sptPrintElapsedTime(timer, "Omp SpTns * Mtx");
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
 

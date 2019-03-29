@@ -36,10 +36,10 @@
 int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const sptMatrix *U, sptIndex const mode) 
 {
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns * Mtx", "shape mismatch");
     }
     if(X->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns * Mtx", "shape mismatch");
     }
     
     sptIndex stride = U->stride;
@@ -50,16 +50,16 @@ int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const s
 
     sptSparseTensorSortIndexAtMode(X, mode, 0);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  SpTns * Mtx");
+    spt_CheckOSError(!ind_buf, "Cpu SpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
     result = sptNewSemiSparseTensor(Y, X->nmodes, mode, ind_buf);
-    spt_CheckError(result, "CPU  SpTns * Mtx", NULL);
+    spt_CheckError(result, "Cpu SpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns * Mtx", "shape mismatch");
     }
     sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
 
@@ -79,7 +79,7 @@ int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const s
     }
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  SpTns * Mtx");
+    sptPrintElapsedTime(timer, "Cpu SpTns * Mtx");
 
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);

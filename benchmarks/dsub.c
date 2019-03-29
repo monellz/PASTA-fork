@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CooDotSub");
+    sptPrintAverageElapsedTime(timer, niters, "Average CooDotSub");
     sptFreeTimer(timer);
 
     if(fZ != NULL) {

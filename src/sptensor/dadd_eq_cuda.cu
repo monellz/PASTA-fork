@@ -57,16 +57,16 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
    sptNnzIndex i;
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda SpTns DotAdd", "shape mismatch");
     }
     for(i = 0; i < X->nmodes; ++i) {
         if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda SpTns DotAdd", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(Y->nnz != X->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotAdd", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda SpTns DotAdd", "nonzero distribution mismatch");
     }
     int result;
 
@@ -82,14 +82,14 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptStartTimer(timer);
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, Z->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, X->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, Y->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     cudaMemcpy(Y_val, Y->values.data, Y->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Device malloc and copy");
@@ -119,10 +119,10 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     dim3 dimBlock(nthreadsx);
     printf("all_nblocks: %lu, nthreadsx: %lu\n", all_nblocks, nthreadsx);
 
-    printf("[CUDA SpTns DotAdd] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
+    printf("[Cuda SpTns DotAdd] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
     spt_dAddKernel<<<nblocks, dimBlock>>>(Z_val, X_val, Y_val, X->nnz);
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd kernel");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd kernel");
 
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Cuda SpTns DotAdd");
@@ -142,11 +142,11 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
 
     cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     result = cudaFree(Y_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     result = cudaFree(Z_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns DotAdd");
+    spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
 
     return 0;
 }

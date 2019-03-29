@@ -158,7 +158,7 @@ int main(int argc, char ** argv)
     }
 
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooTtmHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average HiCooTtm");
 
     if(fo != NULL) {
         // sptDumpSemiSparseTensorHiCOO(&hiY, stdout);

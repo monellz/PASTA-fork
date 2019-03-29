@@ -29,7 +29,7 @@ int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const s
 {
     /* Ensure X and Y are in same number of dimensions */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Mul", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns DotMul", "shape mismatch");
     }
     sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
@@ -64,10 +64,10 @@ int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const s
         } else {  // X[i] == Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
-                spt_CheckError(result, "SpTns Mul", NULL);
+                spt_CheckError(result, "Cpu SpTns DotMul", NULL);
             }
             result = sptAppendValueVector(&Z->values, X->values.data[i] * Y->values.data[j]);
-            spt_CheckError(result, "SpTns Mul", NULL);
+            spt_CheckError(result, "Cpu SpTns DotMul", NULL);
 
             ++Z->nnz;
             ++i;
@@ -75,7 +75,7 @@ int sptSparseTensorDotMul(sptSparseTensor *Z, const sptSparseTensor * X, const s
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  SpTns DotMul");
+    sptPrintElapsedTime(timer, "Cpu SpTns DotMul");
 
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.

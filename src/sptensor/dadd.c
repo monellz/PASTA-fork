@@ -29,7 +29,7 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const s
 {
     /* Ensure X and Y are in same number of dimensions */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns Add", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns DotAdd", "shape mismatch");
     }
     sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
@@ -60,30 +60,30 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const s
         if(compare > 0) {  // X[i] > Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], Y->inds[mode].data[j]);
-                spt_CheckError(result, "SpTns Add", NULL);
+                spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
             }
             result = sptAppendValueVector(&Z->values, Y->values.data[j]);
-            spt_CheckError(result, "SpTns Add", NULL);
+            spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
 
             ++Z->nnz;
             ++j;
         } else if(compare < 0) {  // X[i] < Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
-                spt_CheckError(result, "SpTns Add", NULL);
+                spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
             }
             result = sptAppendValueVector(&Z->values, X->values.data[i]);
-            spt_CheckError(result, "SpTns Add", NULL);
+            spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
 
             ++Z->nnz;
             ++i;
         } else {  // X[i] == Y[j]
             for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
                 result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
-                spt_CheckError(result, "SpTns Add", NULL);
+                spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
             }
             result = sptAppendValueVector(&Z->values, X->values.data[i] + Y->values.data[j]);
-            spt_CheckError(result, "SpTns Add", NULL);
+            spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
 
             ++Z->nnz;
             ++i;
@@ -94,10 +94,10 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const s
     while(i < X->nnz) {
         for(sptIndex mode = 0; mode < X->nmodes; ++mode) {
             result = sptAppendIndexVector(&Z->inds[mode], X->inds[mode].data[i]);
-            spt_CheckError(result, "SpTns Add", NULL);
+            spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
         }
         result = sptAppendValueVector(&Z->values, X->values.data[i]);
-        spt_CheckError(result, "SpTns Add", NULL);
+        spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
         ++Z->nnz;
         ++i;
     }
@@ -105,15 +105,15 @@ int sptSparseTensorDotAdd(sptSparseTensor *Z, const sptSparseTensor * X, const s
     while(j < Y->nnz) {
         for(sptIndex mode = 0; mode < Y->nmodes; ++mode) {
             result = sptAppendIndexVector(&Z->inds[mode], Y->inds[mode].data[j]);
-            spt_CheckError(result, "SpTns Add", NULL);
+            spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
         }
         result = sptAppendValueVector(&Z->values, Y->values.data[j]);
-        spt_CheckError(result, "SpTns Add", NULL);
+        spt_CheckError(result, "Cpu SpTns DotAdd", NULL);
         ++Z->nnz;
         ++j;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  SpTns DotAdd");
+    sptPrintElapsedTime(timer, "Cpu SpTns DotAdd");
 
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.

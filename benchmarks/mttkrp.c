@@ -154,7 +154,7 @@ int main(int argc, char ** argv)
     sptStartTimer(timer);
 
     for(int it=0; it<niters; ++it) {
-        // sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
+        sptAssert(sptConstantMatrix(U[nmodes], 0) == 0);
         if(dev_id == -2) {
             sptAssert(sptMTTKRP(&X, U, mats_order, mode) == 0);
         } else if(dev_id == -1) {
@@ -165,7 +165,6 @@ int main(int argc, char ** argv)
     }
 
     sptStopTimer(timer);
-    sptFreeTimer(timer);
 
     double aver_time = sptPrintAverageElapsedTime(timer, niters, "Average CooMTTKRP");
     double gflops = (double)nmodes * R * X.nnz / aver_time / 1e9;
@@ -181,6 +180,7 @@ int main(int argc, char ** argv)
         fclose(fo);
     }
 
+    sptFreeTimer(timer);
     for(sptIndex m=0; m<nmodes; ++m) {
         sptFreeMatrix(U[m]);
     }

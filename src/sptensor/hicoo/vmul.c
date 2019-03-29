@@ -25,10 +25,10 @@
 int sptSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorHiCOOGeneral *hiX, const sptValueVector *V, sptIndex mode) 
 {
     if(mode >= hiX->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Vec", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Vec", "shape mismatch");
     }
     if(hiX->ndims[mode] != V->len) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Vec", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Vec", "shape mismatch");
     }
 
     int result;
@@ -39,7 +39,7 @@ int sptSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorHiCO
 
     sptStartTimer(timer);
     ind_buf = malloc(hiX->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  HiSpTns * Vec");
+    spt_CheckOSError(!ind_buf, "Cpu HiSpTns * Vec");
     for(sptIndex m = 0; m < hiX->nmodes; ++m) {
         if(m < mode)
             ind_buf[m] = hiX->ndims[m];
@@ -49,7 +49,7 @@ int sptSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorHiCO
 
     result = sptNewSparseTensorHiCOO(hiY, hiX->nmodes - 1, ind_buf, 0, hiX->sb_bits);
     free(ind_buf);
-    spt_CheckError(result, "CPU  HiSpTns * Vec", NULL);
+    spt_CheckError(result, "Cpu HiSpTns * Vec", NULL);
     sptSparseTensorSetIndicesHiCOO(hiY, &fiberidx, hiX);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Allocate output tensor");
@@ -66,7 +66,7 @@ int sptSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorHiCO
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu  HiSpTns * Vec");
+    sptPrintElapsedTime(timer, "Cpu HiSpTns * Vec");
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
 

@@ -31,7 +31,7 @@ int sptOmpSparseTensorDotSub(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTe
 {
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "OMP SpTns Sub", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns DotSub", "shape mismatch");
     }
     sptIndex * max_ndims = (sptIndex*)malloc(X->nmodes * sizeof(sptIndex));
     for(sptIndex i = 0; i < X->nmodes; ++i) {
@@ -181,7 +181,7 @@ int sptOmpSparseTensorDotSub(sptSparseTensor *Z, sptSparseTensor *X, sptSparseTe
         sptAssert(sptAppendValueVectorWithVector(&(Z->values), &(local_vals[k])) == 0);
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp  SpTns DotSub");
+    sptPrintElapsedTime(timer, "Omp SpTns DotSub");
 
 
     for(int k=0; k<nthreads; ++k) {

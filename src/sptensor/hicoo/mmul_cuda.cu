@@ -32,13 +32,13 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     sptNnzIndex const smem_size) 
 {
     if(mode >= hiX->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CUDA HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda HiSpTns * Mtx", "shape mismatch");
     }
     if(hiX->ndims[mode] != U->nrows) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CUDA HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda HiSpTns * Mtx", "shape mismatch");
     }
     if(hiX->nmodes != hiX->ncmodes + 1) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda HiSpTns * Mtx", "shape mismatch");
     }
 
     sptIndex stride = U->stride;
@@ -54,9 +54,9 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     ind_buf[mode] = U->ncols;
     result = sptNewSemiSparseTensorHiCOO(hiY, hiX->nmodes, ind_buf, mode, hiX->sb_bits);
     delete[] ind_buf;
-    spt_CheckError(result, "CUDA HiSpTns * Mtx", NULL);
+    spt_CheckError(result, "Cuda HiSpTns * Mtx", NULL);
     if(hiY->values.stride != stride) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiSpTns * Mtx", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda HiSpTns * Mtx", "shape mismatch");
     }
 
     sptSemiSparseTensorSetIndicesHiCOO(hiY, &fiberidx, hiX);
@@ -75,24 +75,24 @@ int sptCudaSparseTensorMulMatrixHiCOO(
 
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, hiY->nnz * stride * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     // jli: Add memset to Y.
     cudaMemset(Y_val, 0, hiY->nnz * stride * sizeof (sptValue));
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptIndex *X_inds_m = NULL;
     result = cudaMalloc((void **) &X_inds_m, hiX->nnz * sizeof (sptIndex));
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     cudaMemcpy(X_inds_m, hiX->inds[0].data, hiX->nnz * sizeof (sptIndex), cudaMemcpyHostToDevice);
     sptValue *U_val = NULL;
     result = cudaMalloc((void **) &U_val, U->nrows * stride * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     cudaMemcpy(U_val, U->values, U->nrows * stride * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptNnzIndex *fiberidx_val = NULL;
     result = cudaMalloc((void **) &fiberidx_val, fiberidx.len * sizeof (sptNnzIndex));
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     cudaMemcpy(fiberidx_val, fiberidx.data, fiberidx.len * sizeof (sptNnzIndex), cudaMemcpyHostToDevice);
 
     const sptNnzIndex max_nblocks = 32768;
@@ -157,7 +157,7 @@ int sptCudaSparseTensorMulMatrixHiCOO(
 
     switch(impl_num) {
     case 14:  
-        printf("[CUDA HiSpTns * Mtx] spt_TTMRankRBNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
+        printf("[Cuda HiSpTns * Mtx] spt_TTMRankRBNnzKernel<<<%lu, (%lu, %lu)>>>\n", nblocks, nthreadsx, nthreadsy);
         spt_TTMRankRBNnzKernel<<<nblocks, dimBlock>>>(
             Y_val, stride, hiY->nnz,
             X_val, hiX->nnz, X_inds_m,
@@ -165,7 +165,7 @@ int sptCudaSparseTensorMulMatrixHiCOO(
             U_val, U->nrows, U->ncols, stride);
         break; 
     case 15:  
-        printf("[CUDA HiSpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smem_size);
+        printf("[Cuda HiSpTns * Mtx] spt_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smem_size);
         spt_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smem_size>>>(
             Y_val, stride, hiY->nnz,
             X_val, hiX->nnz, X_inds_m,
@@ -174,23 +174,23 @@ int sptCudaSparseTensorMulMatrixHiCOO(
         break; 
     }
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx kernel");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "CUDA HiSpTns * Mtx");
+    sptPrintElapsedTime(timer, "Cuda HiSpTns * Mtx");
     sptFreeTimer(timer);
 
     cudaMemcpy(hiY->values.values, Y_val, hiY->nnz * stride * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(fiberidx_val);
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     result = cudaFree(U_val);
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     result = cudaFree(X_inds_m);
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     result = cudaFree(Y_val);
-    spt_CheckCudaError(result != 0, "CUDA HiSpTns * Mtx");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     sptFreeNnzIndexVector(&fiberidx);
 
     return 0;

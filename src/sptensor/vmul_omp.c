@@ -27,10 +27,10 @@
 int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sptValueVector *V, sptIndex mode)
 {
     if(mode >= X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Vec", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns * Vec", "shape mismatch");
     }
     if(X->ndims[mode] != V->len) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  SpTns * Vec", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns * Vec", "shape mismatch");
     }
 
     int result;
@@ -46,7 +46,7 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
 
     sptStartTimer(timer);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
-    spt_CheckOSError(!ind_buf, "CPU  SpTns * Vec");
+    spt_CheckOSError(!ind_buf, "Omp SpTns * Vec");
     for(sptIndex m = 0; m < X->nmodes; ++m) {
         if(m < mode)
             ind_buf[m] = X->ndims[m];
@@ -56,7 +56,7 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
 
     result = sptNewSparseTensor(Y, X->nmodes - 1, ind_buf);
     free(ind_buf);
-    spt_CheckError(result, "CPU  SpTns * Vec", NULL);
+    spt_CheckError(result, "Omp SpTns * Vec", NULL);
     sptSparseTensorSetIndices(Y, &fiberidx, mode, X);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Allocate output tensor");
@@ -73,7 +73,7 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp  SpTns * Vec");
+    sptPrintElapsedTime(timer, "Omp SpTns * Vec");
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
 

@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
         }
     }
     sptStopTimer(timer);
-    sptPrintAverageElapsedTime(timer, niters, "Average CooMulScalarHiCOO");
+    sptPrintAverageElapsedTime(timer, niters, "Average HiCooMulScalar");
 
 
     if(fZ != NULL) {

@@ -79,7 +79,6 @@ int sptMTTKRPKernelHiCOO(
         /* Matrix blocked implementations */
         case 14:
             printf("\nExecute spt_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked (%u, %u, %u)\n", nblocks, nthreadsx, nthreadsy);
-
             spt_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked<<<nblocks, dimBlock>>>(
                 mode,
                 nmodes,
@@ -101,7 +100,7 @@ int sptMTTKRPKernelHiCOO(
     break;
     }   // End switch nmodes
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA HiCOO SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns MTTKRP");
 
     return 0;
 }

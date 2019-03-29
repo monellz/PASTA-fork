@@ -31,16 +31,16 @@ int sptOmpSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, con
 {
     /* Ensure X and Y are in same shape */
     if(Y->nmodes != X->nmodes) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "shape mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns DotSub", "shape mismatch");
     }
     for(sptIndex i = 0; i < X->nmodes; ++i) {
         if(Y->ndims[i] != X->ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "shape mismatch");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns DotSub", "shape mismatch");
         }
     }
     /* Ensure X and Y have exactly the same nonzero distribution */
     if(Y->nnz != X->nnz) {
-        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SpTns DotSub", "nonzero distribution mismatch");
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "Omp SpTns DotSub", "nonzero distribution mismatch");
     }
     sptNnzIndex nnz = X->nnz;
 

@@ -60,10 +60,10 @@ int sptCudaMTTKRP(
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CUDA SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CUDA SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -101,17 +101,17 @@ int sptCudaMTTKRP(
 
     /* dev_mats_order */
     result = sptCudaDuplicateMemory(&dev_mats_order, mats_order, nmodes * sizeof (sptIndex), cudaMemcpyHostToDevice);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += nmodes * sizeof (sptIndex);
 
     /* dev_Xndims */
     result = sptCudaDuplicateMemory(&dev_Xndims, ndims, nmodes * sizeof (sptIndex), cudaMemcpyHostToDevice);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += nmodes * sizeof (sptIndex);
 
     /* dev_Xvals */
     result = sptCudaDuplicateMemory(&dev_Xvals, X->values.data, nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += nnz * sizeof (sptValue);
 
     /* Xinds_header */
@@ -120,7 +120,7 @@ int sptCudaMTTKRP(
     }
     /* dev_Xinds */
     result = sptCudaDuplicateMemoryIndirect(&dev_Xinds, Xinds_header, nmodes, nnz, cudaMemcpyHostToDevice);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += nmodes * nnz * sizeof(sptIndex);
 
     /* mats_header and lengths */
@@ -136,22 +136,22 @@ int sptCudaMTTKRP(
     sum_mat_length += mats[mode]->nrows * stride;
     /* dev_mats */
     result = sptCudaDuplicateMemoryIndirect(&dev_mats, mats_header, nmodes+1, lengths, cudaMemcpyHostToDevice);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += sum_mat_length * sizeof(sptValue);
 
     if(nmodes > 4) {
         /* dev_scratch */
         result = cudaMalloc((void **) &dev_scratch, nnz * stride * sizeof (sptValue));
-        spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+        spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
         result = cudaMemset(dev_scratch, 0, nnz * stride * sizeof (sptValue));
-        spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+        spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
         dev_mem_size +=  nnz * stride * sizeof (sptValue);
     }
 
     sptStopTimer(timer);
     time_h2d = sptElapsedTime(timer);
     gbw_h2d = dev_mem_size / time_h2d /1e9;
-    sptPrintElapsedTime(timer, "CUDA SpTns MTTKRP H2D");
+    sptPrintElapsedTime(timer, "Cuda SpTns MTTKRP H2D");
     printf("[Bandwidth H2D]: %lf GBytes/sec\n", gbw_h2d);
 
 
@@ -263,7 +263,7 @@ int sptCudaMTTKRP(
         //     block_offset);
     }   // End switch nmodes
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
 
 
 
@@ -271,7 +271,7 @@ int sptCudaMTTKRP(
     time_exe = sptElapsedTime(timer);
     gflops_exe = (double)dev_flops / time_exe / 1e9;
     gbytes_exe = (double)dev_bytes / time_exe / 1e9;
-    sptPrintElapsedTime(timer, "CUDA SpTns MTTKRP");
+    sptPrintElapsedTime(timer, "Cuda SpTns MTTKRP");
     printf("[GFLOPS]: %.2lf GFlops, [Bandwidth]: %.2lf GB/s\n", gflops_exe, gbytes_exe);
 
     sptStartTimer(timer);
@@ -279,34 +279,34 @@ int sptCudaMTTKRP(
     dev_mem_size = 0;
     /* Copy back the pointer to dev_mats[nmodes] to the result */
     result = cudaMemcpy(&dev_part_prod, dev_mats + nmodes, sizeof dev_part_prod, cudaMemcpyDeviceToHost);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += sizeof dev_part_prod;
 
     result = cudaMemcpy(mats[nmodes]->values, dev_part_prod, mats[mode]->nrows * stride * sizeof (sptValue), cudaMemcpyDeviceToHost);
-    spt_CheckCudaError(result != 0, "CUDA SpTns SpltMTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns SpltMTTKRP");
     dev_mem_size += mats[mode]->nrows * stride * sizeof (sptValue);
 
     sptStopTimer(timer);
     time_d2h = sptElapsedTime(timer);
     gbw_d2h = dev_mem_size / time_d2h /1e9;
-    sptPrintElapsedTime(timer, "CUDA SpTns MTTKRP D2H");
+    sptPrintElapsedTime(timer, "Cuda SpTns MTTKRP D2H");
     printf("[Bandwidth D2H]: %lf GBytes/sec\n", gbw_d2h);
     printf("\n");
     sptFreeTimer(timer);
 
     result = cudaFree(dev_mats_order);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     result = cudaFree(dev_Xndims);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     result = cudaFree(dev_Xvals);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     result = cudaFree(dev_Xinds);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     result = cudaFree(dev_mats);
-    spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+    spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     if(nmodes > 4) {
         result = cudaFree(dev_scratch);
-        spt_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
+        spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     }
     delete[] Xinds_header;
     delete[] mats_header;

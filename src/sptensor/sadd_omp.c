@@ -42,7 +42,7 @@ int sptOmpSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue
         Z->values.data[i] += a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns MulScalar");
+    sptPrintElapsedTime(timer, "Omp SpTns AddScalar");
     sptFreeTimer(timer);
     printf("\n");
 

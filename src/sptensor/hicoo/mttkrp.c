@@ -59,10 +59,10 @@ int sptMTTKRPHiCOO(
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -76,6 +76,9 @@ int sptMTTKRPHiCOO(
     sptIndex * block_coord = (sptIndex*)malloc(nmodes * sizeof(*block_coord));
     sptIndex * ele_coord = (sptIndex*)malloc(nmodes * sizeof(*ele_coord));
 
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
 
     /* Loop blocks */
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
@@ -118,7 +121,10 @@ int sptMTTKRPHiCOO(
 
     }   // End loop blocks
 
-
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
+    
+    sptFreeTimer(timer);
     free(block_coord);
     free(ele_coord);
     sptFreeValueVector(&scratch);
@@ -142,10 +148,10 @@ int sptMTTKRPHiCOO_3D(
     sptAssert(nmodes ==3);
     for(sptIndex i=0; i<nmodes; ++i) {
         if(mats[i]->ncols != mats[nmodes]->ncols) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns MTTKRP", "mats[i]->cols != mats[nmodes]->ncols");
         }
         if(mats[i]->nrows != ndims[i]) {
-            spt_CheckError(SPTERR_SHAPE_MISMATCH, "CPU  HiCOO SpTns MTTKRP", "mats[i]->nrows != ndims[i]");
+            spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns MTTKRP", "mats[i]->nrows != ndims[i]");
         }
     }
 
@@ -166,6 +172,10 @@ int sptMTTKRPHiCOO_3D(
     sptValue * restrict blocked_mvals;
     sptValue * restrict blocked_times_mat_1;
     sptValue * restrict blocked_times_mat_2;
+
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    sptStartTimer(timer);
 
     /* Loop blocks */
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
@@ -196,6 +206,11 @@ int sptMTTKRPHiCOO_3D(
             
         }   // End loop entries
     }   // End loop blocks
+
+    sptStopTimer(timer);
+    sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
+    
+    sptFreeTimer(timer);
 
     return 0;
 }

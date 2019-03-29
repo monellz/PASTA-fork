@@ -431,12 +431,10 @@ int sptSparseTensorToHiCOOGeneral(
     sptTimer sort_timer;
     sptNewTimer(&sort_timer, 0);
     sptStartTimer(sort_timer);
-
     /* Sort only block indices. Keep the sorting order in the same fiber. */
     sptSparseTensorSortIndexRowBlock(tsr, 1, 0, tsr->nnz, sb_bits, flags);
     // printf("Sort by blocks:\n");
     // sptAssert(sptDumpSparseTensor(tsr, 0, stdout) == 0);
-
     sptStopTimer(sort_timer);
     sptPrintElapsedTime(sort_timer, "\tHiCOO RowBlock sorting");
     sptFreeTimer(sort_timer);
@@ -526,7 +524,6 @@ int sptSparseTensorToHiCOOGeneral(
 
     /* Last element for bptr */
     sptAppendNnzIndexVector(&hitsr->bptr, nnz);
-
 
     *max_nnzb = hitsr->bptr.data[1] - hitsr->bptr.data[0];
     sptNnzIndex sum_nnzb = 0;

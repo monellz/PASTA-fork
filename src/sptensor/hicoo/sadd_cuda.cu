@@ -67,11 +67,11 @@ int sptCudaSparseTensorAddScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensor
     sptStartTimer(timer);
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, hiZ->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns AddScalar");
     cudaMemcpy(Z_val, hiZ->values.data, hiZ->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns AddScalar");
     cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
     sptPrintElapsedTime(timer, "Device malloc and copy");
@@ -100,21 +100,21 @@ int sptCudaSparseTensorAddScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensor
     dim3 dimBlock(nthreadsx);
     printf("all_nblocks: %lu, nthreadsx: %lu\n", all_nblocks, nthreadsx);
 
-    printf("[CUDA SpTns AddScalar] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
+    printf("[Cuda HiSpTns AddScalar] spt_sAddKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
     spt_sAddKernel<<<nblocks, dimBlock>>>(Z_val, X_val, hiX->nnz, a);
     result = cudaThreadSynchronize();
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar kernel");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns AddScalar kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns AddScalar");
+    sptPrintElapsedTime(timer, "Cuda HiSpTns AddScalar");
     sptFreeTimer(timer);
     printf("\n");
 
     cudaMemcpy(hiZ->values.data, Z_val, hiZ->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     result = cudaFree(X_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns AddScalar");
     result = cudaFree(Z_val);
-    spt_CheckCudaError(result != 0, "CUDA SpTns AddScalar");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns AddScalar");
 
     return 0;
 }
