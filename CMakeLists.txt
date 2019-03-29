@@ -92,6 +92,7 @@ link_libraries("m")
 
 if(USE_CUDA)
     file(GLOB_RECURSE PASTA_SRC RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.c" "src/*.cu" "src/*.h" "include/*.h")
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=gnu99" )
     # MESSAGE( STATUS "PASTA_SRC:         " ${PASTA_SRC} )
 
     if(BUILD_SHARED)
