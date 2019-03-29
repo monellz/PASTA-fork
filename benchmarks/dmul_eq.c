@@ -37,7 +37,7 @@ static void print_usage(char ** argv) {
  * Require two tensors has the same number of dimensions, the same shape and the same nonzero distribution.
  */
 int main(int argc, char *argv[]) {
-    FILE *fX, *fY, *fZ;
+    FILE *fX = NULL, *fY = NULL, *fZ = NULL;
     sptSparseTensor X, Y, Z;
     int dev_id = -2;
     int niters = 5;

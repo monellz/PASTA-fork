@@ -37,7 +37,7 @@ static void print_usage(char ** argv) {
  */
 int main(int argc, char *argv[]) 
 {
-    FILE *fX, *fZ;
+    FILE *fX = NULL, *fZ = NULL;
     sptValue a;
     sptSparseTensor X, Z;
     sptSparseTensorHiCOO hiX, hiZ;

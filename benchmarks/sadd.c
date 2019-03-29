@@ -35,7 +35,7 @@ static void print_usage(char ** argv) {
  * Benchmark COO tensor addition with a scalar. 
  */
 int main(int argc, char *argv[]) {
-    FILE *fX, *fZ;
+    FILE *fX = NULL, *fZ = NULL;
     sptValue a;
     sptSparseTensor X, Z;
     int dev_id = -2;
