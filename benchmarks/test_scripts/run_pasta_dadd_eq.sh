@@ -14,7 +14,12 @@ nmodes=$3 		# 3, or 4
 nt=$4			# 32
 gpu_dev_id=$5	# 0, 1, ...
 
-prog_name="dadd_eq_gpu"
+if [[ ${gpu_dev_id} = "-1" ]]; then
+	prog_name="dadd_eq"
+else
+	prog_name="dadd_eq_gpu"
+fi
+
 if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs[@]}") 
 elif [[ ${nmodes} = "4" ]]; then

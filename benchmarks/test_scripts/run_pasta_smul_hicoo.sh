@@ -14,7 +14,12 @@ nmodes=$3 		# 3, or 4
 nt=$4			# 32
 gpu_dev_id=$5	# 0, 1, ...
 
-prog_name="smul_hicoo_gpu"
+if [[ ${gpu_dev_id} = "-1" ]]; then
+	prog_name="smul_hicoo"
+else
+	prog_name="smul_hicoo_gpu"
+fi
+
 sb=7
 a_value=5.0
 if [[ ${nmodes} = "3" ]]; then

@@ -14,7 +14,12 @@ nmodes=$3 		# 3, or 4
 nt=$4			# 32
 gpu_dev_id=$5	# 0, 1, ...
 
-prog_name="mttkrp_gpu"
+if [[ ${gpu_dev_id} = "-1" ]]; then
+	prog_name="mttkrp"
+else
+	prog_name="mttkrp_gpu"
+fi
+
 modes="$(seq -s ' ' 0 $((${nmodes}-1)))"
 if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs[@]}") 
