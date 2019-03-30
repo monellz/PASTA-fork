@@ -6,15 +6,13 @@ declare -a s4tsrs=("chicago-crime-comm-4d" "nips-4d" "enron-4d" "flickr-4d" "del
 declare -a test_tsr_names=("vast-2015-mc1")
 # declare -a threads=("2" "4" "8" "16" "32")
 
-# Cori
-tsr_path="${SCRATCH}/BIGTENSORS"
-out_path="/global/homes/j/jiajiali/Work/SpTenBench/timing-results/pasta/coo"
+echo "./prog_name tsr_path out_path nmodes nt gpu_dev_id"
 
-echo "./prog_name nmodes nt gpu_dev_id"
-
-nmodes=$1 		# 3, or 4
-nt=$2			# 32
-gpu_dev_id=$3	# 0, 1, ...
+tsr_path=$1		# "${SCRATCH}/BIGTENSORS"
+out_path=$2		# "/global/homes/j/jiajiali/Work/SpTenBench/timing-results/pasta/coo"
+nmodes=$3 		# 3, or 4
+nt=$4			# 32
+gpu_dev_id=$5	# 0, 1, ...
 
 prog_name="mttkrp_hicoo_gpu"
 sb=7
