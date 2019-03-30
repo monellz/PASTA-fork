@@ -37,14 +37,14 @@ do
 	dev_id=-2
 	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.tns -Y ${tsr_path}/${tsr_name}.tns -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-seq.txt"
 	echo ${myprogram}
-	# ${myprogram}
+	${myprogram}
 
 	# OpenMP code
 	dev_id=-1
 	export OMP_NUM_THREADS=${nt}
 	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.tns -Y ${tsr_path}/${tsr_name}.tns -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-t${nt}.txt"
 	echo ${myprogram}
-	# ${myprogram}
+	${myprogram}
 
 	# CUDA code
 	# dev_id=${gpu_dev_id}
