@@ -37,7 +37,21 @@ __global__ void spt_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked(
     sptIndex * const dev_mats_order,
     sptValue ** const dev_mats);
 
-
+__global__ void spt_MTTKRPKernelRankSplitHiCOORB_4D_MatrixBlocked(
+    const sptIndex mode,
+    const sptIndex nmodes,
+    const sptNnzIndex nnz,
+    const sptIndex R,
+    const sptIndex stride,
+    const sptElementIndex sb_bits,
+    const sptNnzIndex blength,
+    sptIndex * const dev_ndims,
+    sptNnzIndex * const dev_bptr,
+    sptBlockIndex ** const dev_binds,
+    sptElementIndex ** const dev_einds,
+    sptValue * const dev_values,
+    sptIndex * const dev_mats_order,
+    sptValue ** const dev_mats);
 
 
 #endif

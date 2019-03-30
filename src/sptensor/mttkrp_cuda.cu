@@ -223,27 +223,31 @@ int sptCudaMTTKRP(
                 dev_mats_order,
                 dev_mats);
             break;
-        }   // End switch impl_num
+        default:
+            printf("Provide correct impl_num.\n");
+
+        }   // End switch impl_num for 3D
         break;
 
     case 4: 
         switch(impl_num) {
+        case 15:
+            printf("Execute spt_MTTKRPKernelRankSplitNnz4DOneKernel (%lu, (%u, %u))\n", nblocks, dimBlock.x, dimBlock.y);
+            spt_MTTKRPKernelRankSplitNnz4DOneKernel<<<nblocks, dimBlock>>>(
+                mode,
+                nmodes,
+                nnz,
+                R,
+                stride,
+                dev_Xndims,
+                dev_Xinds,
+                dev_Xvals,
+                dev_mats_order,
+                dev_mats);
+            break;
         default:
-            printf("Not support: Execute spt_MTTKRPKernelScratch (%lu, %lu)\n", nblocks, nthreadsx);
-            // spt_MTTKRPKernelScratch<<<nblocks, nthreadsx>>>(
-            //     mode,
-            //     nmodes,
-            //     nnz,
-            //     R,
-            //     stride,
-            //     dev_Xndims,
-            //     dev_Xinds,
-            //     dev_Xvals,
-            //     dev_mats_order,
-            //     dev_mats,
-            //     dev_scratch,
-            //     block_offset);
-        }   // End switch impl_num
+            printf("Provide correct impl_num.\n");
+        }   // End switch impl_num for 4D
         break;
 
     default:

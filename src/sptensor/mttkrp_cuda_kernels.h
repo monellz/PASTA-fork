@@ -32,6 +32,20 @@ __global__ void spt_MTTKRPKernelRankSplitNnz3DOneKernel(
     const sptIndex * dev_mats_order,
     sptValue ** dev_mats);
 
+/* impl_num = 15 */
+__global__ void spt_MTTKRPKernelRankSplitNnz4DOneKernel(
+    const sptIndex mode,
+    const sptIndex nmodes,
+    const sptNnzIndex nnz,
+    const sptIndex R,
+    const sptIndex stride,
+    const sptIndex * Xndims,
+    sptIndex ** const Xinds,
+    const sptValue * Xvals,
+    const sptIndex * dev_mats_order,
+    sptValue ** dev_mats);
+
+
 /* impl_num = 16 */
 __global__ void spt_MTTKRPKernelRankSplitNnzRB3DOneKernel(
     const sptIndex mode,
@@ -45,7 +59,8 @@ __global__ void spt_MTTKRPKernelRankSplitNnzRB3DOneKernel(
     const sptIndex * dev_mats_order,
     sptValue ** dev_mats);
 
-/* impl_num = 09, for arbitraty nmodes. Scratch is necessary for tensors with arbitrary modes. */
+
+/* for arbitrary nmodes. Scratch is necessary for tensors with arbitrary modes. */
 __global__ void spt_MTTKRPKernelScratch(
     const sptIndex mode,
     const sptIndex nmodes,
