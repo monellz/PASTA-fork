@@ -28,8 +28,8 @@ elif [[ ${nmodes} = "4" ]]; then
 	run_tsrs=("${s4tsrs[@]}") 
 fi
 
-# for R in 8 16 32 64
-for R in 16
+for R in 8 32 64
+# for R in 16
 do
 	for tsr_name in "${run_tsrs[@]}"
 	do
