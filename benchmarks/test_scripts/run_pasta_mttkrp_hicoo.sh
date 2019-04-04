@@ -20,7 +20,7 @@ else
 	prog_name="mttkrp_hicoo_gpu"
 fi
 
-sb=7
+
 modes="$(seq -s ' ' 0 $((${nmodes}-1)))"
 if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs[@]}") 
@@ -31,6 +31,7 @@ fi
 # for R in 8 32 64
 for R in 16
 do
+	sb=7
 	for tsr_name in "${run_tsrs[@]}"
 	do
 		if [ ${tsr_name} = "chicago-crime-comm-4d" ] || [ ${tsr_name} = "uber-4d" ]; then
