@@ -1,0 +1,135 @@
+{
+   "empirical": {
+      "gbytes": {
+         "data": [
+            [
+               "DRAM", 
+               60.38
+            ]
+         ], 
+         "metadata": {
+            "TIMESTAMP_DB": 1554494211.374497
+         }
+      }, 
+      "gflops": {
+         "data": [
+            [
+               "GFLOPs", 
+               120.77
+            ]
+         ], 
+         "metadata": {
+            "TIMESTAMP_DB": 1554494211.373806
+         }
+      }, 
+      "metadata": {
+         "ERT_VERSION": "1.1.0", 
+         "TIMESTAMP_DATA": [
+            1554494145.87, 
+            1554494146.92, 
+            1554494146.42, 
+            1554494147.92, 
+            1554494147.42
+         ], 
+         "HOSTNAME": [
+            "marianas.pnl.gov", 
+            [], 
+            [
+               "130.20.68.57"
+            ]
+         ], 
+         "OPENMP_THREADS": 16, 
+         "UNAME": [
+            "Linux", 
+            "marianas.pnl.gov", 
+            "3.10.0-514.21.1.el7.x86_64", 
+            "#1 SMP Thu May 25 17:04:51 UTC 2017", 
+            "x86_64", 
+            "x86_64"
+         ], 
+         "FLOPS": 32, 
+         "CONFIG": {
+            "ERT_WORKING_SET_MIN": [
+               "1"
+            ], 
+            "ERT_CFLAGS": [
+               "-O3", 
+               "-msse3", 
+               "-axSSE3", 
+               "-xSSE3", 
+               "-fno-alias", 
+               "-fno-fnalias", 
+               "-DERT_INTEL"
+            ], 
+            "ERT_CC": [
+               "icc"
+            ], 
+            "ERT_OPENMP_LDFLAGS": [
+               "-qopenmp"
+            ], 
+            "ERT_MEMORY_MAX": [
+               "65558828"
+            ], 
+            "ERT_LDFLAGS": [], 
+            "ERT_LDLIBS": [], 
+            "ERT_RUN": [
+               "export", 
+               "KMP_AFFINITY=scatter;", 
+               "export", 
+               "OMP_NUM_THREADS=ERT_OPENMP_THREADS;", 
+               "ERT_CODE"
+            ], 
+            "ERT_FLOPS": [
+               "32"
+            ], 
+            "ERT_OPENMP_CFLAGS": [
+               "-qopenmp"
+            ], 
+            "ERT_MPI": [
+               false
+            ], 
+            "ERT_TRIALS_MIN": [
+               "1"
+            ], 
+            "ERT_DRIVER": [
+               "driver1"
+            ], 
+            "ERT_RESULTS": [
+               "marianas_omp"
+            ], 
+            "ERT_OPENMP": [
+               "True"
+            ], 
+            "ERT_OPENMP_THREADS": [
+               "16"
+            ], 
+            "ERT_KERNEL": [
+               "kernel1"
+            ], 
+            "ERT_GPU": [
+               false
+            ], 
+            "ERT_LD": [
+               "icc"
+            ], 
+            "ERT_NUM_EXPERIMENTS": [
+               "5"
+            ], 
+            "ERT_ALIGN": [
+               "32"
+            ], 
+            "ERT_GNUPLOT": [
+               "gnuplot"
+            ]
+         }
+      }
+   }, 
+   "spec": {
+      "gbytes": {
+         "data": []
+      }, 
+      "gflops": {
+         "data": []
+      }
+   }
+}
