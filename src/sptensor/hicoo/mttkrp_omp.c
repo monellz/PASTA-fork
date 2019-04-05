@@ -62,6 +62,7 @@ int sptOmpMTTKRPHiCOO(
     sptIndex const * const ndims = hitsr->ndims;
     sptValue const * const vals = hitsr->values.data;
     sptIndex const stride = mats[0]->stride;
+    sptElementIndex const sb_bits = hitsr->sb_bits;
 
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
@@ -75,8 +76,7 @@ int sptOmpMTTKRPHiCOO(
 
     sptIndex const tmpI = mats[mode]->nrows;
     sptIndex const R = mats[mode]->ncols;
-    sptMatrix * const M = mats[nmodes];
-    sptValue * const mvals = M->values;
+    sptValue * const mvals = mats[nmodes]->values;
     memset(mvals, 0, tmpI*stride*sizeof(*mvals));
 
     // omp_lock_t lock;
@@ -90,53 +90,52 @@ int sptOmpMTTKRPHiCOO(
     #pragma omp parallel for num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
         /* Allocate thread-private data */
-        sptIndex * block_coord = (sptIndex*)malloc(nmodes * sizeof(*block_coord));
-        sptIndex * ele_coord = (sptIndex*)malloc(nmodes * sizeof(*ele_coord));
+        sptValue ** block_values = (sptValue**)malloc(nmodes * sizeof(*block_values));
         sptValueVector scratch; // Temporary array
-        sptNewValueVector(&scratch, R, R);       
+        sptNewValueVector(&scratch, R, R);    
 
         /* Block indices */
-        for(sptIndex m=0; m<nmodes; ++m)
-            block_coord[m] = hitsr->binds[m].data[b];
+        block_values[mode] = mvals + (hitsr->binds[mode].data[b] << sb_bits) * stride;
+        for(sptIndex m=0; m<nmodes; ++m) {
+            if(m != mode) {
+                block_values[m] = mats[m]->values + (hitsr->binds[m].data[b] << sb_bits) * stride;
+            }
+        }
 
         sptNnzIndex bptr_begin = hitsr->bptr.data[b];
         sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
         /* Loop entries in a block */
         for(sptNnzIndex z=bptr_begin; z<bptr_end; ++z) {
-            /* Element indices */
-            for(sptIndex m=0; m<nmodes; ++m)
-                ele_coord[m] = (block_coord[m] << hitsr->sb_bits) + hitsr->einds[m].data[z];
-
             /* Multiply the 1st matrix */
             sptIndex times_mat_index = mats_order[1];
-            sptMatrix * times_mat = mats[times_mat_index];
-            sptIndex tmp_i = ele_coord[times_mat_index];
+            sptValue * times_matval = block_values[times_mat_index];
+            sptElementIndex tmp_i = hitsr->einds[times_mat_index].data[z];
             sptValue const entry = vals[z];
             for(sptIndex r=0; r<R; ++r) {
-                scratch.data[r] = entry * times_mat->values[tmp_i * stride + r];
+                scratch.data[r] = entry * times_matval[tmp_i * stride + r];
             }
             /* Multiply the rest matrices */
             for(sptIndex m=2; m<nmodes; ++m) {
                 times_mat_index = mats_order[m];
-                times_mat = mats[times_mat_index];
-                tmp_i = ele_coord[times_mat_index];
+                times_matval = block_values[times_mat_index];
+                tmp_i = hitsr->einds[times_mat_index].data[z];
                 for(sptIndex r=0; r<R; ++r) {
-                    scratch.data[r] *= times_mat->values[tmp_i * stride + r];
+                    scratch.data[r] *= times_matval[tmp_i * stride + r];
                 }
             }
 
-            sptIndex const mode_i = ele_coord[mode];
+            sptIndex const mode_i = hitsr->einds[mode].data[z];
+            times_matval = block_values[mode];
             // omp_set_lock(&lock);
             for(sptIndex r=0; r<R; ++r) {
                 #pragma omp atomic update
-                mvals[mode_i * stride + r] += scratch.data[r];
+                times_matval[mode_i * stride + r] += scratch.data[r];
             }
             // omp_unset_lock(&lock);
         }   // End loop entries
 
         /* Free thread-private space */
-        free(block_coord);
-        free(ele_coord);
+        free(block_values);
         sptFreeValueVector(&scratch);
     }   // End loop blocks
 
