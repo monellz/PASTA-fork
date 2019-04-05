@@ -31,9 +31,9 @@ fi
 # for R in 8 32 64
 for R in 16
 do
-	sb=7
 	for tsr_name in "${run_tsrs[@]}"
 	do
+		sb=7
 		if [ ${tsr_name} = "chicago-crime-comm-4d" ] || [ ${tsr_name} = "uber-4d" ]; then
 			sb=4
 		fi
