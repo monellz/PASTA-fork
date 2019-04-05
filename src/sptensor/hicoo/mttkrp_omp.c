@@ -161,6 +161,7 @@ int sptOmpMTTKRPHiCOO_3D(
     sptIndex const * const ndims = hitsr->ndims;
     sptValue const * const restrict vals = hitsr->values.data;
     sptIndex const stride = mats[0]->stride;
+    sptElementIndex const sb_bits = hitsr->sb_bits;
 
     /* Check the mats. */
     sptAssert(nmodes ==3);
@@ -197,18 +198,23 @@ int sptOmpMTTKRPHiCOO_3D(
         sptBlockIndex block_coord_1 = hitsr->binds[times_mat_index_1].data[b];
         sptBlockIndex block_coord_2 = hitsr->binds[times_mat_index_2].data[b];
 
+        sptValue * restrict block_mvals = mvals + (block_coord_mode << sb_bits) * stride;
+        sptValue * restrict block_times_matval_1 = times_mat_1->values + (block_coord_1 << sb_bits) * stride;
+        sptValue * restrict block_times_matval_2 = times_mat_2->values + (block_coord_2 << sb_bits) * stride;
+
         sptNnzIndex bptr_begin = hitsr->bptr.data[b];
         sptNnzIndex bptr_end = hitsr->bptr.data[b+1];
         /* Loop entries in a block */
         for(sptIndex z=bptr_begin; z<bptr_end; ++z) {
             
-            sptIndex mode_i = (block_coord_mode << hitsr->sb_bits) + hitsr->einds[mode].data[z];
-            sptIndex tmp_i_1 = (block_coord_1 << hitsr->sb_bits) + hitsr->einds[times_mat_index_1].data[z];
-            sptIndex tmp_i_2 = (block_coord_2 << hitsr->sb_bits) + hitsr->einds[times_mat_index_2].data[z];
-            sptValue entry = vals[z];
+            sptElementIndex mode_i = hitsr->einds[mode].data[z];
+            sptValue * const restrict block_mvals_row = block_mvals + mode_i * stride;
+            sptElementIndex const tmp_i_1 = hitsr->einds[times_mat_index_1].data[z];
+            sptElementIndex const tmp_i_2 = hitsr->einds[times_mat_index_2].data[z];
+            sptValue const entry = vals[z];
             for(sptIndex r=0; r<R; ++r) {
                 #pragma omp atomic update
-                mvals[mode_i * stride + r] += entry * times_mat_1->values[tmp_i_1 * stride + r] * times_mat_2->values[tmp_i_2 * stride + r];
+                block_mvals_row[r] += entry * block_times_matval_1[tmp_i_1 * stride + r] * block_times_matval_2[tmp_i_2 * stride + r];
             }
             
         }   // End loop entries
