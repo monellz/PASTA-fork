@@ -37,7 +37,8 @@ static void print_usage(char ** argv) {
 
 int main(int argc, char ** argv) 
 {
-    FILE *fX = NULL, *fY = NULL;
+    FILE *fo = NULL;
+    char fname[1000];
     sptSparseTensor X;
     sptSemiSparseTensor Y;
     sptMatrix U;
@@ -76,13 +77,12 @@ int main(int argc, char ** argv)
         }
         switch(c) {
         case 'i':
-            fX = fopen(optarg, "r");
-            sptAssert(fX != NULL);
-            printf("input file: %s\n", optarg); fflush(stdout);
+            strcpy(fname, optarg);
+            printf("input file: %s\n", fname); fflush(stdout);
             break;
         case 'o':
-            fY = fopen(optarg, "w");
-            sptAssert(fY != NULL);
+            fo = fopen(optarg, "w");
+            sptAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'm':
@@ -113,8 +113,7 @@ int main(int argc, char ** argv)
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);
 
-    sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
-    fclose(fX);
+    sptAssert(sptLoadSparseTensor(&X, 1, fname) == 0);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
     // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
@@ -158,15 +157,15 @@ int main(int argc, char ** argv)
     sptStopTimer(timer);
     sptPrintAverageElapsedTime(timer, niters, "Average CooTtm");
 
-    if(fY != NULL) {
-        sptAssert(sptDumpSemiSparseTensor(&Y, fY) == 0);
+    if(fo != NULL) {
+        sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
 
         /* Convert Semi-COO to COO tensor */
         // sptSparseTensor Y_coo;
         // sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
-        // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fY) == 0);
+        // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
         // sptFreeSparseTensor(&Y_coo);
-        fclose(fY);
+        fclose(fo);
     }
 
     sptFreeTimer(timer);

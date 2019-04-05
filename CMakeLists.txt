@@ -123,4 +123,3 @@ if(BUILD_STATIC)
 endif()
 
 add_subdirectory("benchmarks")
-add_subdirectory("tests")

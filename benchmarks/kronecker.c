@@ -20,7 +20,7 @@
 #include <pasta.h>
 
 int main(int argc, char *argv[]) {
-    FILE *fa, *fb, *fo;
+    FILE *fo;
     sptSparseTensor a, b, out;
 
     if(argc != 4) {
@@ -28,15 +28,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    fa = fopen(argv[1], "r");
-    sptAssert(fa != NULL);
-    sptAssert(sptLoadSparseTensor(&a, 1, fa) == 0);
-    fclose(fa);
-
-    fb = fopen(argv[2], "r");
-    sptAssert(fb != NULL);
-    sptAssert(sptLoadSparseTensor(&b, 1, fb) == 0);
-    fclose(fb);
+    sptAssert(sptLoadSparseTensor(&a, 1, argv[1]) == 0);
+    sptAssert(sptLoadSparseTensor(&b, 1, argv[2]) == 0);
 
     sptAssert(sptSparseTensorKroneckerMul(&out, &a, &b) == 0);
 

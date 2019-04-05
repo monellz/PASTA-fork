@@ -24,7 +24,8 @@ int sptNewSparseTensor(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndi
 int sptCopySparseTensor(sptSparseTensor *dest, const sptSparseTensor *src, int const nt);
 void sptFreeSparseTensor(sptSparseTensor *tsr);
 double SparseTensorFrobeniusNormSquared(sptSparseTensor const * const spten);
-int sptLoadSparseTensor(sptSparseTensor *tsr, sptIndex start_index, FILE *fp);
+int sptLoadSparseTensor(sptSparseTensor *tsr, sptIndex start_index, char const * const fname);
+// int sptLoadSparseTensor(sptSparseTensor *tsr, sptIndex start_index, FILE *fp);
 int sptDumpSparseTensor(const sptSparseTensor *tsr, sptIndex start_index, FILE *fp);
 int sptMatricize(sptSparseTensor const * const X,
     sptIndex const m,

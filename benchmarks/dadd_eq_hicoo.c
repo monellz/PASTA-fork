@@ -38,7 +38,8 @@ static void print_usage(char ** argv) {
  * Require two tensors has the same number of dimensions, the same shape and the same nonzero distribution.
  */
 int main(int argc, char *argv[]) {
-    FILE *fX = NULL, *fY = NULL, *fZ = NULL;
+    FILE *fZ = NULL;
+    char Xfname[1000], Yfname[1000];
     sptSparseTensor X, Y, Z;
     sptSparseTensorHiCOO hiX, hiY, hiZ;
     sptElementIndex sb_bits = 7;
@@ -74,14 +75,12 @@ int main(int argc, char *argv[]) {
         }
         switch(c) {
         case 'X':
-            fX = fopen(optarg, "r");
-            sptAssert(fX != NULL);
-            printf("X input file: %s\n", optarg); fflush(stdout);
+            strcpy(Xfname, optarg);
+            printf("X input file: %s\n", Xfname); fflush(stdout);
             break;
         case 'Y':
-            fY = fopen(optarg, "r");
-            sptAssert(fY != NULL);
-            printf("Y input file: %s\n", optarg); fflush(stdout);
+            strcpy(Yfname, optarg);
+            printf("Y input file: %s\n", Yfname); fflush(stdout);
             break;
         case 'Z':
             fZ = fopen(optarg, "w");
@@ -118,10 +117,8 @@ int main(int argc, char *argv[]) {
     printf("Sorting implementation: %d\n", sort_impl); fflush(stdout);
 
 
-    sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
-    fclose(fX);
-    sptAssert(sptLoadSparseTensor(&Y, 1, fY) == 0);
-    fclose(fY);
+    sptAssert(sptLoadSparseTensor(&X, 1, Xfname) == 0);
+    sptAssert(sptLoadSparseTensor(&Y, 1, Yfname) == 0);
     sptSparseTensorStatus(&X, stdout);
     sptSparseTensorStatus(&Y, stdout);
 

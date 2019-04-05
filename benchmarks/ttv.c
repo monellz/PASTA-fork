@@ -25,7 +25,8 @@ static void print_usage(char ** argv) {
  */
 int main(int argc, char ** argv) 
 {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char fname[1000];
     sptSparseTensor X;
     sptSparseTensor Y;
     sptValueVector V;
@@ -57,9 +58,8 @@ int main(int argc, char ** argv)
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            sptAssert(fi != NULL);
-            printf("input file: %s\n", optarg); fflush(stdout);
+            strcpy(fname, optarg);
+            printf("input file: %s\n", fname); fflush(stdout);
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -83,8 +83,7 @@ int main(int argc, char ** argv)
     printf("mode: %"PASTA_PRI_INDEX "\n", mode);
     printf("dev_id: %d\n", dev_id);
 
-    sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
-    fclose(fi);
+    sptAssert(sptLoadSparseTensor(&X, 1, fname) == 0);
 
     sptAssert(sptNewValueVector(&V, X.ndims[mode], X.ndims[mode]) == 0);
     // sptAssert(sptConstantValueVector(&V, 1.0) == 0);

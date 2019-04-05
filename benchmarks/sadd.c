@@ -35,7 +35,8 @@ static void print_usage(char ** argv) {
  * Benchmark COO tensor addition with a scalar. 
  */
 int main(int argc, char *argv[]) {
-    FILE *fX = NULL, *fZ = NULL;
+    FILE *fZ = NULL;
+    char Xfname[1000];
     sptValue a;
     sptSparseTensor X, Z;
     int dev_id = -2;
@@ -64,9 +65,8 @@ int main(int argc, char *argv[]) {
         }
         switch(c) {
         case 'X':
-            fX = fopen(optarg, "r");
-            sptAssert(fX != NULL);
-            printf("X input file: %s\n", optarg); fflush(stdout);
+            strcpy(Xfname, optarg);
+            printf("X input file: %s\n", Xfname); fflush(stdout);
             break;
         case 'a':
             sscanf(optarg, "%"PASTA_SCN_VALUE, &a);
@@ -93,8 +93,7 @@ int main(int argc, char *argv[]) {
     printf("Scaling a: %"PASTA_PRI_VALUE"\n", a); 
     printf("dev_id: %d\n", dev_id); fflush(stdout);
 
-    sptAssert(sptLoadSparseTensor(&X, 1, fX) == 0);
-    fclose(fX);
+    sptAssert(sptLoadSparseTensor(&X, 1, Xfname) == 0);
 
     sptTimer timer;
     sptNewTimer(&timer, 0);

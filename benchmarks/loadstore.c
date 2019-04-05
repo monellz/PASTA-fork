@@ -20,7 +20,7 @@
 #include <pasta.h>
 
 int main(int argc, char *argv[]) {
-    FILE *fi, *fo;
+    FILE *fo;
     sptSparseTensor tsr;
 
     if(argc != 3) {
@@ -28,10 +28,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    fi = fopen(argv[1], "r");
-    sptAssert(fi != NULL);
-    sptAssert(sptLoadSparseTensor(&tsr, 1, fi) == 0);
-    fclose(fi);
+    sptAssert(sptLoadSparseTensor(&tsr, 1, argv[1]) == 0);
 
     fo = fopen(argv[2], "w");
     sptAssert(fo != NULL);

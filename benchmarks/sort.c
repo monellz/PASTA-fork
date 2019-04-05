@@ -39,7 +39,8 @@ static void print_usage(char ** argv) {
  * Benchmark COO tensor sortings in different mode orders, randomized sorting, and Z-Morton sorting.
  */
 int main(int argc, char ** argv) {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char fname[1000];
     sptSparseTensor X;
 
     sptIndex mode = 0;
@@ -81,9 +82,8 @@ int main(int argc, char ** argv) {
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            sptAssert(fi != NULL);
-            printf("input file: %s\n", optarg); fflush(stdout);
+            strcpy(fname, optarg);
+            printf("input file: %s\n", fname); fflush(stdout);
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -120,8 +120,7 @@ int main(int argc, char ** argv) {
     }
 
     /* Load a sparse tensor from file as it is */
-    sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
-    fclose(fi);
+    sptAssert(sptLoadSparseTensor(&X, 1, fname) == 0);
     sptSparseTensorStatus(&X, stdout);
 
     sptIndex nmodes = X.nmodes;

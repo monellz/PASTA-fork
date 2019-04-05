@@ -266,4 +266,16 @@ typedef struct
 } sptMutexPool;
 #endif
 
+
+/**
+* @brief This struct is written to the beginning of any binary tensor file
+*        written by SPLATT.
+*/
+typedef struct
+{
+  int32_t magic;
+  uint64_t idx_width;
+  uint64_t val_width;
+} bin_header;
+
 #endif

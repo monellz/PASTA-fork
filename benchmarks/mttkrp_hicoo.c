@@ -40,7 +40,8 @@ void print_usage(char ** argv) {
  */
 int main(int argc, char ** argv) 
 {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char fname[1000];
     sptSparseTensor tsr;
     sptMatrix ** U;
     sptSparseTensorHiCOO hitsr;
@@ -80,12 +81,13 @@ int main(int argc, char ** argv)
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            sptAssert(fi != NULL);
+            strcpy(fname, optarg);
+            printf("input file: %s\n", fname); fflush(stdout);
             break;
         case 'o':
             fo = fopen(optarg, "w");
             sptAssert(fo != NULL);
+            printf("output file: %s\n", optarg); fflush(stdout);
             break;
         case 'b':
             sscanf(optarg, "%"PASTA_SCN_ELEMENT_INDEX, &sb_bits);
@@ -117,9 +119,8 @@ int main(int argc, char ** argv)
     printf("dev_id: %d\n", dev_id);
     printf("Sorting implementation: %d\n", sort_impl);
 
-    sptAssert(sptLoadSparseTensor(&tsr, 1, fi) == 0);
+    sptAssert(sptLoadSparseTensor(&tsr, 1, fname) == 0);
     // sptSparseTensorSortIndex(&tsr, 1);
-    fclose(fi);
     sptSparseTensorStatus(&tsr, stdout);
     // sptAssert(sptDumpSparseTensor(&tsr, 0, stdout) == 0);
 

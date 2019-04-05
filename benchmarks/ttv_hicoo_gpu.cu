@@ -29,7 +29,8 @@ static void print_usage(char ** argv) {
  */
 int main(int argc, char ** argv) 
 {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char fname[1000];
     sptSparseTensor X;
     sptSparseTensor Y;
     sptSparseTensorHiCOOGeneral hiX;
@@ -71,9 +72,8 @@ int main(int argc, char ** argv)
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            sptAssert(fi != NULL);
-            printf("input file: %s\n", optarg); fflush(stdout);
+            strcpy(fname, optarg);
+            printf("input file: %s\n", fname); fflush(stdout);
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -109,8 +109,7 @@ int main(int argc, char ** argv)
     if(dev_id >= 0)
         printf("impl_num: %d\n", impl_num);
 
-    sptAssert(sptLoadSparseTensor(&X, 1, fi) == 0);
-    fclose(fi);
+    sptAssert(sptLoadSparseTensor(&X, 1, fname) == 0);
     sptSparseTensorStatus(&X, stdout);
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
