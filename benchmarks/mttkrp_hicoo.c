@@ -166,6 +166,10 @@ int main(int argc, char ** argv)
         sptAssert(sptMTTKRPHiCOO(&hitsr, U, mats_order, mode) == 0);
     } else if(dev_id == -1) {
 #ifdef PASTA_USE_OPENMP
+        #pragma omp parallel
+        {
+            nthreads = omp_get_num_threads();
+        }
         printf("nthreads: %d\n", nthreads);
         sptAssert(sptOmpMTTKRPHiCOO(&hitsr, U, mats_order, mode, nthreads) == 0);
 #endif
