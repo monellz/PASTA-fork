@@ -63,7 +63,7 @@ __global__ void spt_TTMRankRBNnzKernel(
                 for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const sptIndex row = X_inds_m[i];
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
+                    // __syncthreads();
                 }
             }
         }
@@ -81,7 +81,7 @@ __global__ void spt_TTMRankRBNnzKernel(
                 for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const sptIndex row = X_inds_m[i];
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
+                    // __syncthreads();
                 }
             }
         }
