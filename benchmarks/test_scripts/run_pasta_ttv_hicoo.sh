@@ -5,7 +5,7 @@ declare -a s3tsrs_pl=("3D_irregular_large" "3D_irregular_medium" "3D_irregular_s
 # declare -a l3tsrs=("amazon-reviews" "patents" "reddit-2015")
 declare -a s4tsrs=("chicago-crime-comm-4d" "nips-4d" "enron-4d" "flickr-4d" "delicious-4d")
 declare -a s4tsrs_pl=("4D_irregular_large" "4D_irregular_medium" "4D_irregular_small" "4D_regular_large" "4D_regular_medium" "4D_regular_small" "4D_i_large" "4D_i_medium" "4D_i_small")
-declare -a test_tsr_names=("vast-2015-mc1")
+declare -a test_tsr_names=("4D_i_large" "4D_i_medium" "4D_i_small")
 # declare -a threads=("2" "4" "8" "16" "32")
 
 echo "./prog_name tsr_path out_path nmodes nt gpu_dev_id"
@@ -28,7 +28,7 @@ if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs_pl[@]}") 
 	# run_tsrs=("${s3tsrs[@]}" "${s3tsrs_pl[@]}") 
 elif [[ ${nmodes} = "4" ]]; then
-	run_tsrs=("${s4tsrs_pl[@]}") 
+	run_tsrs=("${test_tsr_names[@]}") 
 	# run_tsrs=("${s4tsrs[@]}" "${s4tsrs_pl[@]}") 
 fi
 
