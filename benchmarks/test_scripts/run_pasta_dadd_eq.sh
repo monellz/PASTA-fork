@@ -26,7 +26,7 @@ if [[ ${nmodes} = "3" ]]; then
 	run_tsrs=("${s3tsrs_pl[@]}") 
 	# run_tsrs=("${s3tsrs[@]}" "${s3tsrs_pl[@]}") 
 elif [[ ${nmodes} = "4" ]]; then
-	run_tsrs=("${test_tsr_names[@]}") 
+	run_tsrs=("${s4tsrs_pl[@]}") 
 	# run_tsrs=("${s4tsrs[@]}" "${s4tsrs_pl[@]}") 
 fi
 
