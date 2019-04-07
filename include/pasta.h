@@ -45,7 +45,7 @@ extern "C" {
 #endif
 #ifdef PASTA_VALUE_TYPEWIDTH
     #undef PASTA_VALUE_TYPEWIDTH
-    #define PASTA_VALUE_TYPEWIDTH 64
+    #define PASTA_VALUE_TYPEWIDTH 32
 #endif
 
 #include "includes/types.h"
