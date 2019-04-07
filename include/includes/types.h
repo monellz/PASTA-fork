@@ -24,8 +24,6 @@
 /**
  * Define types, TODO: check the bit size of them, add branch for different settings
  */
-#define PASTA_INDEX_TYPEWIDTH 32
-#define PASTA_VALUE_TYPEWIDTH 32
 #define PASTA_ELEMENT_INDEX_TYPEWIDTH 8
 
 #if PASTA_INDEX_TYPEWIDTH == 32

@@ -39,6 +39,15 @@ extern "C" {
 /*************************************************
  * TYPES
  *************************************************/
+#ifdef PASTA_INDEX_TYPEWIDTH
+    #undef PASTA_INDEX_TYPEWIDTH
+    #define PASTA_INDEX_TYPEWIDTH 32
+#endif
+#ifdef PASTA_VALUE_TYPEWIDTH
+    #undef PASTA_VALUE_TYPEWIDTH
+    #define PASTA_VALUE_TYPEWIDTH 64
+#endif
+
 #include "includes/types.h"
 
 
