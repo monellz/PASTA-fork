@@ -103,7 +103,7 @@ int main(int argc, char ** argv)
     sptAssert(sptRandomizeValueVector(&V) == 0);
 
 
-    sptIndex ncmodes = 2;
+    sptIndex ncmodes = X.nmodes - 1;
     sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));
     for(sptIndex m = 0; m < X.nmodes; ++m) {
         flags[m] = 1;
