@@ -8,13 +8,15 @@ import numpy as np
 s3tsrs = ['vast-2015-mc1', 'nell2', 'choa700k', '1998DARPA', 'freebase_music', 'freebase_sampled', 'delicious', 'nell1']
 s3tsrs_pl = ['3D_irregular_large', '3D_irregular_medium', '3D_irregular_small', '3D_regular_large', '3D_regular_medium', '3D_regular_small']
 s4tsrs = ['chicago-crime-comm-4d', 'nips-4d', 'enron-4d', 'flickr-4d', 'delicious-4d']
-s4tsrs_pl = ['4D_irregular_large', '4D_irregular_medium', '4D_irregular_small', '4D_regular_large', '4D_regular_medium', '4D_regular_small', '4D_i_large', '4D_i_medium', '4D_i_small']
+# s4tsrs_pl = ['4D_irregular_large', '4D_irregular_medium', '4D_irregular_small', '4D_regular_large', '4D_regular_medium', '4D_regular_small', '4D_i_large', '4D_i_medium', '4D_i_small']
+s4tsrs_pl = ['4D_i_large', '4D_i_medium', '4D_i_small', '4D_regular_large', '4D_regular_medium', '4D_regular_small']
 
 # For plots
 s3tsrs_names = ['vast', 'nell2', 'choa', 'darpa', 'fb_m', 'fb_s', 'deli', 'nell1']
 s3tsrs_pl_names =['irrL', 'irrM', 'irrS', 'regL', 'regM', 'regS']
 s4tsrs_names = ['crime4d', 'nips4d', 'enron4d', 'flickr4d', 'deli4d']
-s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d', 'irrL4d', 'irrM4d', 'irrS4d']
+# s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d', 'irrL4d', 'irrM4d', 'irrS4d']
+s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d']
 
 # gflops from roofline model
 theo_gflops_tew = 10
@@ -49,7 +51,7 @@ def main(argv):
 
 	print(tensors)
 
-	fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(40, 6))
+	fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(100, 3))
 
 	nnzs = get_nnzs(tensors)
 
@@ -57,29 +59,32 @@ def main(argv):
 
 	####### TEW #########
 	op = 'dadd_eq'
-	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_tew_data(op, intput_path, tk, theo_gflops_tew, plot_tensors, tensors, nnzs, ang_pattern)
-	# plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_tew_data(op, intput_path, tk, theo_gflops_tew, plot_tensors, tensors, nnzs, ang_pattern)
+	rects1, rects2, rects3, rects4, rects5 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+
+	# fig.legend(loc = 'lower right', bbox_to_anchor=(2, 0), bbox_transform=ax1.transAxes)
+	fig.legend([rects1, rects2, rects3, rects4, rects5], ["seq-coo", "omp-coo", "seq-hicoo", "omp-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
 
 	####### TS #########
 	op = 'smul'
-	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ts_data(op, intput_path, tk, theo_gflops_ts, plot_tensors, tensors, nnzs)
-	# plot_gragh(ax2, plot_tensors, "TS", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ts_data(op, intput_path, tk, theo_gflops_ts, plot_tensors, tensors, nnzs, ang_pattern)
+	plot_gragh(ax2, plot_tensors, "TS", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 
 	####### TTV #########
 	op = 'ttv'
-	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttv_data(op, intput_path, tk, theo_gflops_ttv, plot_tensors, tensors, nnzs)
+	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttv_data(op, intput_path, tk, theo_gflops_ttv, plot_tensors, tensors, nnzs, ang_pattern)
 	# plot_gragh(ax3, plot_tensors, "TTV", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 	
 	####### TTM #########
 	op = 'ttm'
 	R = 16
-	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttm_data(op, intput_path, tk, theo_gflops_ttm, plot_tensors, tensors, nnzs, R)
-	plot_gragh(ax4, plot_tensors, "TTM", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttm_data(op, intput_path, tk, theo_gflops_ttm, plot_tensors, tensors, nnzs, R, ang_pattern)
+	# plot_gragh(ax4, plot_tensors, "TTM", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 
 	####### MTTKRP #########
 	op = 'mttkrp'
 	R = 16
-	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_mttkrp_data(op, intput_path, tk, theo_gflops_mttkrp, plot_tensors, tensors, nnzs, R)
+	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_mttkrp_data(op, intput_path, tk, theo_gflops_mttkrp, plot_tensors, tensors, nnzs, R, ang_pattern)
 	plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 
 	plt.show()
@@ -92,7 +97,7 @@ def plot_gragh_left(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 		xnames = s3tsrs_pl_names + s4tsrs_pl_names
 
 	ind = 1.2 * np.arange(len(o1))
-	ylim_var = 2
+	ylim_var = 1
 
 	rects1 = ax.bar(left=ind, height=o1, width=mywidth, color='royalblue', zorder=2, lw=0.5, label='seq-coo')
 	rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='limegreen',  zorder=2, lw=0.5, label='omp-coo')
@@ -109,7 +114,7 @@ def plot_gragh_left(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 	ax.set_ylim( [0, max(max(o5), max(o1), max(o2), max(o3), max(o4)) + ylim_var] )
 
 	# ax.legend( (rects1[0], rects2[0], rects3[0], rects4[0], rects5[0]), ('seq-coo', 'omp-coo','seq-hicoo','omp-hicoo', 'roofline'),loc='right', shadow=True)
-	ax.legend()
+	# ax.legend()
 	ax.grid(axis='y')
 	# ax.autoscale_view()
 
@@ -119,6 +124,8 @@ def plot_gragh_left(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 
 	# ax.text(4, -3, "3D", fontweight='bold', fontsize=16)
 
+	return rects1, rects2, rects3, rects4, rects5
+
 
 def plot_gragh(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 	if plot_tensors == "real":
@@ -127,7 +134,7 @@ def plot_gragh(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 		xnames = s3tsrs_pl_names + s4tsrs_pl_names
 
 	ind = 1.2 * np.arange(len(o1))
-	ylim_var = 8
+	ylim_var = 1
 
 	rects1 = ax.bar(left=ind, height=o1, width=mywidth, color='royalblue', zorder=2, lw=0.5, label='seq-coo')
 	rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='limegreen', zorder=2, lw=0.5, label='omp-coo')
@@ -142,7 +149,7 @@ def plot_gragh(ax, plot_tensors, title, o1, o2, o3, o4, o5):
 	ax.set_xlim(min(ind) - mywidth, max(ind) + mywidth * 5)
 	ax.set_ylim( [0, max(max(o5), max(o1), max(o2), max(o3), max(o4)) + ylim_var] )
 
-	ax.legend()
+	# ax.legend()
 	ax.grid(axis='y')
 
 
@@ -321,7 +328,7 @@ def get_tew_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 	return seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array
 
 
-def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
+def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern):
 
 	seq_times_coo = []
 	omp_times_coo = []
@@ -329,12 +336,19 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 	omp_times_hicoo = []
 
 	for tsr in tensors:
+		if tsr in s3tsrs + s3tsrs_pl:
+			nmodes = 3
+		elif tsr in s4tsrs + s4tsrs_pl:
+			nmodes = 4
 
 		###### COO ######
 		sum_time = 0.0
 		count = 0
 		## sequential
-		input_str = intput_path + tsr + '_' + op + '-seq.txt'
+		if ang_pattern == '1':
+			input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_seq.txt'
+		else:
+			input_str = intput_path + tsr + '_' + op + '-seq.txt'
 		fi = open(input_str, 'r')
 		for line in fi:
 			line_array = line.rstrip().split(" ")
@@ -353,7 +367,10 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 		sum_time = 0.0
 		count = 0
 		## omp
-		input_str = intput_path + tsr + '_' + op + '-t' + tk + '.txt'
+		if ang_pattern == '1':
+			input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_omp-' + tk + '.txt'
+		else:
+			input_str = intput_path + tsr + '_' + op + '-t' + tk + '.txt'
 		fi = open(input_str, 'r')
 		for line in fi:
 			line_array = line.rstrip().split(" ")
@@ -379,7 +396,10 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 		sum_time = 0.0
 		count = 0
 		## sequential
-		input_str = intput_path + tsr + '_' + op + '_hicoo-b' + str(sb) + '-seq.txt'
+		if ang_pattern == '1':
+			input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_seq.txt'
+		else:
+			input_str = intput_path + tsr + '_' + op + '_hicoo-b' + str(sb) + '-seq.txt'
 		fi = open(input_str, 'r')
 		for line in fi:
 			line_array = line.rstrip().split(" ")
@@ -399,7 +419,10 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 		sum_time = 0.0
 		count = 0
 		## omp
-		input_str = intput_path + tsr + '_' + op + '_hicoo-b' + str(sb) + '-t' + tk + '.txt'
+		if ang_pattern == '1':
+			input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_omp-' + tk + '.txt'
+		else:
+			input_str = intput_path + tsr + '_' + op + '_hicoo-b' + str(sb) + '-t' + tk + '.txt'
 		fi = open(input_str, 'r')
 		for line in fi:
 			line_array = line.rstrip().split(" ")
@@ -454,7 +477,7 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 	return seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array
 
 
-def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
+def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern):
 
 	print("get_ttv_data")
 	seq_times_coo = []
@@ -477,7 +500,10 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -502,7 +528,10 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -524,7 +553,7 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 
 		###### HiCOO ######
 		# if tsr in s4tsrs:
-		if tsr in ["chicago-crime-comm-4d", "uber-4d", "nips-4d", 'enron-4d', 'flickr-4d']:
+		if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
 		else:
 			sb = 7
@@ -534,7 +563,10 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-b' + str(sb) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-b' + str(sb) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -560,7 +592,10 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-b' + str(sb) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-b' + str(sb) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -621,7 +656,7 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs):
 	return seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array
 
 
-def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, R):
+def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, R, ang_pattern):
 
 	seq_times_coo = []
 	omp_times_coo = []
@@ -643,7 +678,10 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -668,7 +706,10 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -690,7 +731,7 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 
 		###### HiCOO ######
 		# if tsr in s4tsrs:
-		if tsr in ["chicago-crime-comm-4d", "uber-4d", "nips-4d", 'enron-4d', 'flickr-4d']:
+		if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
 		else:
 			sb = 7
@@ -700,7 +741,10 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -726,7 +770,10 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -786,7 +833,7 @@ def get_ttm_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 	return seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array
 
 
-def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, R):
+def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, R, ang_pattern):
 
 	seq_times_coo = []
 	omp_times_coo = []
@@ -808,7 +855,10 @@ def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnz
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -833,7 +883,10 @@ def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnz
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '-m' + str(m) + '-r' + str(R) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -855,7 +908,8 @@ def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnz
 
 		###### HiCOO ######
 		# if tsr in s4tsrs:
-		if tsr in ["chicago-crime-comm-4d", "uber-4d", "nips-4d", 'enron-4d']:
+		if tsr in ["chicago-crime-comm-4d", "uber-4d", "enron-4d", "nips-4d"]:
+		# if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
 		else:
 			sb = 7
@@ -865,7 +919,10 @@ def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnz
 			sum_time = 0.0
 			count = 0
 			## sequential
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-seq.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_seq.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-seq.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
@@ -891,7 +948,10 @@ def get_mttkrp_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnz
 			sum_time = 0.0
 			count = 0
 			## omp
-			input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-t' + tk + '.txt'
+			if ang_pattern == '1':
+				input_str = intput_path + 'amd4_' + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_omp-' + tk + '.txt'
+			else:
+				input_str = intput_path + tsr + '_' + op + '_hicoo-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-t' + tk + '.txt'
 			fi = open(input_str, 'r')
 			for line in fi:
 				line_array = line.rstrip().split(" ")
