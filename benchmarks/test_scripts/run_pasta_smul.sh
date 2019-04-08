@@ -33,24 +33,24 @@ fi
 
 for tsr_name in "${run_tsrs[@]}"
 do
-	# # Sequetial code
-	# dev_id=-2
-	# myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-seq.txt"
-	# echo ${myprogram}
-	# eval ${myprogram}
-
-	# # OpenMP code
-	# dev_id=-1
-	# export OMP_NUM_THREADS=${nt}
-	# myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-t${nt}.txt"
-	# echo ${myprogram}
-	# eval ${myprogram}
-
-	# CUDA code
-	dev_id=${gpu_dev_id}
-	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-gpu.txt"
+	# Sequetial code
+	dev_id=-2
+	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-seq.txt"
 	echo ${myprogram}
 	eval ${myprogram}
+
+	# OpenMP code
+	dev_id=-1
+	export OMP_NUM_THREADS=${nt}
+	myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-t${nt}.txt"
+	echo ${myprogram}
+	eval ${myprogram}
+
+	# CUDA code
+	# dev_id=${gpu_dev_id}
+	# myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-gpu.txt"
+	# echo ${myprogram}
+	# eval ${myprogram}
 
 	echo 
 
