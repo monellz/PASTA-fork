@@ -62,7 +62,7 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
     sptPrintElapsedTime(timer, "Allocate output tensor");
 
     sptStartTimer(timer);
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];

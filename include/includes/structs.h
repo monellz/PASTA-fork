@@ -264,6 +264,8 @@ typedef struct
   sptIndex padsize;
   omp_lock_t * locks;
 } sptMutexPool;
+#else
+typedef struct sptMutexPool sptMutexPool;
 #endif
 
 

@@ -87,7 +87,7 @@ int sptOmpMTTKRPHiCOO(
     sptStartTimer(timer);
 
     /* Loop kernels */
-    #pragma omp parallel for num_threads(nthreads)
+    #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
         /* Allocate thread-private data */
         sptValue ** block_values = (sptValue**)malloc(nmodes * sizeof(*block_values));
@@ -111,6 +111,7 @@ int sptOmpMTTKRPHiCOO(
             sptValue * times_matval = block_values[times_mat_index];
             sptElementIndex tmp_i = hitsr->einds[times_mat_index].data[z];
             sptValue const entry = vals[z];
+            #pragma omp simd
             for(sptIndex r=0; r<R; ++r) {
                 scratch.data[r] = entry * times_matval[tmp_i * stride + r];
             }
@@ -119,6 +120,8 @@ int sptOmpMTTKRPHiCOO(
                 times_mat_index = mats_order[m];
                 times_matval = block_values[times_mat_index];
                 tmp_i = hitsr->einds[times_mat_index].data[z];
+                
+                #pragma omp simd
                 for(sptIndex r=0; r<R; ++r) {
                     scratch.data[r] *= times_matval[tmp_i * stride + r];
                 }
@@ -190,7 +193,7 @@ int sptOmpMTTKRPHiCOO_3D(
     sptStartTimer(timer);
     
     /* Loop kernels */
-    #pragma omp parallel for num_threads(nthreads)
+    #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
         sptBlockIndex block_coord_mode = hitsr->binds[mode].data[b];

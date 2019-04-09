@@ -71,7 +71,7 @@ int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTenso
     sptNewTimer(&timer, 0);
     sptStartTimer(timer);
 
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];

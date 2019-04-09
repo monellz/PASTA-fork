@@ -72,8 +72,8 @@ def main(argv):
 
 	####### TTV #########
 	op = 'ttv'
-	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttv_data(op, intput_path, tk, theo_gflops_ttv, plot_tensors, tensors, nnzs, ang_pattern)
-	# plot_gragh(ax3, plot_tensors, "TTV", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_ttv_data(op, intput_path, tk, theo_gflops_ttv, plot_tensors, tensors, nnzs, ang_pattern)
+	plot_gragh(ax3, plot_tensors, "TTV", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 	
 	####### TTM #########
 	op = 'ttm'
@@ -84,8 +84,8 @@ def main(argv):
 	####### MTTKRP #########
 	op = 'mttkrp'
 	R = 16
-	# seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_mttkrp_data(op, intput_path, tk, theo_gflops_mttkrp, plot_tensors, tensors, nnzs, R, ang_pattern)
-	# plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	seq_gflops_coo, omp_gflops_coo, seq_gflops_hicoo, omp_gflops_hicoo, theo_gflops_array = get_mttkrp_data(op, intput_path, tk, theo_gflops_mttkrp, plot_tensors, tensors, nnzs, R, ang_pattern)
+	plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(seq_gflops_coo), np.asarray(omp_gflops_coo), np.asarray(seq_gflops_hicoo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
 
 	plt.show()
 
@@ -389,8 +389,8 @@ def get_ts_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, a
 		omp_times_coo.append(time_num)
 
 		###### HiCOO ######
-		# if tsr in s4tsrs:	# for cori data
-		if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
+		if tsr in s4tsrs:	# for cori data
+		# if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
 		else:
 			sb = 7
@@ -554,7 +554,6 @@ def get_ttv_data(op, intput_path, tk, theo_gflops, plot_tensors, tensors, nnzs, 
 		omp_times_coo.append(time_num)
 
 		###### HiCOO ######
-		# if tsr in s4tsrs:	# For cori data
 		# if tsr in ["chicago-crime-comm-4d", "uber-4d", "nips-4d"]:	# For cori data
 		if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
