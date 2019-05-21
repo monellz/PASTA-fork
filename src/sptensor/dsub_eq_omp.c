@@ -53,7 +53,7 @@ int sptOmpSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, con
     sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(static)
     for(sptNnzIndex i = 0; i < nnz; ++ i)
         Z->values.data[i] = X->values.data[i] - Y->values.data[i];
     sptStopTimer(timer);

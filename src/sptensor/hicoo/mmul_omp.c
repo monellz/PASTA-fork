@@ -77,6 +77,7 @@ int sptOmpSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTenso
         sptNnzIndex inz_end = fiberidx.data[i+1];
         for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
             sptIndex k = X->inds[0].data[j];    // non-compressed modes
+            #pragma omp simd
             for(sptIndex r = 0; r < U->ncols; ++r) {
                 Y->values.values[i * stride + r] += X->values.data[j] * U->values[k * stride + r];
             }

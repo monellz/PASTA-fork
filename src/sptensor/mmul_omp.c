@@ -59,7 +59,6 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];
-        // jli: exchange two loops
         for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
             sptIndex r = X->inds[mode].data[j];
             #pragma omp simd
