@@ -9,6 +9,7 @@ build.config
 
 benchmarks/test_scripts/*.sh
 timing-results*/
+timing-results*.tgz
 ert_results/*.tgz
 
 tmp*

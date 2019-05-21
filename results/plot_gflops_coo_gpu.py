@@ -19,11 +19,12 @@ s4tsrs_names = ['crime4d', 'nips4d', 'enron4d', 'flickr4d', 'deli4d']
 s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d']
 
 # gflops from roofline model
-theo_gflops_tew = 10
-theo_gflops_ts = 10
-theo_gflops_ttv = 10
-theo_gflops_ttm = 10
-theo_gflops_mttkrp = 10
+# dgx-2
+theo_gflops_tew = 75
+theo_gflops_ts = 112.5
+theo_gflops_ttv = 225
+theo_gflops_ttm = 450
+theo_gflops_mttkrp = 225
 
 # Global settings for figures
 mywidth = 0.35      # the width of the bars
@@ -43,8 +44,8 @@ def main(argv):
 	print('ang_pattern: %s' % ang_pattern)
 
 	if ang_pattern == '1':
-		# prefix = "dgx-2_"
-		prefix = "dgx-1_"
+		prefix = "dgx-2_"
+		# prefix = "dgx-1_"
 	else:
 		prefix = ""
 
@@ -132,7 +133,7 @@ def plot_gragh(ax, plot_tensors, title, o1, o3):
 		xnames = s3tsrs_pl_names + s4tsrs_pl_names
 
 	ind = 1.2 * np.arange(len(o1))
-	ylim_var = 1
+	ylim_var = 10
 
 	rects1 = ax.bar(left=ind, height=o1, width=mywidth, color='m', zorder=2, lw=0.5, label='gpu-coo')
 	rects3 = ax.plot(ind , o3, color='r', lw=3, label='roofline')

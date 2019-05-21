@@ -62,6 +62,7 @@ int sptOmpSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, cons
         // jli: exchange two loops
         for(sptNnzIndex j = inz_begin; j < inz_end; ++j) {
             sptIndex r = X->inds[mode].data[j];
+            #pragma omp simd
             for(sptIndex k = 0; k < U->ncols; ++k) {
                 Y->values.values[i * stride + k] += X->values.data[j] * U->values[r * stride + k];
             }

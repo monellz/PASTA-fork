@@ -19,11 +19,11 @@ s4tsrs_names = ['crime4d', 'nips4d', 'enron4d', 'flickr4d', 'deli4d']
 s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d']
 
 # gflops from roofline model
-theo_gflops_tew = 10
-theo_gflops_ts = 10
-theo_gflops_ttv = 10
-theo_gflops_ttm = 10
-theo_gflops_mttkrp = 10
+theo_gflops_tew = 6.76
+theo_gflops_ts = 10.14
+theo_gflops_ttv = 20.28
+theo_gflops_ttm = 40.56
+theo_gflops_mttkrp = 20.28
 
 # Global settings for figures
 mywidth = 0.35      # the width of the bars
