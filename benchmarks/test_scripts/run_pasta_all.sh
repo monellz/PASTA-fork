@@ -10,11 +10,11 @@ gpu_dev_id=$5	# 0, 1, ...
 
 
 # TS
-# ./benchmarks/test_scripts/run_pasta_sadd.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-# ./benchmarks/test_scripts/run_pasta_sadd_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
 ./benchmarks/test_scripts/run_pasta_smul.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
 ./benchmarks/test_scripts/run_pasta_smul_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
+
+# ./benchmarks/test_scripts/run_pasta_sadd.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
+# ./benchmarks/test_scripts/run_pasta_sadd_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
 
 # TEW-eq
 ./benchmarks/test_scripts/run_pasta_dadd_eq.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
