@@ -42,10 +42,10 @@ elif [[ ${machine_name} = "wingtip-bigmem2" ]]; then	# 56 cores
 	if [[ ${nt} = "56" ]]; then
 		numa_str="numactl --interleave=all --physcpubind=56-111"
 	fi
-elif [[ ${machine_name} = "bluesky" ]]; then	# 24 cores
-	if [[ ${nt} = "24" ]]; then
-		numa_str="numactl --interleave=all --physcpubind=24-47"
-	fi
+# elif [[ ${machine_name} = "bluesky" ]]; then	# 24 cores
+# 	if [[ ${nt} = "24" ]]; then
+# 		numa_str="numactl --interleave=all --physcpubind=24-47"
+# 	fi
 fi
 
 for tsr_name in "${run_tsrs[@]}"
