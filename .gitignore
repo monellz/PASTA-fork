@@ -11,6 +11,7 @@ benchmarks/test_scripts/*.sh
 timing-results*/
 timing-results*.tgz
 ert_results/*.tgz
+ert_results/dgx*
 
 tmp*
 out*
