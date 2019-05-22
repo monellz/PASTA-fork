@@ -38,15 +38,15 @@ do
 	do
 
 		# Sequetial code
-		dev_id=-2
-		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.bin -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-seq.txt"
-		echo ${myprogram}
-		eval ${myprogram}
+		# dev_id=-2
+		# myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.bin -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-seq.txt"
+		# echo ${myprogram}
+		# eval ${myprogram}
 
 		# OpenMP code
 		dev_id=-1
 		export OMP_NUM_THREADS=${nt}
-		myprogram="./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.bin -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-t${nt}.txt"
+		myprogram="numactl --interleave=all ./build/benchmarks/${prog_name} -i ${tsr_path}/${tsr_name}.bin -m ${mode} -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-m${mode}-t${nt}.txt"
 		echo ${myprogram}
 		eval ${myprogram}
 
