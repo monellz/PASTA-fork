@@ -61,7 +61,7 @@ do
 	export OMP_NUM_THREADS=${nt}
 	myprogram="${numa_str} ./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -Y ${tsr_path}/${tsr_name}.bin -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-t${nt}.txt"
 	echo ${myprogram}
-	# eval ${myprogram}
+	eval ${myprogram}
 
 	# CUDA code
 	# dev_id=${gpu_dev_id}
