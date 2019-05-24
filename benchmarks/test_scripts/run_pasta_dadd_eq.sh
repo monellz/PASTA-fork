@@ -32,7 +32,8 @@ elif [[ ${nmodes} = "4" ]]; then
 	run_tsrs=("${s4tsrs[@]}" "${s4tsrs_pl[@]}") 
 fi
 
-numa_str="numactl --interleave=all"
+numa_str=""
+# numa_str="numactl --interleave=all"
 if [[ ${machine_name} = "dgx2" ]]; then	# 40 cores
 	if [[ ${nt} = "40" ]]; then
 		numa_str="numactl --interleave=all --physcpubind=40-79"
@@ -60,7 +61,7 @@ do
 	export OMP_NUM_THREADS=${nt}
 	myprogram="${numa_str} ./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -Y ${tsr_path}/${tsr_name}.bin -d ${dev_id} > ${out_path}/${tsr_name}_${prog_name}-t${nt}.txt"
 	echo ${myprogram}
-	eval ${myprogram}
+	# eval ${myprogram}
 
 	# CUDA code
 	# dev_id=${gpu_dev_id}
