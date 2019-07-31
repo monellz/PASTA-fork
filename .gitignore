@@ -13,6 +13,8 @@ timing-results*.tgz
 ert_results/*.tgz
 ert_results/dgx*
 
+results/figure.pdf
+
 tmp*
 out*
 *.out

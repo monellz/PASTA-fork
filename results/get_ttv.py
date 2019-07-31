@@ -40,7 +40,7 @@ def main(argv):
 	op = 'ttv'
 	
 	if len(argv) < 6:
-		print("Usage: %s intput_path tk theo_gflops plot_tensors tensor_format" % argv[0])
+		print("Usage: %s intput_path tk theo_gflops plot_tensors(real/graph) tensor_format(coo/hicoo)" % argv[0])
 		exit(-1)
 
 	# input parameters

@@ -20,11 +20,11 @@ s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d']
 
 # gflops from roofline model
 # v100
-theo_gflops_tew = 65.917
-theo_gflops_ts = 98.875
-theo_gflops_ttv = 197.75
-theo_gflops_ttm = 395.5
-theo_gflops_mttkrp = 197.75
+# theo_gflops_tew = 65.917
+# theo_gflops_ts = 98.875
+# theo_gflops_ttv = 197.75
+# theo_gflops_ttm = 395.5
+# theo_gflops_mttkrp = 197.75
 # p100
 # theo_gflops_tew = 43.083
 # theo_gflops_ts = 64.625
@@ -32,34 +32,60 @@ theo_gflops_mttkrp = 197.75
 # theo_gflops_ttm = 258.50
 # theo_gflops_mttkrp = 129.25
 
+# Operational intensity
+oi_tew = 1.0/12.0
+oi_ts = 1.0/8.0
+oi_ttv = 1.0/4.0
+oi_ttm = 1.0/2.0
+oi_mttkrp = 1.0/4.0
+
 # Global settings for figures
 mywidth = 0.35      # the width of the bars
 
 def main(argv):
 
 	if len(argv) < 4:
-		print("Usage: %s intput_path plot_tensors ang_pattern" % argv[0])
+		print("Usage: %s intput_path plot_tensors(real/graph) ang_pattern(0/1-dgx1/2-dgx2) machine_name(dgx1,dgx2)" % argv[0])
 		exit(-1)
 
 	# input parameters
 	intput_path = sys.argv[1]
 	plot_tensors = sys.argv[2]
 	ang_pattern = sys.argv[3]
+	machine_name = sys.argv[4]
 	print('intput_path: %s' % intput_path)
 	print('plot_tensors: %s' % plot_tensors)
 	print('ang_pattern: %s' % ang_pattern)
+	print('machine_name: %s' % machine_name)
 
 	if ang_pattern == '1':
+		prefix = "dgx-1_"
+	elif ang_pattern == '2':
 		prefix = "dgx-2_"
-		# prefix = "dgx-1_"
 	else:
 		prefix = ""
+
+	# theoretical machine numbers
+	if machine_name == "dgx1":
+		# p100
+		theo_gflops = 65.917
+		theo_bw = 65.917
+	elif machine_name == "dgx2":
+		# v100 
+		theo_gflops = 65.917
+		theo_bw = 65.917
+	else:
+		print('Wrong machine_name!')
+		return -1
 
 	if plot_tensors == "real":
 		tensors = s3tsrs + s4tsrs
 	elif plot_tensors == "graph":
 		# tensors = s3tsrs_pl + s4tsrs_pl
 		tensors = s3tsrs_pl 
+	else:
+		print('Wrong plot_tensors!')
+		return -1
 
 	print(tensors)
 
@@ -71,8 +97,8 @@ def main(argv):
 
 	####### TEW #########
 	op = 'dadd_eq'
-	gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_tew_data(op, intput_path, theo_gflops_tew, plot_tensors, tensors, nnzs, ang_pattern, prefix)
-	rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	gpu_gflops_coo, gpu_gflops_hicoo, predict_gflops_coo, predict_gflops_hicoo = get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, nnzs, ang_pattern, prefix)
+	rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predict_gflops_coo))
 	
 
 	####### TS #########
@@ -86,10 +112,10 @@ def main(argv):
 	plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 	
 	####### TTM #########
-	op = 'ttm'
-	R = 16
-	gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_ttm_data(op, intput_path, theo_gflops_ttm, plot_tensors, tensors, nnzs, R, ang_pattern, prefix)
-	plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	# op = 'ttm'
+	# R = 16
+	# gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_ttm_data(op, intput_path, theo_gflops_ttm, plot_tensors, tensors, nnzs, R, ang_pattern, prefix)
+	# plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 	# rects1, rects2, rects3 =plot_gragh_modes(ax4, plot_tensors, "", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 
 	####### MTTKRP #########
@@ -191,7 +217,7 @@ def plot_gragh_modes(ax, plot_tensors, title, o1, o2, o3):
 
 def get_nnzs(tensors):
 	nnzs = []
-	intput_path = '../timing-results-cori-save/'
+	intput_path = '../timing-results/timing-results-cori-save/'
 
 	for tsr in tensors:
 		# Get NNZ
@@ -214,7 +240,7 @@ def get_nnzs(tensors):
 
 	return nnzs
 
-def get_tew_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern, prefix):
+def get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, nnzs, ang_pattern, prefix):
 
 	print("get_tew_data")
 	gpu_times_coo = []
@@ -286,8 +312,12 @@ def get_tew_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_
 	print("gpu_times_hicoo:")
 	print(gpu_times_hicoo)
 
-	# Calculate GFLOPS
+	# Calculate work (#Flops) and memory access (#Bytes)
 	num_flops = nnzs
+	
+
+
+	# actual running time
 	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
 	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
 	print("num_flops:")
@@ -298,9 +328,13 @@ def get_tew_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_
 	print(gpu_gflops_hicoo)
 	print("\n")
 
-	theo_gflops_array = [theo_gflops] * len(num_flops)
+	# predicted running time
+	predict_time_coo = [ max( float(num_flops[i]) / theo_gflops, float(num_mem_coo[i]) / theo_bw ) for i in range(len(num_flops)) ]
+	predict_time_hicoo = [ max( float(num_flops[i]) / theo_gflops, float(num_mem_hicoo[i]) / theo_bw ) for i in range(len(num_flops)) ]
+	predict_gflops_coo = [ float(num_flops[i]) / predict_time_coo[i] for i in range(len(num_flops)) ]
+	predict_gflops_hicoo = [ float(num_flops[i]) / predict_time_hicoo[i] for i in range(len(num_flops)) ]
 
-	return gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array
+	return gpu_gflops_coo, gpu_gflops_hicoo, predict_gflops_coo, predict_gflops_hicoo
 
 
 def get_ts_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern, prefix):
@@ -728,3 +762,5 @@ def get_mttkrp_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
+
+
