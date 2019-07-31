@@ -70,18 +70,38 @@ int sptConstantValueVector(sptValueVector * const vec, sptValue const val) {
 }
 
 /**
- * Copy a value vector to an uninitialized value vector
+ * Copy a value vector to an uninitialized value vector without allocation.
  *
  * @param dest a pointer to an uninitialized value vector
  * @param src  a pointer to an existing valid value vector
  *
  * The contents of `src` will be copied to `dest`.
  */
-int sptCopyValueVector(sptValueVector *dest, const sptValueVector *src, int const nt) {
+int sptCopyValueVector(sptValueVector *dest, const sptValueVector *src) {
     int result = sptNewValueVector(dest, src->len, src->len);
     spt_CheckError(result, "ValVec Copy", NULL);
 #ifdef PASTA_USE_OPENMP
-    #pragma omp parallel for num_threads(nt)
+    #pragma omp parallel for schedule(static)
+    for (sptNnzIndex i=0; i<src->len; ++i) {
+        dest->data[i] = src->data[i];
+    }
+#else
+    memcpy(dest->data, src->data, src->len * sizeof *src->data);
+#endif
+    return 0;
+}
+
+/**
+ * Copy a value vector to an uninitialized value vector.
+ *
+ * @param dest a pointer to an uninitialized value vector
+ * @param src  a pointer to an existing valid value vector
+ *
+ * The contents of `src` will be copied to `dest`.
+ */
+int sptCopyValueVectorCopyOnly(sptValueVector *dest, const sptValueVector *src) {
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
     for (sptNnzIndex i=0; i<src->len; ++i) {
         dest->data[i] = src->data[i];
     }
@@ -217,19 +237,41 @@ int sptConstantIndexVector(sptIndexVector * const vec, sptIndex const num) {
     return 0;
 }
 
+
 /**
- * Copy an index vector to an uninitialized index vector
+ * Copy an index vector to an uninitialized index vector.
  *
  * @param dest a pointer to an uninitialized index vector
  * @param src  a pointer to an existing valid index vector
  *
  * The contents of `src` will be copied to `dest`.
  */
-int sptCopyIndexVector(sptIndexVector *dest, const sptIndexVector *src, int const nt) {
+int sptCopyIndexVector(sptIndexVector *dest, const sptIndexVector *src) {
     int result = sptNewIndexVector(dest, src->len, src->len);
     spt_CheckError(result, "IdxVec Copy", NULL);
 #ifdef PASTA_USE_OPENMP
-    #pragma omp parallel for num_threads(nt)
+    #pragma omp parallel for schedule(static)
+    for (sptNnzIndex i=0; i<src->len; ++i) {
+        dest->data[i] = src->data[i];
+    }
+#else
+    memcpy(dest->data, src->data, src->len * sizeof *src->data);
+#endif
+    return 0;
+}
+
+
+/**
+ * Copy an index vector to an uninitialized index vector without allocation.
+ *
+ * @param dest a pointer to an uninitialized index vector
+ * @param src  a pointer to an existing valid index vector
+ *
+ * The contents of `src` will be copied to `dest`.
+ */
+int sptCopyIndexVectorCopyOnly(sptIndexVector *dest, const sptIndexVector *src) {
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
     for (sptNnzIndex i=0; i<src->len; ++i) {
         dest->data[i] = src->data[i];
     }

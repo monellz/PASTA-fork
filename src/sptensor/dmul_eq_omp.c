@@ -46,18 +46,23 @@ int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, con
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, collect_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorAllocateOnly(Z, X);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorCopyOnly(Z, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
     #pragma omp parallel for schedule(static)
     for(sptNnzIndex i = 0; i < nnz; ++ i)
         Z->values.data[i] = X->values.data[i] * Y->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns DotMul");
+    comp_time = sptPrintElapsedTime(timer, "Omp SpTns DotMul");
 
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
@@ -67,10 +72,13 @@ int sptOmpSparseTensorDotMulEq(sptSparseTensor *Z, const sptSparseTensor *X, con
         sptSparseTensorCollectZeros(Z); // TODO: Sequential
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
+    collect_time = sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
     sptFreeTimer(timer);
-    printf("\n");
     
+    total_time = copy_time + comp_time + collect_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
+
     return 0;
 }
 

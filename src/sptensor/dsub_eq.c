@@ -46,17 +46,22 @@ int sptSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const 
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, collect_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorAllocateOnly(Z, X);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorCopyOnly(Z, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
     for(i=0; i< nnz; ++i)
         Z->values.data[i] = X->values.data[i] - Y->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns DotSub");
+    comp_time = sptPrintElapsedTime(timer, "Cpu SpTns DotSub");
 
     /* Check whether elements become zero after subtraction.
        If so, fill the gap with the [nnz-1]'th element.
@@ -66,8 +71,11 @@ int sptSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, const 
         sptSparseTensorCollectZeros(Z);
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
+    collect_time = sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
     sptFreeTimer(timer);
+
+    total_time = copy_time + comp_time + collect_time;
+    printf("[Total time]: %lf\n", total_time);
     printf("\n");
     
     return 0;

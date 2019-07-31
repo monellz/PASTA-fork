@@ -62,7 +62,7 @@ int sptSemiSparseTensorMulMatrix(
     for(m = 0; m < Y->nmodes; ++m) {
         if(m != mode) {
             sptFreeIndexVector(&Y->inds[m]);
-            result = sptCopyIndexVector(&Y->inds[m], &X->inds[m], 1);
+            result = sptCopyIndexVector(&Y->inds[m], &X->inds[m]);
             if(result != 0) {
                 return result;
             }

@@ -30,11 +30,16 @@ int sptOmpSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorAllocateOnly(Z, X);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorCopyOnly(Z, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
     #pragma omp parallel for schedule(static)
@@ -42,8 +47,11 @@ int sptOmpSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue
         Z->values.data[i] += a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns AddScalar");
+    comp_time = sptPrintElapsedTime(timer, "Omp SpTns AddScalar");
     sptFreeTimer(timer);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
     printf("\n");
 
     return 0;

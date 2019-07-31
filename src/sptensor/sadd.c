@@ -30,19 +30,27 @@ int sptSparseTensorAddScalar(sptSparseTensor *Z, sptSparseTensor *X, sptValue a)
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorAllocateOnly(Z, X);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorCopyOnly(Z, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
     sptStartTimer(timer);
     for(sptNnzIndex i = 0; i < Z->nnz; ++i) {
         Z->values.data[i] += a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns AddScalar");
+    comp_time = sptPrintElapsedTime(timer, "Cpu SpTns AddScalar");
     sptFreeTimer(timer);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
     printf("\n");
 
     return 0;

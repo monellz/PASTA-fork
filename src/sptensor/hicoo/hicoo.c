@@ -104,7 +104,7 @@ int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHi
         spt_CheckError(result, "HiSpTns Copy", NULL);
     }
 
-    result = sptCopyValueVector(&dest->values, &src->values, 1);
+    result = sptCopyValueVector(&dest->values, &src->values);
     spt_CheckError(result, "HiSpTns Copy", NULL);
 
     return 0;

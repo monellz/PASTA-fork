@@ -72,27 +72,34 @@ int sptCudaSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, co
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time_cpu, copy_time_gpu, comp_time, collect_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorAllocateOnly(Z, X);
+
+    /* Copy indices on CPU */
     sptStartTimer(timer);
-    sptCopySparseTensor(Z, X, 1);
+    sptCopySparseTensorCopyOnly(Z, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time_cpu = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
-
-    sptStartTimer(timer);
+    /* Device memory allocation */
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, Z->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, X->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
-    cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, Y->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
+
+    /* Device memory copy */
+    sptStartTimer(timer);
+    cudaMemcpy(X_val, X->values.data, X->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     cudaMemcpy(Y_val, Y->values.data, Y->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Device malloc and copy");
+    copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
 
     sptStartTimer(timer);
@@ -125,7 +132,7 @@ int sptCudaSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda SpTns DotDiv");
+    comp_time = sptPrintElapsedTime(timer, "Cuda SpTns DotDiv");
 
     /* Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
@@ -135,18 +142,24 @@ int sptCudaSparseTensorDotDivEq(sptSparseTensor *Z, const sptSparseTensor *X, co
         sptSparseTensorCollectZeros(Z);
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
-    sptFreeTimer(timer);
-    printf("\n");
+    collect_time = sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
-
+    sptStartTimer(timer);
     cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    sptStopTimer(timer);
+    copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+    sptFreeTimer(timer);
+
     result = cudaFree(X_val);
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
     result = cudaFree(Y_val);
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
     result = cudaFree(Z_val);
     spt_CheckCudaError(result != 0, "Cuda SpTns DotDiv");
+
+    total_time = copy_time_cpu + copy_time_gpu + comp_time + collect_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

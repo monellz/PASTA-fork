@@ -50,12 +50,13 @@ int sptNewSparseTensor(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndi
     return 0;
 }
 
+
 /**
  * Copy a sparse tensor
  * @param[out] dest a pointer to an uninitialized sparse tensor
  * @param[in]  src  a pointer to a valid sparse tensor
  */
-int sptCopySparseTensor(sptSparseTensor *dest, const sptSparseTensor *src, int const nt) {
+int sptCopySparseTensor(sptSparseTensor *dest, const sptSparseTensor *src) {
     sptIndex i;
     int result;
     dest->nmodes = src->nmodes;
@@ -68,10 +69,54 @@ int sptCopySparseTensor(sptSparseTensor *dest, const sptSparseTensor *src, int c
     dest->inds = malloc(dest->nmodes * sizeof *dest->inds);
     spt_CheckOSError(!dest->inds, "SpTns Copy");
     for(i = 0; i < dest->nmodes; ++i) {
-        result = sptCopyIndexVector(&dest->inds[i], &src->inds[i], nt);
+        result = sptCopyIndexVector(&dest->inds[i], &src->inds[i]);
         spt_CheckError(result, "SpTns Copy", NULL);
     }
-    result = sptCopyValueVector(&dest->values, &src->values, nt);
+    result = sptCopyValueVector(&dest->values, &src->values);
+    spt_CheckError(result, "SpTns Copy", NULL);
+    return 0;
+}
+
+/**
+ * Allocate a sparse tensor from another tensor.
+ * @param[out] dest a pointer to an uninitialized sparse tensor
+ * @param[in]  src  a pointer to a valid sparse tensor
+ */
+int sptCopySparseTensorAllocateOnly(sptSparseTensor *dest, const sptSparseTensor *src) {
+    sptIndex i;
+    int result;
+    dest->nmodes = src->nmodes;
+    dest->sortorder = malloc(src->nmodes * sizeof src->sortorder[0]);
+    memcpy(dest->sortorder, src->sortorder, src->nmodes * sizeof src->sortorder[0]);
+    dest->ndims = malloc(dest->nmodes * sizeof *dest->ndims);
+    spt_CheckOSError(!dest->ndims, "SpTns Copy");
+    memcpy(dest->ndims, src->ndims, src->nmodes * sizeof *src->ndims);
+    dest->nnz = src->nnz;
+    dest->inds = malloc(dest->nmodes * sizeof *dest->inds);
+    spt_CheckOSError(!dest->inds, "SpTns Copy");
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptNewIndexVector(&dest->inds[i], src->inds[i].len, src->inds[i].len);
+        spt_CheckError(result, "SpTns Copy", NULL);
+    }
+    result = sptNewValueVector(&dest->values, src->values.len, src->values.len);
+    spt_CheckError(result, "SpTns Copy", NULL);
+    return 0;
+}
+
+
+/**
+ * Copy a sparse tensor without allocation.
+ * @param[out] dest a pointer to an uninitialized sparse tensor
+ * @param[in]  src  a pointer to a valid sparse tensor
+ */
+int sptCopySparseTensorCopyOnly(sptSparseTensor *dest, const sptSparseTensor *src) {
+    sptIndex i;
+    int result;
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptCopyIndexVectorCopyOnly(&dest->inds[i], &src->inds[i]);
+        spt_CheckError(result, "SpTns Copy", NULL);
+    }
+    result = sptCopyValueVectorCopyOnly(&dest->values, &src->values);
     spt_CheckError(result, "SpTns Copy", NULL);
     return 0;
 }
