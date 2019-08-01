@@ -7,8 +7,8 @@ build.config
 *.ptx
 *.mex*
 
-benchmarks/test_scripts/*.sh
 timing-results*/
+new-timing-results*/
 timing-results*.tgz
 ert_results/*.tgz
 ert_results/dgx*
