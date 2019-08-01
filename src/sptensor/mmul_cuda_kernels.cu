@@ -56,14 +56,14 @@ __global__ void spt_TTMRankRBNnzKernel(
 
         for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
             x = blockIdx.x * blockDim.y + tidy + nl * nnz_per_loop;
+            sptValue * Y_val_offset = Y_val + x * Y_stride;
             if(x < Y_nnz) {
                 const sptNnzIndex inz_begin = fiberidx_val[x];
                 const sptNnzIndex inz_end = fiberidx_val[x+1];
 
                 for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const sptIndex row = X_inds_m[i];
-                    Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    // __syncthreads();
+                    Y_val_offset[r] += X_val[i] * U_val[row*U_stride + r];
                 }
             }
         }
@@ -74,14 +74,14 @@ __global__ void spt_TTMRankRBNnzKernel(
 
         for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
             x = blockIdx.x * blockDim.y + tidy + nl * nnz_per_loop;
+            sptValue * Y_val_offset = Y_val + x * Y_stride;
             if(x < Y_nnz) {
                 const sptNnzIndex inz_begin = fiberidx_val[x];
                 const sptNnzIndex inz_end = fiberidx_val[x+1];
 
                 for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const sptIndex row = X_inds_m[i];
-                    Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    // __syncthreads();
+                    Y_val_offset[r] += X_val[i] * U_val[row*U_stride + r];
                 }
             }
         }

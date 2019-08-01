@@ -75,8 +75,9 @@ int sptOmpMTTKRP(sptSparseTensor const * const X,
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    double comp_time, total_time;
 
+    sptStartTimer(timer);
     #pragma omp parallel for schedule(static) num_threads(tk)
     for(sptNnzIndex x=0; x<nnz; ++x) {
         sptValueVector scratch;  // Temporary array
@@ -116,9 +117,13 @@ int sptOmpMTTKRP(sptSparseTensor const * const X,
     }   // End loop nnzs
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
     
     sptFreeTimer(timer);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }
@@ -162,6 +167,8 @@ int sptOmpMTTKRP_3D(sptSparseTensor const * const X,
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double comp_time, total_time;
+
     sptStartTimer(timer);
     #pragma omp parallel for schedule(static) num_threads(tk)
     for(sptNnzIndex x=0; x<nnz; ++x) {
@@ -177,8 +184,13 @@ int sptOmpMTTKRP_3D(sptSparseTensor const * const X,
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Omp SpTns MTTKRP");
+
     sptFreeTimer(timer);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

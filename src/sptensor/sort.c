@@ -962,7 +962,7 @@ static int spt_SparseTensorCompareAtMode(const sptSparseTensor *tsr1, sptNnzInde
     sptIndex i;
     sptIndex eleind1, eleind2;
     assert(tsr1->nmodes == tsr2->nmodes);
-    for(i = 0; i < tsr1->nmodes; ++i) {
+    for(i = 0; i < tsr1->nmodes; ++i) { // Compare order
         if(i != mode) {
             eleind1 = tsr1->inds[i].data[ind1];
             eleind2 = tsr2->inds[i].data[ind2];

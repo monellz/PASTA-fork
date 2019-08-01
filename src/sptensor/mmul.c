@@ -47,26 +47,50 @@ int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const s
     sptIndex *ind_buf;
     sptIndex m;
     sptNnzIndexVector fiberidx;
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    double sort_time, setfiber_time, allocate_time, preprocess_time, copy_time, comp_time, total_time;
 
+    /* Sort tensor except mode */
+    sptStartTimer(timer);
     sptSparseTensorSortIndexAtMode(X, mode, 0);
+    sptStopTimer(timer);
+    sort_time = sptPrintElapsedTime(timer, "sptSparseTensorSortIndexAtMode");
+
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSemiSparseTensorSetFibers(&fiberidx, X, mode);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSparseTensorSetFibers");
+
+    /* Allocate output Y */
+    sptStartTimer(timer);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
     spt_CheckOSError(!ind_buf, "Cpu SpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
-    result = sptNewSemiSparseTensor(Y, X->nmodes, mode, ind_buf);
+    result = sptNewSemiSparseTensorWithNnz(Y, X->nmodes, mode, ind_buf, fiberidx.len - 1);
     spt_CheckError(result, "Cpu SpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu SpTns * Mtx", "shape mismatch");
     }
-    sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSemiSparseTensorWithNnz");
 
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
+    preprocess_time = sort_time + setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
+
+    /* Set indices */
     sptStartTimer(timer);
+    sptSemiSparseTensorSetIndices(Y, &fiberidx, X);
+    sptStopTimer(timer);
+    copy_time = sptPrintElapsedTime(timer, "Copy indices");
 
+    /* Computation */
+    sptStartTimer(timer);
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];
@@ -77,12 +101,15 @@ int sptSparseTensorMulMatrix(sptSemiSparseTensor *Y, sptSparseTensor *X, const s
             }
         }
     }
-
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns * Mtx");
+    comp_time = sptPrintElapsedTime(timer, "Cpu SpTns * Mtx");
 
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
     
     return 0;
 }

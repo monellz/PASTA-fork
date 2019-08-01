@@ -76,8 +76,10 @@ int sptMTTKRP(sptSparseTensor const * const X,
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    double comp_time, total_time;
 
+    /* Computation */
+    sptStartTimer(timer);
     for(sptNnzIndex x=0; x<nnz; ++x) {
 
         sptIndex times_mat_index = mats_order[1];
@@ -106,10 +108,14 @@ int sptMTTKRP(sptSparseTensor const * const X,
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Cpu SpTns MTTKRP");
     
     sptFreeTimer(timer);
     sptFreeValueVector(&scratch);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }
@@ -158,6 +164,8 @@ int sptMTTKRP_3D(sptSparseTensor const * const X,
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double comp_time, total_time;
+
     sptStartTimer(timer);
     for(sptNnzIndex x=0; x<nnz; ++x) {
         mode_i = mode_ind[x];
@@ -170,8 +178,12 @@ int sptMTTKRP_3D(sptSparseTensor const * const X,
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu SpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Cpu SpTns MTTKRP");
     sptFreeTimer(timer);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

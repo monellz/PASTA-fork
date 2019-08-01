@@ -47,16 +47,17 @@ __global__ void spt_TTVNnzKernel(
 
     for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
         x = blockIdx.x * blockDim.x + tidx + nl * nnz_per_loop;
+        sptValue tmp_val = 0;
         if(x < Y_nnz) {
             const sptNnzIndex inz_begin = fiberidx_val[x];
             const sptNnzIndex inz_end = fiberidx_val[x+1];
 
             for(sptNnzIndex i = inz_begin; i < inz_end; ++i) {
                 const sptIndex row = X_inds_m[i];
-                Y_val[x] += X_val[i] * V_val[row];
+                tmp_val += X_val[i] * V_val[row];
             }
+            Y_val[x] += tmp_val;
         }
-        __syncthreads();
     }
 
 }

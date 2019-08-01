@@ -56,6 +56,7 @@ int sptCudaMTTKRP(
     double gbw_h2d, gflops_exe, gbytes_exe, gbw_d2h;
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double total_time;
 
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
@@ -269,8 +270,6 @@ int sptCudaMTTKRP(
     result = cudaThreadSynchronize();
     spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
 
-
-
     sptStopTimer(timer);
     time_exe = sptElapsedTime(timer);
     gflops_exe = (double)dev_flops / time_exe / 1e9;
@@ -295,9 +294,8 @@ int sptCudaMTTKRP(
     gbw_d2h = dev_mem_size / time_d2h /1e9;
     sptPrintElapsedTime(timer, "Cuda SpTns MTTKRP D2H");
     printf("[Bandwidth D2H]: %lf GBytes/sec\n", gbw_d2h);
-    printf("\n");
-    sptFreeTimer(timer);
 
+    sptFreeTimer(timer);
     result = cudaFree(dev_mats_order);
     spt_CheckCudaError(result != 0, "Cuda SpTns MTTKRP");
     result = cudaFree(dev_Xndims);
@@ -315,6 +313,10 @@ int sptCudaMTTKRP(
     delete[] Xinds_header;
     delete[] mats_header;
     delete[] lengths;
+
+    total_time = time_exe;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
   return 0;
 }

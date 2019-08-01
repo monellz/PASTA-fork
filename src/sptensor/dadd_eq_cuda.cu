@@ -40,7 +40,6 @@ static __global__ void spt_dAddKernel(
         if(x < nnz) {
             Z_val[x] = X_val[x] + Y_val[x];
         }
-        __syncthreads();
     }
 
 }

@@ -38,12 +38,21 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
     sptNnzIndexVector fiberidx;
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double sort_time, setfiber_time, allocate_time, preprocess_time, copy_time, comp_time, total_time;
 
+    /* Sort tensor except mode */
     sptStartTimer(timer);
     sptSparseTensorSortIndexAtMode(X, mode, 0);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptSparseTensorSortIndexAtMode");
+    sort_time = sptPrintElapsedTime(timer, "sptSparseTensorSortIndexAtMode");
 
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSparseTensorSetFibers(&fiberidx, mode, X);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSparseTensorSetFibers");
+
+    /* Allocate output Y */
     sptStartTimer(timer);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
     spt_CheckOSError(!ind_buf, "Omp SpTns * Vec");
@@ -53,16 +62,24 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
         else if(m > mode)
             ind_buf[m - 1] = X->ndims[m];
     }
-
-    result = sptNewSparseTensor(Y, X->nmodes - 1, ind_buf);
-    free(ind_buf);
+    result = sptNewSparseTensorWithNnz(Y, X->nmodes - 1, ind_buf, fiberidx.len - 1);
     spt_CheckError(result, "Omp SpTns * Vec", NULL);
+    free(ind_buf);
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSparseTensorWithNnz");
+
+    preprocess_time = sort_time + setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
+
+    /* Set indices */
+    sptStartTimer(timer);
     sptSparseTensorSetIndices(Y, &fiberidx, mode, X);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Allocate output tensor");
+    copy_time = sptPrintElapsedTime(timer, "Copy indices");
 
+    /* Computation */
     sptStartTimer(timer);
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];
@@ -73,9 +90,13 @@ int sptOmpSparseTensorMulVector(sptSparseTensor *Y, sptSparseTensor *X, const sp
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp SpTns * Vec");
+    comp_time = sptPrintElapsedTime(timer, "Omp SpTns * Vec");
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

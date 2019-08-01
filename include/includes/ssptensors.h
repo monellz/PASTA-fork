@@ -26,6 +26,7 @@
 int sptSemiSparseTensorToSparseTensor(sptSparseTensor *dest, const sptSemiSparseTensor *src, sptValue epsilon);
 
 int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[]);
+int sptNewSemiSparseTensorWithNnz(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[], sptNnzIndex nfibers);
 int sptCopySemiSparseTensor(sptSemiSparseTensor *dest, const sptSemiSparseTensor *src);
 void sptFreeSemiSparseTensor(sptSemiSparseTensor *tsr);
 int sptDumpSemiSparseTensor(sptSemiSparseTensor * const tsr, FILE *fp);
@@ -49,6 +50,11 @@ int sptDumpSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO * const hitsr, FILE *f
  * Set indices of a semi-sparse according to a reference sparse
  * Call sptSparseTensorSortIndexAtMode on ref first
  */
+int sptSemiSparseTensorSetFibers(
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensor *ref,
+    sptIndex mode
+);
 int sptSemiSparseTensorSetIndices(sptSemiSparseTensor *dest, sptNnzIndexVector *fiberidx, sptSparseTensor *ref);
 int sptSemiSparseTensorSetIndicesHiCOO(
     sptSemiSparseTensorHiCOO *dest,

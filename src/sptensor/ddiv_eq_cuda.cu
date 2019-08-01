@@ -40,7 +40,6 @@ __global__ void spt_dDivKernel(
         if(x < nnz) {
             Z_val[x] = X_val[x] / Y_val[x];
         }
-        __syncthreads();
     }
 
 }

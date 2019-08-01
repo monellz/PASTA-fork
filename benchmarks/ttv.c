@@ -84,6 +84,7 @@ int main(int argc, char ** argv)
     printf("dev_id: %d\n", dev_id);
 
     sptAssert(sptLoadSparseTensor(&X, 1, fname) == 0);
+    // sptDumpSparseTensor(&X, 0, stdout);
 
     sptAssert(sptNewValueVector(&V, X.ndims[mode], X.ndims[mode]) == 0);
     // sptAssert(sptConstantValueVector(&V, 1.0) == 0);

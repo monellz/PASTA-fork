@@ -52,6 +52,36 @@ int sptNewSparseTensor(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndi
 
 
 /**
+ * Create a new sparse tensor with given number of nonzeros.
+ * @param tsr    a pointer to an uninitialized sparse tensor
+ * @param nmodes number of modes the tensor will have
+ * @param ndims  the dimension of each mode the tensor will have
+ */
+int sptNewSparseTensorWithNnz(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndims[], sptNnzIndex nnz) {
+    sptIndex i;
+    int result;
+    tsr->nmodes = nmodes;
+    tsr->sortorder = malloc(nmodes * sizeof tsr->sortorder[0]);
+    for(i = 0; i < nmodes; ++i) {
+        tsr->sortorder[i] = i;
+    }
+    tsr->ndims = malloc(nmodes * sizeof *tsr->ndims);
+    spt_CheckOSError(!tsr->ndims, "SpTns New");
+    memcpy(tsr->ndims, ndims, nmodes * sizeof *tsr->ndims);
+    tsr->nnz = nnz;
+    tsr->inds = malloc(nmodes * sizeof *tsr->inds);
+    spt_CheckOSError(!tsr->inds, "SpTns New");
+    for(i = 0; i < nmodes; ++i) {
+        result = sptNewIndexVector(&tsr->inds[i], nnz, nnz);
+        spt_CheckError(result, "SpTns New", NULL);
+    }
+    result = sptNewValueVector(&tsr->values, nnz, nnz);
+    spt_CheckError(result, "SpTns New", NULL);
+    return 0;
+}
+
+
+/**
  * Copy a sparse tensor
  * @param[out] dest a pointer to an uninitialized sparse tensor
  * @param[in]  src  a pointer to a valid sparse tensor

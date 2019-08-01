@@ -21,6 +21,7 @@
 
 /* Sparse tensor */
 int sptNewSparseTensor(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndims[]);
+int sptNewSparseTensorWithNnz(sptSparseTensor *tsr, sptIndex nmodes, const sptIndex ndims[], sptNnzIndex nnz);
 int sptCopySparseTensor(sptSparseTensor *dest, const sptSparseTensor *src);
 int sptCopySparseTensorAllocateOnly(sptSparseTensor *dest, const sptSparseTensor *src);
 int sptCopySparseTensorCopyOnly(sptSparseTensor *dest, const sptSparseTensor *src);
@@ -80,6 +81,11 @@ int spt_ComputeSliceSizes(
     sptIndex const mode);
 void sptSparseTensorStatus(sptSparseTensor *tsr, FILE *fp);
 double sptSparseTensorDensity(sptSparseTensor const * const tsr);
+int sptSparseTensorSetFibers(
+    sptNnzIndexVector *fiberidx,
+    sptIndex mode,
+    sptSparseTensor *ref
+);
 int sptSparseTensorSetIndices(
     sptSparseTensor *dest,
     sptNnzIndexVector *fiberidx,

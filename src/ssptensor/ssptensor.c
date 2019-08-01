@@ -53,6 +53,39 @@ int sptNewSemiSparseTensor(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex m
     return 0;
 }
 
+
+/**
+ * Create a new semi sparse tensor with given number of nonzeros.
+ * @param tsr    a pointer to an uninitialized semi sparse tensor
+ * @param nmodes number of modes the tensor will have
+ * @param mode   the mode which will be stored in dense format
+ * @param ndims  the dimension of each mode the tensor will have
+ */
+int sptNewSemiSparseTensorWithNnz(sptSemiSparseTensor *tsr, sptIndex nmodes, sptIndex mode, const sptIndex ndims[], sptNnzIndex nfibers) 
+{
+    sptIndex i;
+    int result;
+    if(nmodes < 2) {
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SspTns New", "nmodes < 2");
+    }
+    tsr->nmodes = nmodes;
+    tsr->ndims = malloc(nmodes * sizeof *tsr->ndims);
+    spt_CheckOSError(!tsr->ndims, "SspTns New");
+    memcpy(tsr->ndims, ndims, nmodes * sizeof *tsr->ndims);
+    tsr->mode = mode;
+    tsr->nnz = nfibers;
+    tsr->inds = malloc((nmodes - 1) * sizeof *tsr->inds);
+    spt_CheckOSError(!tsr->inds, "SspTns New");
+    for(i = 0; i < nmodes - 1; ++i) {
+        result = sptNewIndexVector(&tsr->inds[i], nfibers, nfibers);
+        spt_CheckError(result, "SspTns New", NULL);
+    }
+    result = sptNewMatrix(&tsr->values, nfibers, tsr->ndims[mode]);
+    spt_CheckError(result, "SspTns New", NULL);
+    return 0;
+}
+
+
 /**
  * Copy a semi sparse tensor
  * @param[out] dest a pointer to an uninitialized semi sparse tensor

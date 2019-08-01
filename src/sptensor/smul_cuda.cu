@@ -39,7 +39,6 @@ static __global__ void spt_sMulKernel(
         if(x < X_nnz) {
             Z_val[x] = a * X_val[x];
         }
-        __syncthreads();
     }
 
 }
