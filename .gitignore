@@ -7,6 +7,9 @@ build.config
 *.ptx
 *.mex*
 
+
+benchmarks/test_scripts/run_pasta_all_coo.sh
+
 timing-results*/
 new-timing-results*/
 timing-results*.tgz
