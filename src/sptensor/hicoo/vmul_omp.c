@@ -34,9 +34,18 @@ int sptOmpSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorH
     int result;
     sptIndex *ind_buf;
     sptNnzIndexVector fiberidx;
+    sptNnzIndexVector bptr; // Do NOT free it
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double setfiber_time, allocate_time, preprocess_time, copy_time, comp_time, total_time;
 
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSparseTensorSetFibersHiCOO(&bptr, &fiberidx, hiX);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSparseTensorSetFibersHiCOO");
+
+    /* Allocate output Y */
     sptStartTimer(timer);
     ind_buf = malloc(hiX->nmodes * sizeof *ind_buf);
     spt_CheckOSError(!ind_buf, "Omp HiSpTns * Vec");
@@ -47,14 +56,22 @@ int sptOmpSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorH
             ind_buf[m - 1] = hiX->ndims[m];
     }
 
-    result = sptNewSparseTensorHiCOO(hiY, hiX->nmodes - 1, ind_buf, 0, hiX->sb_bits);
-    free(ind_buf);
+    result = sptNewSparseTensorHiCOOWithBptr(hiY, hiX->nmodes - 1, ind_buf, fiberidx.len - 1, hiX->sb_bits, &bptr);
     spt_CheckError(result, "Omp HiSpTns * Vec", NULL);
+    free(ind_buf);
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSparseTensorHiCOOWithBptr");
+
+    preprocess_time = setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
+
+    /* Set indices */
+    sptStartTimer(timer);
     sptSparseTensorSetIndicesHiCOO(hiY, &fiberidx, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Allocate output tensor");
+    copy_time = sptPrintElapsedTime(timer, "Copy indices");
 
-
+    /* Computation */
     sptStartTimer(timer);
     #pragma omp parallel for schedule(dynamic)
     for(sptNnzIndex i = 0; i < hiY->nnz; ++i) {
@@ -67,9 +84,14 @@ int sptOmpSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorH
         }
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp HiSpTns * Vec");
+    comp_time = sptPrintElapsedTime(timer, "Omp HiSpTns * Vec");
+
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

@@ -74,7 +74,7 @@ int sptSparseTensorSetFibers(
 
 
 /**
- * Set the indices of a subset of a sparse tensor.
+ * Set the indices of a sparse tensor.
  * @param[out] dest     a pointer to an initialized sparse tensor
  * @param[out] fiberidx a vector to store the starting position of each fiber, should be uninitialized
  * @param[in]  ref      a pointer to a valid sparse tensor

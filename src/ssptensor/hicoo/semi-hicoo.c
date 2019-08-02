@@ -73,6 +73,65 @@ int sptNewSemiSparseTensorHiCOO(
 
 
 /**
+ * Create a new semi-sparse tensor in HiCOO format
+ * @param histsr    a pointer to an uninitialized sparse tensor
+ * @param nmodes number of modes the tensor will have
+ * @param ndims  the dimension of each mode the tensor will have
+ * @param nnz number of nonzeros the tensor will have
+ */
+int sptNewSemiSparseTensorHiCOOWithBptr(
+    sptSemiSparseTensorHiCOO *histsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nfibers,
+    const sptIndex mode,
+    const sptElementIndex sb_bits,
+    sptNnzIndexVector * bptr)
+{
+    sptIndex ncmodes = nmodes - 1;
+    sptIndex i;
+    int result;
+    sptNnzIndex nb = bptr->len - 1;
+    if(nmodes < 2) {
+        spt_CheckError(SPTERR_SHAPE_MISMATCH, "SspTnsHiCOO New", "nmodes < 2");
+    }
+
+    histsr->nmodes = nmodes;
+    histsr->ndims = malloc(nmodes * sizeof *histsr->ndims);
+    spt_CheckOSError(!histsr->ndims, "HiSpTns New");
+    memcpy(histsr->ndims, ndims, nmodes * sizeof *histsr->ndims);
+    histsr->mode = mode;
+    histsr->nnz = nfibers;
+
+    /* Parameters */
+    histsr->sb_bits = sb_bits; // block size by nnz
+
+    /* Soft copy bptr */
+    histsr->bptr.len = bptr->len;
+    histsr->bptr.cap = bptr->cap;
+    histsr->bptr.data = bptr->data;
+
+    histsr->binds = malloc(ncmodes * sizeof *histsr->binds);
+    spt_CheckOSError(!histsr->binds, "HiSpTns New");
+    for(i = 0; i < ncmodes; ++i) {
+        result = sptNewBlockIndexVector(&histsr->binds[i], nb, nb);
+        spt_CheckError(result, "HiSpTns New", NULL);
+    }
+
+    histsr->einds = malloc(ncmodes * sizeof *histsr->einds);
+    spt_CheckOSError(!histsr->einds, "HiSpTns New");
+    for(i = 0; i < ncmodes; ++i) {
+        result = sptNewElementIndexVector(&histsr->einds[i], nfibers, nfibers);
+        spt_CheckError(result, "HiSpTns New", NULL);
+    }
+    result = sptNewMatrix(&histsr->values, nfibers, histsr->ndims[mode]);
+    spt_CheckError(result, "HiSpTns New", NULL);
+
+    return 0;
+}
+
+
+/**
  * Release any memory the HiCOO semi-sparse tensor is holding
  * @param histsr the tensor to release
  */

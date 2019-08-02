@@ -46,21 +46,31 @@ int sptSparseTensorDotAddEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseTenso
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorHiCOOAllocateOnly(hiZ, hiX);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensorHiCOO(hiZ, hiX);
+    sptCopySparseTensorHiCOOCopyOnly(hiZ, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOOCopyOnly");
 
+    /* Computation */
     sptStartTimer(timer);
     for(i=0; i< nnz; ++i)
         hiZ->values.data[i] = hiX->values.data[i] + hiY->values.data[i];
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu HiSpTns DotAdd");
+    comp_time = sptPrintElapsedTime(timer, "Cpu HiSpTns DotAdd");
 
     /* TODO: Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
     
     return 0;
 }

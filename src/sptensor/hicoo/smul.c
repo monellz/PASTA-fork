@@ -30,20 +30,29 @@ int sptSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensorHiCO
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorHiCOOAllocateOnly(hiZ, hiX);
+
+    /* Set values */
     sptStartTimer(timer);
-    sptCopySparseTensorHiCOO(hiZ, hiX);
+    sptCopySparseTensorHiCOOCopyOnly(hiZ, hiX);
     // sptSparseTensorStatusHiCOO(hiZ, stdout);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
+    copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOOCopyOnly");
 
+    /* Computation */
     sptStartTimer(timer);
     for(sptNnzIndex i = 0; i < hiZ->nnz; ++i) {
         hiZ->values.data[i] *= a;
     }
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu HiSpTns MulScalar");
+    comp_time = sptPrintElapsedTime(timer, "Cpu HiSpTns MulScalar");
     sptFreeTimer(timer);
+    
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
     printf("\n");
 
     return 0;

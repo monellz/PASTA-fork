@@ -57,6 +57,7 @@ int sptSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, const 
     sptStopTimer(timer);
     copy_time = sptPrintElapsedTime(timer, "sptCopySparseTensor");
 
+    /* Computation */
     sptStartTimer(timer);
     for(i=0; i< nnz; ++i)
         Z->values.data[i] = X->values.data[i] + Y->values.data[i];

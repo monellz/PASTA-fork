@@ -43,34 +43,51 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     if(X->nmodes != X->ncmodes + 1) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
-    
+
     sptIndex stride = U->stride;
     int result;
     sptIndex m;
     sptNnzIndexVector fiberidx;
+    sptNnzIndexVector bptr; // Do NOT free it
     sptIndex *ind_buf;
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    double setfiber_time, allocate_time, preprocess_time, copy_time, comp_time, total_time;
+    
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSemiSparseTensorSetFibersHiCOO(&bptr, &fiberidx, X);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSemiSparseTensorSetFibersHiCOO");
 
+    /* Allocate output Y */
+    sptStartTimer(timer);
     ind_buf = malloc(X->nmodes * sizeof *ind_buf);
     spt_CheckOSError(!ind_buf, "Cpu HiSpTns * Mtx");
     for(m = 0; m < X->nmodes; ++m) {
         ind_buf[m] = X->ndims[m];
     }
     ind_buf[mode] = U->ncols;
-    result = sptNewSemiSparseTensorHiCOO(Y, X->nmodes, ind_buf, mode, X->sb_bits);
+    result = sptNewSemiSparseTensorHiCOOWithBptr(Y, X->nmodes, ind_buf, fiberidx.len - 1, mode, X->sb_bits, &bptr);
     spt_CheckError(result, "Cpu HiSpTns * Mtx", NULL);
     free(ind_buf);
     if(Y->values.stride != stride) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cpu HiSpTns * Mtx", "shape mismatch");
     }
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSemiSparseTensorHiCOOWithBptr");
 
-    sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
-    // printf("fiberidx-final:\n");
-    // sptDumpNnzIndexVector(&fiberidx, stdout);
+    preprocess_time = setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
 
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
+    /* Set indices */
     sptStartTimer(timer);
+    sptSemiSparseTensorSetIndicesHiCOO(Y, &fiberidx, X);
+    sptStopTimer(timer);
+    copy_time = sptPrintElapsedTime(timer, "Copy indices");
 
+    /* Computation */
+    sptStartTimer(timer);
     for(sptNnzIndex i = 0; i < Y->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];
@@ -83,10 +100,14 @@ int sptSparseTensorMulMatrixHiCOO(sptSemiSparseTensorHiCOO *Y, sptSparseTensorHi
     }
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu HiSpTns * Mtx");
+    comp_time = sptPrintElapsedTime(timer, "Cpu HiSpTns * Mtx");
     
     sptFreeTimer(timer);
     sptFreeNnzIndexVector(&fiberidx);
+
+    total_time = copy_time + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
     
     return 0;
 }

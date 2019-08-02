@@ -37,9 +37,8 @@ static __global__ void spt_sMulKernel(
     for(sptNnzIndex nl=0; nl<num_loops_nnz; ++nl) {
         x = blockIdx.x * blockDim.x + tidx + nl * nnz_per_loop;
         if(x < X_nnz) {
-            Z_val[x] *= a;
+            Z_val[x] = a * X_val[x];
         }
-        __syncthreads();
     }
 
 }
@@ -58,24 +57,33 @@ int sptCudaSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensor
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time_cpu, copy_time_gpu, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorHiCOOAllocateOnly(hiZ, hiX);
+
+    /* Copy indices on CPU */
     sptStartTimer(timer);
-    sptCopySparseTensorHiCOO(hiZ, hiX);
+    sptCopySparseTensorHiCOOCopyOnly(hiZ, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensor");
+    copy_time_cpu = sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOOCopyOnly");
 
-    sptStartTimer(timer);
+    /* Device memory allocation */
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, hiZ->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns MulScalar");
-    cudaMemcpy(Z_val, hiZ->values.data, hiZ->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns MulScalar");
+
+    /* Device memory copy */
+    sptStartTimer(timer);
+    // cudaMemcpy(Z_val, hiZ->values.data, hiZ->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Device malloc and copy");
+    copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
+    /* Computation */
     sptStartTimer(timer);
 
     const sptNnzIndex max_nblocks = 32768;
@@ -106,15 +114,23 @@ int sptCudaSparseTensorMulScalarHiCOO(sptSparseTensorHiCOO *hiZ, sptSparseTensor
     spt_CheckCudaError(result != 0, "Cuda HiSpTns MulScalar kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda HiSpTns MulScalar");
-    sptFreeTimer(timer);
-    printf("\n");
+    comp_time = sptPrintElapsedTime(timer, "Cuda HiSpTns MulScalar");
 
+    /* Copy back to CPU */
+    sptStartTimer(timer);
     cudaMemcpy(hiZ->values.data, Z_val, hiZ->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    sptStopTimer(timer);
+    copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+
+    sptFreeTimer(timer);
     result = cudaFree(X_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns MulScalar");
     result = cudaFree(Z_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns MulScalar");
+
+    total_time = copy_time_cpu + copy_time_gpu + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

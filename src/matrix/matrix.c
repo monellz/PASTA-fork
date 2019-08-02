@@ -51,6 +51,7 @@ int sptNewMatrix(sptMatrix *mtx, sptIndex const nrows, sptIndex const ncols) {
     mtx->values = malloc(mtx->cap * mtx->stride * sizeof (sptValue));
 #endif
     spt_CheckOSError(!mtx->values, "Mtx New");
+    memset(mtx->values, 0, mtx->cap * mtx->stride * sizeof (sptValue));
     return 0;
 }
 

@@ -42,9 +42,18 @@ int sptCudaSparseTensorMulVectorHiCOO(
     int result;
     sptIndex *ind_buf;
     sptNnzIndexVector fiberidx;
+    sptNnzIndexVector bptr; // Do NOT free it
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double setfiber_time, allocate_time, preprocess_time, copy_time_cpu, copy_time_gpu, comp_time, total_time;
 
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSparseTensorSetFibersHiCOO(&bptr, &fiberidx, hiX);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSparseTensorSetFibersHiCOO");
+
+    /* Allocate output Y */
     sptStartTimer(timer);
     ind_buf = new sptIndex[hiX->nmodes * sizeof *ind_buf];
     spt_CheckOSError(!ind_buf, "Cuda HiSpTns * Vec");
@@ -55,34 +64,46 @@ int sptCudaSparseTensorMulVectorHiCOO(
             ind_buf[m - 1] = hiX->ndims[m];
     }
 
-    result = sptNewSparseTensorHiCOO(hiY, hiX->nmodes - 1, ind_buf, 0, hiX->sb_bits);
-    free(ind_buf);
+    result = sptNewSparseTensorHiCOOWithBptr(hiY, hiX->nmodes - 1, ind_buf, fiberidx.len - 1, hiX->sb_bits, &bptr);
     spt_CheckError(result, "Cuda HiSpTns * Vec", NULL);
+    free(ind_buf);
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSparseTensorHiCOOWithBptr");
+
+    preprocess_time = setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
+
+    /* Set indices */
+    sptStartTimer(timer);
     sptSparseTensorSetIndicesHiCOO(hiY, &fiberidx, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Allocate output tensor");
+    copy_time_cpu = sptPrintElapsedTime(timer, "Copy indices");
 
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, hiY->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
-    // jli: Add memset to Y.
-    cudaMemset(Y_val, 0, hiY->nnz * sizeof (sptValue));
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
-    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptIndex *X_inds_m = NULL;
     result = cudaMalloc((void **) &X_inds_m, hiX->nnz * sizeof (sptIndex));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
-    cudaMemcpy(X_inds_m, hiX->inds[0].data, hiX->nnz * sizeof (sptIndex), cudaMemcpyHostToDevice);
     sptValue *V_val = NULL;
     result = cudaMalloc((void **) &V_val, V->len * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
-    cudaMemcpy(V_val, V->data, V->len * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptNnzIndex *fiberidx_val = NULL;
     result = cudaMalloc((void **) &fiberidx_val, fiberidx.len * sizeof (sptNnzIndex));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
+    
+    /* Copy data to GPU */
+    sptStartTimer(timer);
+    cudaMemset(Y_val, 0, hiY->nnz * sizeof (sptValue));
+    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    cudaMemcpy(X_inds_m, hiX->inds[0].data, hiX->nnz * sizeof (sptIndex), cudaMemcpyHostToDevice);
+    cudaMemcpy(V_val, V->data, V->len * sizeof (sptValue), cudaMemcpyHostToDevice);
     cudaMemcpy(fiberidx_val, fiberidx.data, fiberidx.len * sizeof (sptNnzIndex), cudaMemcpyHostToDevice);
+    sptStopTimer(timer);
+    copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
     const sptNnzIndex max_nblocks = 32768;
     const sptNnzIndex max_nthreads_per_block = 256;
@@ -114,8 +135,8 @@ int sptCudaSparseTensorMulVectorHiCOO(
     dim3 dimBlock(nthreadsx, nthreadsy);
     printf("all_nblocks: %lu, nthreadsx: %lu, nthreadsy: %lu\n", all_nblocks, nthreadsx, nthreadsy);
 
+    /* Computation */
     sptStartTimer(timer);
-
 
     switch(impl_num) {
     // case 1:
@@ -132,10 +153,15 @@ int sptCudaSparseTensorMulVectorHiCOO(
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda HiSpTns * Vec");
-    sptFreeTimer(timer);
-
+    comp_time = sptPrintElapsedTime(timer, "Cuda HiSpTns * Vec");
+    
+    /* Copy back to CPU */
+    sptStartTimer(timer);
     cudaMemcpy(hiY->values.data, Y_val, hiY->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    sptStopTimer(timer);
+    copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+
+    sptFreeTimer(timer);
     result = cudaFree(fiberidx_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
     result = cudaFree(V_val);
@@ -148,6 +174,9 @@ int sptCudaSparseTensorMulVectorHiCOO(
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Vec");
     sptFreeNnzIndexVector(&fiberidx);
 
+    total_time = copy_time_cpu + copy_time_gpu + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

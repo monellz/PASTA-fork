@@ -120,8 +120,8 @@ int main(int argc, char ** argv)
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
-    sptAssert(sptRandomizeMatrix(&U) == 0);
+    sptAssert(sptConstantMatrix(&U, 1.0) == 0);
+    // sptAssert(sptRandomizeMatrix(&U) == 0);
 
     sptIndex ncmodes = X.nmodes - 1;
     sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));
@@ -181,15 +181,15 @@ int main(int argc, char ** argv)
     sptPrintAverageElapsedTime(timer, niters, "Average HiCooTtm");
 
     if(fo != NULL) {
-        // sptDumpSemiSparseTensorHiCOO(&hiY, stdout);
+        sptDumpSemiSparseTensorHiCOO(&hiY, fo);
 
-        /* Convert Semi-HiCOO to Semi-COO tensor */
-        sptStartTimer(timer);
-        sptAssert(sptSemiHiCOOToSemiSparseTensor(&Y, &hiY) == 0);
-        sptSemiSparseTensorSortIndex(&Y);
-        sptStopTimer(timer);
-        sptPrintElapsedTime(timer, "Convert Semi-HiCOO -> Semi-COO");
-        sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
+        /* Convert Semi-HiCOO to Semi-COO tensor to compare with COO output */
+        // sptStartTimer(timer);
+        // sptAssert(sptSemiHiCOOToSemiSparseTensor(&Y, &hiY) == 0);
+        // sptSemiSparseTensorSortIndex(&Y);
+        // sptStopTimer(timer);
+        // sptPrintElapsedTime(timer, "Convert Semi-HiCOO -> Semi-COO");
+        // sptAssert(sptDumpSemiSparseTensor(&Y, fo) == 0);
 
         /* Convert Semi-COO to COO tensor */
         // sptStartTimer(timer);
@@ -197,10 +197,11 @@ int main(int argc, char ** argv)
         // sptAssert(sptSemiSparseTensorToSparseTensor(&Y_coo, &Y, 1e-6) == 0);
         // sptStopTimer(timer);
         // sptPrintElapsedTime(timer, "Convert Semi-COO -> COO");
-        sptFreeSemiSparseTensor(&Y);
 
         // sptAssert(sptDumpSparseTensor(&Y_coo, 1, fo) == 0);
-        // sptFreeSparseTensor(&Y_coo);  
+        // sptFreeSparseTensor(&Y_coo);
+
+        // sptFreeSemiSparseTensor(&Y);
         fclose(fo);      
     }
 

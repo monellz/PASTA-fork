@@ -48,8 +48,58 @@ static int spt_SparseTensorCompare(const sptSparseTensorHiCOOGeneral *tsr1, sptN
     return 0;
 }
 
+
 /**
- * Convert a sparse tensor into a semi sparse tensor, but only set the indices
+ * Set the fibers of a gHiCOO sparse tensor.
+ * without setting any actual data
+ * @param[out] dest     a pointer to an initialized semi sparse tensor
+ * @param[out] fiberidx a vector to store the starting position of each fiber, should be uninitialized
+ * @param[in]  ref      a pointer to a valid sparse tensor
+ */
+int sptSparseTensorSetFibersHiCOO (
+    sptNnzIndexVector *bptr,
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensorHiCOOGeneral *ref) 
+{
+    sptNnzIndex lastidx = ref->nnz;
+    sptNnzIndex lastbidx = ref->bptr.len - 1;
+    sptNnzIndex tmp_nnz = 0;
+    int result;
+
+    result = sptNewNnzIndexVector(fiberidx, 0, 0);
+    spt_CheckError(result, "SpTns SetIndices", NULL);
+    result = sptNewNnzIndexVector(bptr, 0, 0);
+    spt_CheckError(result, "SpTns SetIndices", NULL);
+    
+    result = sptAppendNnzIndexVector(bptr, 0);
+    for(sptNnzIndex b = 0; b < ref->bptr.len - 1; ++ b) {
+        sptNnzIndex b_begin = ref->bptr.data[b];
+        sptNnzIndex b_end = ref->bptr.data[b + 1];
+        for(sptNnzIndex z = b_begin; z < b_end; ++z) {
+
+            if(lastidx == ref->nnz || spt_SparseTensorCompare(ref, lastbidx, lastidx, ref, b, z) != 0) 
+            {
+                lastidx = z;
+                lastbidx = b;
+                ++ tmp_nnz;
+                result = sptAppendNnzIndexVector(fiberidx, z);
+                spt_CheckError(result, "SpTns SetIndices", NULL);
+            }
+        }   // End elements in a block
+        result = sptAppendNnzIndexVector(bptr, tmp_nnz);
+        spt_CheckError(result, "SpTns SetIndices", NULL);
+    }   // End blocks
+
+    result = sptAppendNnzIndexVector(fiberidx, ref->nnz);
+    spt_CheckError(result, "SpTns SetIndices", NULL);
+    
+    return 0;
+}
+
+
+
+/**
+ * Set the indices of a sparse tensor.
  * without setting any actual data
  * @param[out] dest     a pointer to an initialized semi sparse tensor
  * @param[out] fiberidx a vector to store the starting position of each fiber, should be uninitialized
@@ -60,53 +110,24 @@ int sptSparseTensorSetIndicesHiCOO(
     sptNnzIndexVector *fiberidx,
     sptSparseTensorHiCOOGeneral *ref) 
 {
-    sptNnzIndex lastidx = ref->nnz;
-    sptNnzIndex lastbidx = ref->bptr.len - 1;
-    sptIndex m;
     int result;
     assert(dest->nmodes == ref->nmodes - 1);
 
-    result = sptNewNnzIndexVector(fiberidx, 0, 0);
-    spt_CheckError(result, "SpTns SetIndices", NULL);
-
+    /* binds is the same with ref gHiCOO tensor's */
     for(sptIndex m = 0; m < ref->ncmodes; ++m) {
-        result = sptCopyBlockIndexVector(&dest->binds[m], &ref->binds[m]);
+        result = sptCopyBlockIndexVectorCopyOnly(&dest->binds[m], &ref->binds[m]);
         spt_CheckError(result, "SpTns SetIndices", NULL);
     }
     
-    dest->nnz = 0;
-    result = sptAppendNnzIndexVector(&dest->bptr, 0);
-    for(sptNnzIndex b = 0; b < ref->bptr.len - 1; ++ b) {
-        sptNnzIndex b_begin = ref->bptr.data[b];
-        sptNnzIndex b_end = ref->bptr.data[b + 1];
-        for(sptNnzIndex z = b_begin; z < b_end; ++z) {
-
-            if(lastidx == ref->nnz || spt_SparseTensorCompare(ref, lastbidx, lastidx, ref, b, z) != 0) 
-            {
-                lastidx = z;
-                lastbidx = b;
-                ++ dest->nnz;
-                for(sptIndex m = 0; m < ref->ncmodes; ++m) {
-                    result = sptAppendElementIndexVector(&dest->einds[m], ref->einds[m].data[z]);
-                    spt_CheckError(result, "SpTns SetIndices", NULL);
-                }
-                if(fiberidx != NULL) {
-                    result = sptAppendNnzIndexVector(fiberidx, z);
-                    spt_CheckError(result, "SpTns SetIndices", NULL);
-                }
-            }
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
+#endif
+    for(sptNnzIndex f = 0; f < fiberidx->len - 1; ++f) {
+        sptNnzIndex z = fiberidx->data[f];
+        for(sptIndex m = 0; m < ref->ncmodes; ++m) {
+            dest->einds[m].data[f] = ref->einds[m].data[z];
         }
-        result = sptAppendNnzIndexVector(&dest->bptr, dest->nnz);
-        spt_CheckError(result, "SpTns SetIndices", NULL);
     }
-
-    if(fiberidx != NULL) {
-        result = sptAppendNnzIndexVector(fiberidx, ref->nnz);
-        spt_CheckError(result, "SpTns SetIndices", NULL);
-    }
-    result = sptResizeValueVector(&dest->values, dest->nnz);
-    spt_CheckError(result, "SpTns SetIndices", NULL);
-    memset(dest->values.data, 0, dest->nnz * sizeof (sptValue));
     
     return 0;
 }

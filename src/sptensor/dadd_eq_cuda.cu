@@ -100,7 +100,7 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptStopTimer(timer);
     copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
-
+    /* Computation */
     sptStartTimer(timer);
 
     const sptNnzIndex max_nblocks = 32768;
@@ -143,12 +143,13 @@ int sptCudaSparseTensorDotAddEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptStopTimer(timer);
     collect_time = sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
+    /* Copy back to CPU */
     sptStartTimer(timer);
     cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     sptStopTimer(timer);
     copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+    
     sptFreeTimer(timer);
-
     result = cudaFree(X_val);
     spt_CheckCudaError(result != 0, "Cuda SpTns DotAdd");
     result = cudaFree(Y_val);

@@ -39,7 +39,6 @@ static __global__ void spt_dSubKernel(
         if(x < nnz) {
             Z_val[x] = X_val[x] - Y_val[x];
         }
-        __syncthreads();
     }
 
 }
@@ -72,29 +71,36 @@ int sptCudaSparseTensorDotSubEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseT
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double copy_time_cpu, copy_time_gpu, comp_time, total_time;
 
+    /* Allocate space */
+    sptCopySparseTensorHiCOOAllocateOnly(hiZ, hiX);
+
+    /* Copy indices on CPU */
     sptStartTimer(timer);
-    sptCopySparseTensorHiCOO(hiZ, hiX);
+    sptCopySparseTensorHiCOOCopyOnly(hiZ, hiX);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOO");
+    copy_time_cpu = sptPrintElapsedTime(timer, "sptCopySparseTensorHiCOOCopyOnly");
 
-
-    sptStartTimer(timer);
+    /* Device memory allocation */
     sptValue *Z_val = NULL;
     result = cudaMalloc((void **) &Z_val, hiZ->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");
-    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, hiY->nnz * sizeof (sptValue));
-    spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");
+    spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");   
+
+    /* Device memory copy */
+    sptStartTimer(timer);
+    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     cudaMemcpy(Y_val, hiY->values.data, hiY->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Device malloc and copy");
+    copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
-
+    /* Computation */
     sptStartTimer(timer);
 
     const sptNnzIndex max_nblocks = 32768;
@@ -125,14 +131,19 @@ int sptCudaSparseTensorDotSubEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseT
     spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda HiSpTns DotSub");
+    comp_time = sptPrintElapsedTime(timer, "Cuda HiSpTns DotSub");
 
     /* TODO: Check whether elements become zero after adding.
        If so, fill the gap with the [nnz-1]'th element.
     */
 
-
+    /* Copy back to CPU */
+    sptStartTimer(timer);
     cudaMemcpy(hiZ->values.data, Z_val, hiZ->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    sptStopTimer(timer);
+    copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+
+    sptFreeTimer(timer);
     result = cudaFree(X_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");
     result = cudaFree(Y_val);
@@ -140,5 +151,9 @@ int sptCudaSparseTensorDotSubEqHiCOO(sptSparseTensorHiCOO *hiZ, const sptSparseT
     result = cudaFree(Z_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns DotSub");
 
+    total_time = copy_time_cpu + copy_time_gpu + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
+    
     return 0;
 }

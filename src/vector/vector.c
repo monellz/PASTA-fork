@@ -424,6 +424,28 @@ int sptCopyElementIndexVector(sptElementIndexVector *dest, const sptElementIndex
 }
 
 /**
+ * Copy an element index vector to an uninitialized element index vector
+ *
+ * @param dest a pointer to an uninitialized element index vector
+ * @param src  a pointer to an existing valid element index vector
+ *
+ * The contents of `src` will be copied to `dest`.
+ */
+int sptCopyElementIndexVectorCopyOnly(sptElementIndexVector *dest, const sptElementIndexVector *src) 
+{
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
+    for (sptNnzIndex i=0; i<src->len; ++i) {
+        dest->data[i] = src->data[i];
+    }
+#else
+    memcpy(dest->data, src->data, src->len * sizeof *src->data);
+#endif    
+    return 0;
+}
+
+
+/**
  * Add a value to the end of a sptElementIndexVector
  *
  * @param vec   a pointer to a valid element index vector
@@ -565,6 +587,27 @@ int sptCopyBlockIndexVector(sptBlockIndexVector *dest, const sptBlockIndexVector
 }
 
 /**
+ * Copy a block index vector to an uninitialized block index vector
+ *
+ * @param dest a pointer to an uninitialized block index vector
+ * @param src  a pointer to an existing valid block index vector
+ *
+ * The contents of `src` will be copied to `dest`.
+ */
+int sptCopyBlockIndexVectorCopyOnly(sptBlockIndexVector *dest, const sptBlockIndexVector *src) 
+{
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
+    for (sptNnzIndex i=0; i<src->len; ++i) {
+        dest->data[i] = src->data[i];
+    }
+#else
+    memcpy(dest->data, src->data, src->len * sizeof *src->data);
+#endif
+    return 0;
+}
+
+/**
  * Add a value to the end of a sptBlockIndexVector
  *
  * @param vec   a pointer to a valid block index vector
@@ -702,6 +745,27 @@ int sptCopyNnzIndexVector(sptNnzIndexVector *dest, const sptNnzIndexVector *src)
     int result = sptNewNnzIndexVector(dest, src->len, src->len);
     spt_CheckError(result, "NnzIdxVec Copy", NULL);
     memcpy(dest->data, src->data, src->len * sizeof *src->data);
+    return 0;
+}
+
+/**
+ * Copy a long nnz index vector to an uninitialized long nnz index vector
+ *
+ * @param dest a pointer to an uninitialized long nnz index vector
+ * @param src  a pointer to an existing valid long nnz index vector
+ *
+ * The contents of `src` will be copied to `dest`.
+ */
+int sptCopyNnzIndexVectorCopyOnly(sptNnzIndexVector *dest, const sptNnzIndexVector *src) 
+{
+#ifdef PASTA_USE_OPENMP
+    #pragma omp parallel for schedule(static)
+    for (sptNnzIndex i=0; i<src->len; ++i) {
+        dest->data[i] = src->data[i];
+    }
+#else
+    memcpy(dest->data, src->data, src->len * sizeof *src->data);
+#endif
     return 0;
 }
 

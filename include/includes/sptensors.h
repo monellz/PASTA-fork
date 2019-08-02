@@ -106,7 +106,16 @@ int sptNewSparseTensorHiCOO(
     const sptIndex ndims[],
     const sptNnzIndex nnz,
     const sptElementIndex sb_bits);
+int sptNewSparseTensorHiCOOWithBptr(
+    sptSparseTensorHiCOO *hitsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nnz,
+    const sptElementIndex sb_bits,
+    sptNnzIndexVector * bptr );
 int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src);
+int sptCopySparseTensorHiCOOAllocateOnly(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src);
+int sptCopySparseTensorHiCOOCopyOnly(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src);
 void sptFreeSparseTensorHiCOO(sptSparseTensorHiCOO *hitsr);
 int sptSparseTensorToHiCOO(
     sptSparseTensorHiCOO *hitsr, 
@@ -121,6 +130,10 @@ int sptHiCOOToSparseTensor(
 int sptDumpSparseTensorHiCOO(sptSparseTensorHiCOO * const hitsr, FILE *fp);
 int sptSparseTensorSetIndicesHiCOO(
     sptSparseTensorHiCOO *dest,
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensorHiCOOGeneral *ref);
+int sptSparseTensorSetFibersHiCOO(
+    sptNnzIndexVector *bptr,
     sptNnzIndexVector *fiberidx,
     sptSparseTensorHiCOOGeneral *ref);
 

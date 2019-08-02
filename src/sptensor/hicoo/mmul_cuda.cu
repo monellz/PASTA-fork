@@ -46,20 +46,41 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     sptIndex *ind_buf;
     sptIndex m;
     sptNnzIndexVector fiberidx;
+    sptNnzIndexVector bptr; // Do NOT free it
+    sptTimer timer;
+    sptNewTimer(&timer, 0);
+    double setfiber_time, allocate_time, preprocess_time, copy_time_cpu, copy_time_gpu, comp_time, total_time;
 
+    /* Set fibers */
+    sptStartTimer(timer);
+    sptSemiSparseTensorSetFibersHiCOO(&bptr, &fiberidx, hiX);
+    sptStopTimer(timer);
+    setfiber_time = sptPrintElapsedTime(timer, "sptSemiSparseTensorSetFibersHiCOO");
+
+    /* Allocate output Y */
+    sptStartTimer(timer);
     ind_buf = new sptIndex[hiX->nmodes * sizeof *ind_buf];
     for(m = 0; m < hiX->nmodes; ++m) {
         ind_buf[m] = hiX->ndims[m];
     }
     ind_buf[mode] = U->ncols;
-    result = sptNewSemiSparseTensorHiCOO(hiY, hiX->nmodes, ind_buf, mode, hiX->sb_bits);
-    delete[] ind_buf;
+    result = sptNewSemiSparseTensorHiCOOWithBptr(hiY, hiX->nmodes, ind_buf, fiberidx.len - 1, mode, hiX->sb_bits, &bptr);
     spt_CheckError(result, "Cuda HiSpTns * Mtx", NULL);
+    delete[] ind_buf;
     if(hiY->values.stride != stride) {
         spt_CheckError(SPTERR_SHAPE_MISMATCH, "Cuda HiSpTns * Mtx", "shape mismatch");
     }
+    sptStopTimer(timer);
+    allocate_time = sptPrintElapsedTime(timer, "sptNewSemiSparseTensorHiCOOWithBptr");
 
+    preprocess_time = setfiber_time + allocate_time;
+    printf("[Total preprocess time]: %lf\n", preprocess_time);
+
+    /* Set indices */
+    sptStartTimer(timer);
     sptSemiSparseTensorSetIndicesHiCOO(hiY, &fiberidx, hiX);
+    sptStopTimer(timer);
+    copy_time_cpu = sptPrintElapsedTime(timer, "Copy indices");
 
     double flen = (double)hiX->nnz / fiberidx.len;
     sptNnzIndex tmp_flen = (fiberidx.data[1] - fiberidx.data[0]) - flen;
@@ -76,24 +97,28 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     sptValue *Y_val = NULL;
     result = cudaMalloc((void **) &Y_val, hiY->nnz * stride * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
-    // jli: Add memset to Y.
-    cudaMemset(Y_val, 0, hiY->nnz * stride * sizeof (sptValue));
     sptValue *X_val = NULL;
     result = cudaMalloc((void **) &X_val, hiX->nnz * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
-    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptIndex *X_inds_m = NULL;
     result = cudaMalloc((void **) &X_inds_m, hiX->nnz * sizeof (sptIndex));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
-    cudaMemcpy(X_inds_m, hiX->inds[0].data, hiX->nnz * sizeof (sptIndex), cudaMemcpyHostToDevice);
     sptValue *U_val = NULL;
     result = cudaMalloc((void **) &U_val, U->nrows * stride * sizeof (sptValue));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
-    cudaMemcpy(U_val, U->values, U->nrows * stride * sizeof (sptValue), cudaMemcpyHostToDevice);
     sptNnzIndex *fiberidx_val = NULL;
     result = cudaMalloc((void **) &fiberidx_val, fiberidx.len * sizeof (sptNnzIndex));
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
+
+    /* Copy data to GPU */
+    sptStartTimer(timer);
+    cudaMemset(Y_val, 0, hiY->nnz * stride * sizeof (sptValue));
+    cudaMemcpy(X_val, hiX->values.data, hiX->nnz * sizeof (sptValue), cudaMemcpyHostToDevice);
+    cudaMemcpy(X_inds_m, hiX->inds[0].data, hiX->nnz * sizeof (sptIndex), cudaMemcpyHostToDevice);
+    cudaMemcpy(U_val, U->values, U->nrows * stride * sizeof (sptValue), cudaMemcpyHostToDevice);
     cudaMemcpy(fiberidx_val, fiberidx.data, fiberidx.len * sizeof (sptNnzIndex), cudaMemcpyHostToDevice);
+    sptStopTimer(timer);
+    copy_time_gpu = sptPrintElapsedTime(timer, "Device copy");
 
     const sptNnzIndex max_nblocks = 32768;
     const sptNnzIndex max_nthreads_per_block = 256;
@@ -150,10 +175,8 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     dim3 dimBlock(nthreadsx, nthreadsy);
     printf("all_nblocks: %lu, nthreadsx: %lu, nthreadsy: %lu\n", all_nblocks, nthreadsx, nthreadsy);
 
-    sptTimer timer;
-    sptNewTimer(&timer, 0);
+    /* Computation */
     sptStartTimer(timer);
-
 
     switch(impl_num) {
     case 14:  
@@ -177,10 +200,15 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx kernel");
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cuda HiSpTns * Mtx");
-    sptFreeTimer(timer);
+    comp_time = sptPrintElapsedTime(timer, "Cuda HiSpTns * Mtx");
 
+    /* Copy back to CPU */
+    sptStartTimer(timer);
     cudaMemcpy(hiY->values.values, Y_val, hiY->nnz * stride * sizeof (sptValue), cudaMemcpyDeviceToHost);
+    sptStopTimer(timer);
+    copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+
+    sptFreeTimer(timer);
     result = cudaFree(fiberidx_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     result = cudaFree(U_val);
@@ -192,6 +220,10 @@ int sptCudaSparseTensorMulMatrixHiCOO(
     result = cudaFree(Y_val);
     spt_CheckCudaError(result != 0, "Cuda HiSpTns * Mtx");
     sptFreeNnzIndexVector(&fiberidx);
+
+    total_time = copy_time_cpu + copy_time_gpu + comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

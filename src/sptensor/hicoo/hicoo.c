@@ -72,6 +72,64 @@ int sptNewSparseTensorHiCOO(
 
 
 /**
+ * Create a new sparse tensor in HiCOO format
+ * @param hitsr    a pointer to an uninitialized sparse tensor
+ * @param nmodes number of modes the tensor will have
+ * @param ndims  the dimension of each mode the tensor will have
+ * @param nnz number of nonzeros the tensor will have
+ */
+int sptNewSparseTensorHiCOOWithBptr(
+    sptSparseTensorHiCOO *hitsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nnz,
+    const sptElementIndex sb_bits,
+    sptNnzIndexVector * bptr)
+{
+    sptIndex i;
+    int result;
+    sptNnzIndex nb = bptr->len - 1;
+
+    hitsr->nmodes = nmodes;
+    hitsr->sortorder = malloc(nmodes * sizeof hitsr->sortorder[0]);
+    for(i = 0; i < nmodes; ++i) {
+        hitsr->sortorder[i] = i;
+    }
+    hitsr->ndims = malloc(nmodes * sizeof *hitsr->ndims);
+    spt_CheckOSError(!hitsr->ndims, "HiSpTns New");
+    memcpy(hitsr->ndims, ndims, nmodes * sizeof *hitsr->ndims);
+    hitsr->nnz = nnz;
+
+    /* Parameters */
+    hitsr->sb_bits = sb_bits; // block size by nnz
+
+    /* Soft copy bptr */
+    hitsr->bptr.len = bptr->len;
+    hitsr->bptr.cap = bptr->cap;
+    hitsr->bptr.data = bptr->data;
+    
+    hitsr->binds = malloc(nmodes * sizeof *hitsr->binds);
+    spt_CheckOSError(!hitsr->binds, "HiSpTns New");
+    for(i = 0; i < nmodes; ++i) {
+        result = sptNewBlockIndexVector(&hitsr->binds[i], nb, nb);
+        spt_CheckError(result, "HiSpTns New", NULL);
+    }
+
+    hitsr->einds = malloc(nmodes * sizeof *hitsr->einds);
+    spt_CheckOSError(!hitsr->einds, "HiSpTns New");
+    for(i = 0; i < nmodes; ++i) {
+        result = sptNewElementIndexVector(&hitsr->einds[i], nnz, nnz);
+        spt_CheckError(result, "HiSpTns New", NULL);
+    }
+    result = sptNewValueVector(&hitsr->values, nnz, nnz);
+    spt_CheckError(result, "HiSpTns New", NULL);
+
+
+    return 0;
+}
+
+
+/**
  * Copy a sparse tensor
  * @param[out] dest a pointer to an uninitialized sparse tensor
  * @param[in]  src  a pointer to a valid sparse tensor
@@ -109,6 +167,76 @@ int sptCopySparseTensorHiCOO(sptSparseTensorHiCOO *dest, const sptSparseTensorHi
 
     return 0;
 }
+
+
+/**
+ * Copy a sparse tensor
+ * @param[out] dest a pointer to an uninitialized sparse tensor
+ * @param[in]  src  a pointer to a valid sparse tensor
+ */
+int sptCopySparseTensorHiCOOAllocateOnly(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src) 
+{
+    sptIndex i;
+    int result;
+    dest->nmodes = src->nmodes;
+    dest->sortorder = malloc(src->nmodes * sizeof src->sortorder[0]);
+    memcpy(dest->sortorder, src->sortorder, src->nmodes * sizeof src->sortorder[0]);
+    dest->ndims = malloc(dest->nmodes * sizeof *dest->ndims);
+    spt_CheckOSError(!dest->ndims, "SpTns Copy");
+    memcpy(dest->ndims, src->ndims, src->nmodes * sizeof *src->ndims);
+    dest->nnz = src->nnz;
+
+    dest->sb_bits = src->sb_bits;
+
+    result = sptNewNnzIndexVector(&dest->bptr, src->bptr.len, src->bptr.len);
+    spt_CheckError(result, "HiSpTns Copy", NULL);
+    dest->binds = malloc(dest->nmodes * sizeof *dest->binds);
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptNewBlockIndexVector(&(dest->binds[i]), src->binds[i].len, src->binds[i].len);
+        spt_CheckError(result, "HiSpTns Copy", NULL);
+        
+    }
+    dest->einds = malloc(dest->nmodes * sizeof *dest->einds);
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptNewElementIndexVector(&(dest->einds[i]), src->einds[i].len, src->einds[i].len);
+        spt_CheckError(result, "HiSpTns Copy", NULL);
+    }
+
+    result = sptNewValueVector(&dest->values, src->values.len, src->values.len);
+    spt_CheckError(result, "HiSpTns Copy", NULL);
+
+    return 0;
+}
+
+
+/**
+ * Copy a sparse tensor
+ * @param[out] dest a pointer to an uninitialized sparse tensor
+ * @param[in]  src  a pointer to a valid sparse tensor
+ */
+int sptCopySparseTensorHiCOOCopyOnly(sptSparseTensorHiCOO *dest, const sptSparseTensorHiCOO *src) 
+{
+    sptIndex i;
+    int result;
+
+    result = sptCopyNnzIndexVectorCopyOnly(&dest->bptr, &src->bptr);
+    spt_CheckError(result, "HiSpTns Copy", NULL);
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptCopyBlockIndexVectorCopyOnly(&(dest->binds[i]), &(src->binds[i]));
+        spt_CheckError(result, "HiSpTns Copy", NULL);
+        
+    }
+    for(i = 0; i < dest->nmodes; ++i) {
+        result = sptCopyElementIndexVectorCopyOnly(&(dest->einds[i]), &(src->einds[i]));
+        spt_CheckError(result, "HiSpTns Copy", NULL);
+    }
+
+    result = sptCopyValueVectorCopyOnly(&dest->values, &src->values);
+    spt_CheckError(result, "HiSpTns Copy", NULL);
+
+    return 0;
+}
+
 
 /**
  * Release any memory the HiCOO sparse tensor is holding

@@ -40,6 +40,14 @@ int sptNewSemiSparseTensorHiCOO(
     const sptIndex ndims[],
     const sptIndex mode,
     const sptElementIndex sb_bits);
+int sptNewSemiSparseTensorHiCOOWithBptr(
+    sptSemiSparseTensorHiCOO *histsr, 
+    const sptIndex nmodes, 
+    const sptIndex ndims[],
+    const sptNnzIndex nfibers,
+    const sptIndex mode,
+    const sptElementIndex sb_bits,
+    sptNnzIndexVector * bptr);
 void sptFreeSemiSparseTensorHiCOO(sptSemiSparseTensorHiCOO *histsr);
 int sptSemiHiCOOToSemiSparseTensor(
     sptSemiSparseTensor *stsr, 
@@ -56,6 +64,10 @@ int sptSemiSparseTensorSetFibers(
     sptIndex mode
 );
 int sptSemiSparseTensorSetIndices(sptSemiSparseTensor *dest, sptNnzIndexVector *fiberidx, sptSparseTensor *ref);
+int sptSemiSparseTensorSetFibersHiCOO (
+    sptNnzIndexVector *bptr,
+    sptNnzIndexVector *fiberidx,
+    sptSparseTensorHiCOOGeneral *ref);
 int sptSemiSparseTensorSetIndicesHiCOO(
     sptSemiSparseTensorHiCOO *dest,
     sptNnzIndexVector *fiberidx,

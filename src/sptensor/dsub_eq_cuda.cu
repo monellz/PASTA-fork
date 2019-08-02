@@ -143,12 +143,13 @@ int sptCudaSparseTensorDotSubEq(sptSparseTensor *Z, const sptSparseTensor *X, co
     sptStopTimer(timer);
     collect_time = sptPrintElapsedTime(timer, "sptSparseTensorCollectZeros");
 
+    /* Copy back to CPU */
     sptStartTimer(timer);
     cudaMemcpy(Z->values.data, Z_val, Z->nnz * sizeof (sptValue), cudaMemcpyDeviceToHost);
     sptStopTimer(timer);
     copy_time_gpu += sptPrintElapsedTime(timer, "Device copy back");
+    
     sptFreeTimer(timer);
-
     result = cudaFree(X_val);
     spt_CheckCudaError(result != 0, "Cuda SpTns DotSub");
     result = cudaFree(Y_val);
