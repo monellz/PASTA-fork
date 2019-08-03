@@ -9,6 +9,7 @@ build.config
 
 
 benchmarks/test_scripts/run_pasta_all_coo.sh
+benchmarks/test_scripts/run_pasta_all_hicoo.sh
 
 timing-results*/
 new-timing-results*/
