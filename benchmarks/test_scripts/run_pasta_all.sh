@@ -1,42 +1,24 @@
 #!/bin/bash
 
-echo "./run_pasta_all tsr_path out_path nmodes nt gpu_dev_id"
+if [[ $# < 5 ]]; then
+	echo "./run_pasta_all tsr_path out_path nt gpu_dev_id machine_name"
+	exit
+fi
 
 tsr_path=$1		# "${SCRATCH}/BIGTENSORS"
 out_path=$2		# "./timing-results"
-nmodes=$3 		# 3, or 4
-nt=$4			# 32
-gpu_dev_id=$5	# 0, 1, ...
+nt=$3			# 32
+gpu_dev_id=$4	# 0, 1, ...
+machine_name=$5	# dgx2, wingtip-bigmem2, bluesky
 
+echo "./run_pasta_all ${tsr_path} ${out_path} ${nt} ${gpu_dev_id} ${machine_name}"
+echo
 
-# TS
-./benchmarks/test_scripts/run_pasta_smul.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-./benchmarks/test_scripts/run_pasta_smul_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
+script_path="./benchmarks/test_scripts"
+apped="${tsr_path} ${out_path} ${nt} ${gpu_dev_id} ${machine_name}"
 
-# ./benchmarks/test_scripts/run_pasta_sadd.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-# ./benchmarks/test_scripts/run_pasta_sadd_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
+# COO
+${script_path}/run_pasta_all_coo.sh ${apped}
 
-# TEW-eq
-./benchmarks/test_scripts/run_pasta_dadd_eq.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-./benchmarks/test_scripts/run_pasta_dadd_eq_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# ./benchmarks/test_scripts/run_pasta_ddiv_eq.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-# ./benchmarks/test_scripts/run_pasta_ddiv_eq_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# ./benchmarks/test_scripts/run_pasta_dmul_eq.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-# ./benchmarks/test_scripts/run_pasta_dmul_eq_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# ./benchmarks/test_scripts/run_pasta_dsub_eq.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-# ./benchmarks/test_scripts/run_pasta_dsub_eq_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# TTV
-./benchmarks/test_scripts/run_pasta_ttv.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-./benchmarks/test_scripts/run_pasta_ttv_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# TTM
-./benchmarks/test_scripts/run_pasta_ttm.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-./benchmarks/test_scripts/run_pasta_ttm_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-
-# MTTKRP
-./benchmarks/test_scripts/run_pasta_mttkrp.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
-./benchmarks/test_scripts/run_pasta_mttkrp_hicoo.sh ${tsr_path} ${out_path} ${nmodes} ${nt} ${gpu_dev_id}
+# HiCOO
+${script_path}/run_pasta_all_hicoo.sh ${apped}
