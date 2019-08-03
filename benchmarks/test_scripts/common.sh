@@ -31,4 +31,8 @@ elif [[ ${machine_name} = "cori" ]]; then	# 24 cores
 	if [[ ${nt} = "32" ]]; then
 		numa_str="numactl --interleave=all --physcpubind=32-63"
 	fi
+elif [[ ${machine_name} = "summit" ]]; then	# 24 cores
+	if [[ ${nt} = "64" ]]; then
+		numa_str="numactl --interleave=all --physcpubind=32-63,96-127"
+	fi
 fi
