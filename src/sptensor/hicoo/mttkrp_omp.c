@@ -84,10 +84,12 @@ int sptOmpMTTKRPHiCOO(
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    double comp_time, total_time;
 
+    /* Computation */
+    sptStartTimer(timer);
     /* Loop kernels */
-    #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
+    #pragma omp parallel for num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
         /* Allocate thread-private data */
         sptValue ** block_values = (sptValue**)malloc(nmodes * sizeof(*block_values));
@@ -143,10 +145,14 @@ int sptOmpMTTKRPHiCOO(
     }   // End loop blocks
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
-    sptFreeTimer(timer);
+    comp_time = sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
 
+    sptFreeTimer(timer);
     // omp_destroy_lock(&lock);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }
@@ -190,10 +196,12 @@ int sptOmpMTTKRPHiCOO_3D(
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double comp_time, total_time;
+
+    /* Computation */
     sptStartTimer(timer);
-    
     /* Loop kernels */
-    #pragma omp parallel for schedule(dynamic) num_threads(nthreads)
+    #pragma omp parallel for num_threads(nthreads)
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
         sptBlockIndex block_coord_mode = hitsr->binds[mode].data[b];
@@ -223,8 +231,13 @@ int sptOmpMTTKRPHiCOO_3D(
     }   // End loop blocks
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Omp HiSpTns MTTKRP");
+    
     sptFreeTimer(timer);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }

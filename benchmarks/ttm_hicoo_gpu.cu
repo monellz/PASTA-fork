@@ -120,8 +120,8 @@ int main(int argc, char ** argv)
     // sptAssert(sptDumpSparseTensor(&X, 0, stdout) == 0);
 
     sptAssert(sptNewMatrix(&U, X.ndims[mode], R) == 0);
-    sptAssert(sptConstantMatrix(&U, 1.0) == 0);
-    // sptAssert(sptRandomizeMatrix(&U) == 0);
+    // sptAssert(sptConstantMatrix(&U, 1.0) == 0);
+    sptAssert(sptRandomizeMatrix(&U) == 0);
 
     sptIndex ncmodes = X.nmodes - 1;
     sptIndex * flags = (sptIndex *)malloc(X.nmodes * sizeof(*flags));

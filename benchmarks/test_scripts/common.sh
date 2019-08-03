@@ -17,8 +17,8 @@ elif [[ ${nmodes} = "4" ]]; then
 	run_tsrs=("${s4tsrs[@]}" "${s4tsrs_pl[@]}") 
 fi
 
-numa_str=""
-# numa_str="numactl --interleave=all"
+# numa_str=""
+numa_str="numactl --interleave=all"
 if [[ ${machine_name} = "dgx2" ]]; then	# 40 cores
 	if [[ ${nt} = "40" ]]; then
 		numa_str="numactl --interleave=all --physcpubind=40-79"

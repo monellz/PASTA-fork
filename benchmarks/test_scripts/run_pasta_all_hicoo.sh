@@ -11,7 +11,7 @@ nt=$3			# 32
 gpu_dev_id=$4	# 0, 1, ...
 machine_name=$5	# dgx2, wingtip-bigmem2, bluesky
 
-echo "./run_pasta_all_coo ${tsr_path} ${out_path} ${nt} ${gpu_dev_id} ${machine_name}"
+echo "./run_pasta_all_hicoo ${tsr_path} ${out_path} ${nt} ${gpu_dev_id} ${machine_name}"
 echo
 
 script_path="./benchmarks/test_scripts"
@@ -26,19 +26,19 @@ do
 		apped="${tsr_path} ${out_path} ${nmodes} ${nt} ${id} ${machine_name}"
 
 		# TS
-		${script_path}/run_pasta_smul.sh ${apped}
+		${script_path}/run_pasta_smul_hicoo.sh ${apped}
 
 		# TEW-eq
-		${script_path}/run_pasta_dadd_eq.sh ${apped}
+		${script_path}/run_pasta_dadd_eq_hicoo.sh ${apped}
 
 		# TTV
-		${script_path}/run_pasta_ttv.sh ${apped}
+		${script_path}/run_pasta_ttv_hicoo.sh ${apped}
 
 		# TTM
-		${script_path}/run_pasta_ttm.sh ${apped}
+		${script_path}/run_pasta_ttm_hicoo.sh ${apped}
 
 		# MTTKRP
-		${script_path}/run_pasta_mttkrp.sh ${apped}
+		${script_path}/run_pasta_mttkrp_hicoo.sh ${apped}
 
 	done
 done

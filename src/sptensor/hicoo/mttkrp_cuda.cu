@@ -74,6 +74,7 @@ int sptCudaMTTKRPHiCOO(
     double gbw_h2d, gflops_exe, gbw_d2h;
     sptTimer timer;
     sptNewTimer(&timer, 0);
+    double total_time;
 
     /* Check the mats. */
     for(sptIndex i=0; i<nmodes; ++i) {
@@ -259,6 +260,10 @@ int sptCudaMTTKRPHiCOO(
     delete[] einds_header;
     delete[] mats_header;
     delete[] lengths;
+
+    total_time = time_exe;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
   return 0;
 }

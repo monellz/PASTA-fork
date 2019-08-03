@@ -73,7 +73,7 @@ int sptOmpSparseTensorMulVectorHiCOO(sptSparseTensorHiCOO *hiY, sptSparseTensorH
 
     /* Computation */
     sptStartTimer(timer);
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for
     for(sptNnzIndex i = 0; i < hiY->nnz; ++i) {
         sptNnzIndex inz_begin = fiberidx.data[i];
         sptNnzIndex inz_end = fiberidx.data[i+1];

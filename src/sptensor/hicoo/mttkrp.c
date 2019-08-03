@@ -78,8 +78,10 @@ int sptMTTKRPHiCOO(
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    double comp_time, total_time;
 
+    /* Computation */
+    sptStartTimer(timer);
     /* Loop blocks */
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
@@ -122,12 +124,16 @@ int sptMTTKRPHiCOO(
     }   // End loop blocks
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
     
     sptFreeTimer(timer);
     free(block_coord);
     free(ele_coord);
     sptFreeValueVector(&scratch);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }
@@ -175,8 +181,10 @@ int sptMTTKRPHiCOO_3D(
 
     sptTimer timer;
     sptNewTimer(&timer, 0);
-    sptStartTimer(timer);
+    double comp_time, total_time;
 
+    /* Computation */
+    sptStartTimer(timer);
     /* Loop blocks */
     for(sptIndex b=0; b<hitsr->bptr.len - 1; ++b) {
 
@@ -208,9 +216,13 @@ int sptMTTKRPHiCOO_3D(
     }   // End loop blocks
 
     sptStopTimer(timer);
-    sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
+    comp_time = sptPrintElapsedTime(timer, "Cpu HiSpTns MTTKRP");
     
     sptFreeTimer(timer);
+
+    total_time = comp_time;
+    printf("[Total time]: %lf\n", total_time);
+    printf("\n");
 
     return 0;
 }
