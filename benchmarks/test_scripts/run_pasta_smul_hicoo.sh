@@ -24,24 +24,21 @@ do
 
 	if [[ ${dev_id} = "-2" ]]; then
 		# Sequetial code
-		dev_id=-2
 		myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-seq.txt"
 		echo ${myprogram}
 		eval ${myprogram}
 
 	elif [[ ${dev_id} = "-1" ]]; then
 		# OpenMP code
-		dev_id=-1
 		export OMP_NUM_THREADS=${nt}
 		myprogram="${numa_str} ./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-t${nt}.txt"
 		echo ${myprogram}
 		eval ${myprogram}
 	else
 		# CUDA code
-		dev_id=${gpu_dev_id}
 		myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-gpu.txt"
 		echo ${myprogram}
-		eval ${myprogram}
+		# eval ${myprogram}
 	fi
 
 	echo 
