@@ -37,12 +37,12 @@ double sptSparseTensorDensity(sptSparseTensor const * const tsr)
 void sptSparseTensorStatus(sptSparseTensor *tsr, FILE *fp)
 {
   fprintf(fp, "COO Sparse Tensor information (use sptIndex, sptValue))---------\n");
-  fprintf(fp, "DIMS=%"PASTA_PRI_INDEX, tsr->ndims[0]);
+  fprintf(fp, "DIMS = %"PASTA_PRI_INDEX, tsr->ndims[0]);
   for(sptIndex m=1; m < tsr->nmodes; ++m) {
     fprintf(fp, "x%"PASTA_PRI_INDEX, tsr->ndims[m]);
   }
-  fprintf(fp, " NNZ=%"PASTA_PRI_NNZ_INDEX, tsr->nnz);
-  fprintf(fp, " DENSITY=%e\n" , sptSparseTensorDensity(tsr));
+  fprintf(fp, " NNZ = %"PASTA_PRI_NNZ_INDEX, tsr->nnz);
+  fprintf(fp, " DENSITY = %e\n" , sptSparseTensorDensity(tsr));
 
   fprintf(fp, "Average slice length (c): ");
   for(sptIndex m=0; m < tsr->nmodes - 1; ++m) {
@@ -51,7 +51,7 @@ void sptSparseTensorStatus(sptSparseTensor *tsr, FILE *fp)
   fprintf(fp, "%.2lf\n", (double)tsr->nnz / tsr->ndims[tsr->nmodes-1]);
 
   char * bytestr = sptBytesString(tsr->nnz * (sizeof(sptIndex) * tsr->nmodes + sizeof(sptValue)));
-  fprintf(fp, "COO-STORAGE=%s\n", bytestr);
+  fprintf(fp, "COO-STORAGE = %s\n", bytestr);
   fprintf(fp, "\n");
   free(bytestr);
 }

@@ -3,41 +3,12 @@
 import sys 
 import matplotlib.pyplot as plt
 import numpy as np
+import common
 
-# For locating data
-s3tsrs = ['vast-2015-mc1', 'nell2', 'choa700k', '1998DARPA', 'freebase_music', 'freebase_sampled', 'delicious', 'nell1']
-s3tsrs_pl = ['3D_irregular_large', '3D_irregular_medium', '3D_irregular_small', '3D_regular_large', '3D_regular_medium', '3D_regular_small']
-s4tsrs = ['chicago-crime-comm-4d', 'nips-4d', 'enron-4d', 'flickr-4d', 'delicious-4d']
-# s4tsrs_pl = ['4D_irregular_large', '4D_irregular_medium', '4D_irregular_small', '4D_regular_large', '4D_regular_medium', '4D_regular_small', '4D_i_large', '4D_i_medium', '4D_i_small']
-s4tsrs_pl = ['4D_irregular_large', '4D_irregular_medium', '4D_irregular_small', '4D_regular_large', '4D_regular_medium', '4D_regular_small']
+s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
 
-# For plots
-s3tsrs_names = ['vast', 'nell2', 'choa', 'darpa', 'fb_m', 'fb_s', 'deli', 'nell1']
-s3tsrs_pl_names =['irrL', 'irrM', 'irrS', 'regL', 'regM', 'regS']
-s4tsrs_names = ['crime4d', 'nips4d', 'enron4d', 'flickr4d', 'deli4d']
-# s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d', 'irrL4d', 'irrM4d', 'irrS4d']
-s4tsrs_pl_names =['irrL4d', 'irrM4d', 'irrS4d', 'regL4d', 'regM4d', 'regS4d']
-
-# gflops from roofline model
-# v100
-# theo_gflops_tew = 65.917
-# theo_gflops_ts = 98.875
-# theo_gflops_ttv = 197.75
-# theo_gflops_ttm = 395.5
-# theo_gflops_mttkrp = 197.75
-# p100
-# theo_gflops_tew = 43.083
-# theo_gflops_ts = 64.625
-# theo_gflops_ttv = 129.25
-# theo_gflops_ttm = 258.50
-# theo_gflops_mttkrp = 129.25
-
-# Operational intensity
-oi_tew = 1.0/12.0
-oi_ts = 1.0/8.0
-oi_ttv = 1.0/4.0
-oi_ttm = 1.0/2.0
-oi_mttkrp = 1.0/4.0
+use_cache_bw_coo_tew = use_cache_bw_hicoo_tew = use_cache_bw_coo_ts = use_cache_bw_hicoo_ts = False
+use_cache_bw_coo_ttv = use_cache_bw_hicoo_ttv = use_cache_bw_coo_ttm = use_cache_bw_hicoo_ttm = use_cache_bw_coo_mttkrp = use_cache_bw_hicoo_mttkrp = True
 
 # Global settings for figures
 mywidth = 0.35      # the width of the bars
@@ -68,12 +39,14 @@ def main(argv):
 	# theoretical machine numbers
 	if machine_name == "dgx1":
 		# p100
-		theo_gflops = 65.917
-		theo_bw = 65.917
+		theo_gflops = 10600.0
+		theo_mem_bw = 517.0
+		theo_cache_bw = 1920.0
 	elif machine_name == "dgx2":
 		# v100 
-		theo_gflops = 65.917
-		theo_bw = 65.917
+		theo_gflops = 14900.0
+		theo_mem_bw = 791.0
+		theo_cache_bw = 3332.0
 	else:
 		print('Wrong machine_name!')
 		return -1
@@ -81,56 +54,55 @@ def main(argv):
 	if plot_tensors == "real":
 		tensors = s3tsrs + s4tsrs
 	elif plot_tensors == "graph":
-		# tensors = s3tsrs_pl + s4tsrs_pl
-		tensors = s3tsrs_pl 
+		tensors = s3tsrs_pl + s4tsrs_pl
 	else:
 		print('Wrong plot_tensors!')
 		return -1
 
 	print(tensors)
 
-	fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3))
+	# fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3))
 
-	nnzs = get_nnzs(tensors)
-
-	gpu_gflops_coo = gpu_gflops_hicoo = theo_gflops_array = []
+	nnzs = common.get_nnzs(tensors, '../new-timing-results/new-timing-results-dgx2/')
+	nfibs = common.get_nnzs(tensors, '../new-timing-results/new-timing-results-dgx2/')
+	nbs = common.get_nnzs(tensors, '../new-timing-results/new-timing-results-dgx2/')
 
 	####### TEW #########
 	op = 'dadd_eq'
-	gpu_gflops_coo, gpu_gflops_hicoo, predict_gflops_coo, predict_gflops_hicoo = get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, nnzs, ang_pattern, prefix)
-	rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predict_gflops_coo))
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
+	# rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predict_gflops_coo))
 	
 
-	####### TS #########
+	# ####### TS #########
 	op = 'smul'
-	gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_ts_data(op, intput_path, theo_gflops_ts, plot_tensors, tensors, nnzs, ang_pattern, prefix)
-	plot_gragh(ax2, plot_tensors, "TS", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = get_ts_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
+	# plot_gragh(ax2, plot_tensors, "TS", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 
-	####### TTV #########
+	# ####### TTV #########
 	op = 'ttv'
-	gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_ttv_data(op, intput_path, theo_gflops_ttv, plot_tensors, tensors, nnzs, ang_pattern, prefix)
-	plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = get_ttv_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
+	# plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 	
 	####### TTM #########
-	# op = 'ttm'
-	# R = 16
-	# gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_ttm_data(op, intput_path, theo_gflops_ttm, plot_tensors, tensors, nnzs, R, ang_pattern, prefix)
+	op = 'ttm'
+	R = 16
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = get_ttm_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	# plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 	# rects1, rects2, rects3 =plot_gragh_modes(ax4, plot_tensors, "", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 
-	####### MTTKRP #########
+	# ####### MTTKRP #########
 	op = 'mttkrp'
 	R = 16
-	gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array = get_mttkrp_data(op, intput_path, theo_gflops_mttkrp, plot_tensors, tensors, nnzs, R, ang_pattern, prefix)
-	plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = get_mttkrp_data(op, intput_path, plot_tensors, tensors, nnzs, nbs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
+	# plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
 
-	# fig.legend([], ['oral', 'physa'], bbox_to_anchor=(2, 0),loc = 'lower right')
-	# fig.legend(*fig.axes[0,0].get_legend_handles_labels())
+	# # fig.legend([], ['oral', 'physa'], bbox_to_anchor=(2, 0),loc = 'lower right')
+	# # fig.legend(*fig.axes[0,0].get_legend_handles_labels())
 
-	fig.legend([rects1, rects2, rects3], ["gpu-coo", "gpu-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
+	# fig.legend([rects1, rects2, rects3], ["gpu-coo", "gpu-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
 
-	# plt.show()
-	plt.savefig('figure.pdf', format='pdf', bbox_inches='tight')
+	# # plt.show()
+	# plt.savefig('figure.pdf', format='pdf', bbox_inches='tight')
 
 
 def plot_gragh_left(ax, plot_tensors, title, o1, o2, o3):
@@ -215,34 +187,10 @@ def plot_gragh_modes(ax, plot_tensors, title, o1, o2, o3):
 
 	return rects1, rects2, rects3
 
-def get_nnzs(tensors):
-	nnzs = []
-	intput_path = '../timing-results/timing-results-cori-save/'
 
-	for tsr in tensors:
-		# Get NNZ
-		count = 0
-		input_str = intput_path + tsr + '_dadd_eq-seq.txt'
-		fi = open(input_str, 'r')
-		for line in fi:
-			# print(line)
-			line_array = line.rstrip().split(" ")
-			if(len(line_array) > 1):
-				tmp_arrray = line_array[1].split("=")
-				if(tmp_arrray[0] == 'NNZ' and count == 0):
-					count += 1
-					nnzs.append(int(tmp_arrray[1]))
+def get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw):
 
-		fi.close()
-
-	# print("nnzs:")
-	# print(nnzs)
-
-	return nnzs
-
-def get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, nnzs, ang_pattern, prefix):
-
-	print("get_tew_data")
+	print("\n### get_tew_data ###")
 	gpu_times_coo = []
 	gpu_times_hicoo = []
 
@@ -255,7 +203,7 @@ def get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, n
 		###### COO ######
 		sum_time = 0.0
 		count = 0
-		if ang_pattern == '1':
+		if ang_pattern == '1' or ang_pattern == '2':
 			input_str = intput_path + prefix + tsr + '_' + op + '_Mode' + str(nmodes) + '_gpu.txt'
 		else:
 			input_str = intput_path + tsr + '_' + op + '_gpu-gpu.txt'
@@ -284,7 +232,7 @@ def get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, n
 
 		sum_time = 0.0
 		count = 0
-		if ang_pattern == '1':
+		if ang_pattern == '1' or ang_pattern == '2':
 			input_str = intput_path + prefix + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_gpu.txt'
 		else:
 			input_str = intput_path + tsr + '_' + op + '_hicoo_gpu-b' + str(sb) + '-gpu.txt'
@@ -307,37 +255,24 @@ def get_tew_data(op, intput_path, theo_gflops, theo_bw, plot_tensors, tensors, n
 	assert(len(gpu_times_coo) == len(nnzs))
 	assert(len(gpu_times_coo) == len(gpu_times_hicoo))
 
-	print("gpu_times_coo:")
-	print(gpu_times_coo)
-	print("gpu_times_hicoo:")
-	print(gpu_times_hicoo)
-
 	# Calculate work (#Flops) and memory access (#Bytes)
 	num_flops = nnzs
-	
-
-
-	# actual running time
-	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
+	num_bytes_coo = [ 12 * nnzs[i] for i in range(len(nnzs)) ]
+	num_bytes_hicoo = num_bytes_coo
 	print("num_flops:")
 	print(num_flops)
-	print("gpu_gflops_coo:")
-	print(gpu_gflops_coo)
-	print("gpu_gflops_hicoo:")
-	print(gpu_gflops_hicoo)
-	print("\n")
+	print("num_bytes_coo:")
+	print(num_bytes_coo)
+	print("num_bytes_hicoo:")
+	print(num_bytes_hicoo)
+	print("")
 
-	# predicted running time
-	predict_time_coo = [ max( float(num_flops[i]) / theo_gflops, float(num_mem_coo[i]) / theo_bw ) for i in range(len(num_flops)) ]
-	predict_time_hicoo = [ max( float(num_flops[i]) / theo_gflops, float(num_mem_hicoo[i]) / theo_bw ) for i in range(len(num_flops)) ]
-	predict_gflops_coo = [ float(num_flops[i]) / predict_time_coo[i] for i in range(len(num_flops)) ]
-	predict_gflops_hicoo = [ float(num_flops[i]) / predict_time_hicoo[i] for i in range(len(num_flops)) ]
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = common.comp_gflops(theo_gflops, theo_mem_bw, theo_cache_bw, num_flops, num_bytes_coo, num_bytes_hicoo, gpu_times_coo, gpu_times_hicoo, use_cache_bw_coo_tew, use_cache_bw_hicoo_tew)
 
-	return gpu_gflops_coo, gpu_gflops_hicoo, predict_gflops_coo, predict_gflops_hicoo
+	return gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo
 
 
-def get_ts_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern, prefix):
+def get_ts_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw):
 
 	print("get_ts_data")
 	gpu_times_coo = []
@@ -352,7 +287,7 @@ def get_ts_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_p
 		###### COO ######
 		sum_time = 0.0
 		count = 0
-		if ang_pattern == '1':
+		if ang_pattern == '1' or ang_pattern == '2':
 			input_str = intput_path + prefix + tsr + '_' + op + '_Mode' + str(nmodes) + '_gpu.txt'
 		else:
 			input_str = intput_path + tsr + '_' + op + '_gpu-gpu.txt'
@@ -380,7 +315,7 @@ def get_ts_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_p
 
 		sum_time = 0.0
 		count = 0
-		if ang_pattern == '1':
+		if ang_pattern == '1' or ang_pattern == '2':
 			input_str = intput_path + prefix + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_gpu.txt'
 		else:
 			input_str = intput_path + tsr + '_' + op + '_hicoo_gpu-b' + str(sb) + '-gpu.txt'
@@ -403,29 +338,24 @@ def get_ts_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_p
 	assert(len(gpu_times_coo) == len(nnzs))
 	assert(len(gpu_times_coo) == len(gpu_times_hicoo))
 
-	print("gpu_times_coo:")
-	print(gpu_times_coo)
-	print("gpu_times_hicoo:")
-	print(gpu_times_hicoo)
-
-	# Calculate GFLOPS
+	# Calculate GFLOPS and GBytes
 	num_flops = nnzs
-	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
+	num_bytes_coo = [ 8 * nnzs[i] for i in range(len(nnzs)) ]
+	num_bytes_hicoo = num_bytes_coo
 	print("num_flops:")
 	print(num_flops)
-	print("gpu_gflops_coo:")
-	print(gpu_gflops_coo)
-	print("gpu_gflops_hicoo:")
-	print(gpu_gflops_hicoo)
-	print("\n")
+	print("num_bytes_coo:")
+	print(num_bytes_coo)
+	print("num_bytes_hicoo:")
+	print(num_bytes_hicoo)
+	print("")
 
-	theo_gflops_array = [theo_gflops] * len(num_flops)
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = common.comp_gflops(theo_gflops, theo_mem_bw, theo_cache_bw, num_flops, num_bytes_coo, num_bytes_hicoo, gpu_times_coo, gpu_times_hicoo, use_cache_bw_coo_tew, use_cache_bw_hicoo_tew)
 
-	return gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array
+	return gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo
 
 
-def get_ttv_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_pattern, prefix):
+def get_ttv_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw):
 
 	print("get_ttv_data")
 	gpu_times_coo = []
@@ -444,7 +374,7 @@ def get_ttv_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_
 		for m in modes:
 			sum_time = 0.0
 			count = 0
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_gpu-m' + str(m) + '-gpu.txt'
@@ -478,7 +408,7 @@ def get_ttv_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_
 		for m in modes:
 			sum_time = 0.0
 			count = 0
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_hicoo_gpu-m' + str(m) + '-b' + str(sb) + '-gpu.txt'
@@ -505,29 +435,24 @@ def get_ttv_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, ang_
 	assert(len(gpu_times_coo) == len(nnzs))
 	assert(len(gpu_times_coo) == len(gpu_times_hicoo))
 
-	print("gpu_times_coo:")
-	print(gpu_times_coo)
-	print("gpu_times_hicoo:")
-	print(gpu_times_hicoo)
-
-	# Calculate GFLOPS
+	# Calculate GFLOPS and GBytes
 	num_flops = [ 2 * i for i in nnzs ]
-	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
+	num_bytes_coo = [ (12 * nnzs[i] + 16 * nfibs[i]) for i in range(len(nnzs)) ]
+	num_bytes_hicoo = num_bytes_coo
 	print("num_flops:")
 	print(num_flops)
-	print("gpu_gflops_coo:")
-	print(gpu_gflops_coo)
-	print("gpu_gflops_hicoo:")
-	print(gpu_gflops_hicoo)
-	print("\n")
+	print("num_bytes_coo:")
+	print(num_bytes_coo)
+	print("num_bytes_hicoo:")
+	print(num_bytes_hicoo)
+	print("")
 
-	theo_gflops_array = [theo_gflops] * len(num_flops)
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = common.comp_gflops(theo_gflops, theo_mem_bw, theo_cache_bw, num_flops, num_bytes_coo, num_bytes_hicoo, gpu_times_coo, gpu_times_hicoo, use_cache_bw_coo_tew, use_cache_bw_hicoo_tew)
 
-	return gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array
+	return gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo
 
 
-def get_ttm_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R, ang_pattern, prefix):
+def get_ttm_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw):
 
 	print("get_ttm_data")
 	gpu_times_coo = []
@@ -549,7 +474,7 @@ def get_ttm_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R, a
 		for m in modes:
 			sum_time = 0.0
 			count = 0
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_gpu-m' + str(m) + '-r' + str(R) + '-gpu.txt'
@@ -586,7 +511,7 @@ def get_ttm_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R, a
 		for m in modes:
 			sum_time = 0.0
 			count = 0
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_hicoo_gpu-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-gpu.txt'
@@ -615,45 +540,41 @@ def get_ttm_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R, a
 	assert(len(gpu_times_coo) == len(nnzs))
 	assert(len(gpu_times_coo) == len(gpu_times_hicoo))
 
-	print("gpu_times_coo:")
-	print(gpu_times_coo)
-	print("gpu_times_hicoo:")
-	print(gpu_times_hicoo)
+	# Calculate GFLOPS and GBytes
+	num_flops = [ 2 * i * R for i in nnzs ]
+	num_bytes_coo = [ (4 * R * nnzs[i] + 4 * R * nfibs[i] + 8 * nnzs[i] + 8 * nfibs[i]) for i in range(len(nnzs)) ]
+	num_bytes_hicoo = num_bytes_coo
+	print("num_flops:")
+	print(num_flops)
+	print("num_bytes_coo:")
+	print(num_bytes_coo)
+	print("num_bytes_hicoo:")
+	print(num_bytes_hicoo)
+	print("")
+
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = common.comp_gflops(theo_gflops, theo_mem_bw, theo_cache_bw, num_flops, num_bytes_coo, num_bytes_hicoo, gpu_times_coo, gpu_times_hicoo, use_cache_bw_coo_tew, use_cache_bw_hicoo_tew)
+
 	# print("gpu_mode_times_coo:")
 	# print(gpu_mode_times_coo)
 	# print("gpu_mode_times_hicoo:")
 	# print(gpu_mode_times_hicoo)
 
 	# Calculate GFLOPS
-	num_flops = [ 2 * i * R for i in nnzs ]
 	num_modes_flops = []
 	for i in range(len(num_flops)):
 		for m in range(nmodes):
 			num_modes_flops.append(num_flops[i])
-	print(num_modes_flops)
-	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_mode_gflops_coo = [ float(num_modes_flops[i]) / gpu_mode_times_coo[i] / 1e9 for i in range(len(num_modes_flops)) ]
-	gpu_mode_gflops_hicoo = [ float(num_modes_flops[i]) / gpu_mode_times_hicoo[i] / 1e9 for i in range(len(num_modes_flops)) ]
-	print("num_flops:")
-	print(num_flops)
-	print("gpu_gflops_coo:")
-	print(gpu_gflops_coo)
-	print("gpu_gflops_hicoo:")
-	print(gpu_gflops_hicoo)
+	# print(num_modes_flops)
+
 	# print("gpu_mode_gflops_coo:")
 	# print(gpu_mode_gflops_coo)
 	# print("gpu_mode_gflops_hicoo:")
 	# print(gpu_mode_gflops_hicoo)
-	print("\n")
 
-	theo_gflops_array = [theo_gflops] * len(num_flops)
-
-	# return gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array
-	return gpu_mode_gflops_coo, gpu_mode_gflops_hicoo, theo_gflops_array
+	return gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo
 
 
-def get_mttkrp_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R, ang_pattern, prefix):
+def get_mttkrp_data(op, intput_path, plot_tensors, tensors, nnzs, nbs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw):
 
 	print("get_mttkrp_data")
 	gpu_times_coo = []
@@ -672,7 +593,7 @@ def get_mttkrp_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R
 		for m in modes:
 			sum_time = 0.0
 			count = 0
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_gpu-m' + str(m) + '-r' + str(R) + '-gpu.txt'
@@ -708,7 +629,7 @@ def get_mttkrp_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R
 			sum_time = 0.0
 			count = 0
 			# input_str = '../timing-results-marianas/' + tsr + '_' + op + '_hicoo_gpu-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-gpu.txt'
-			if ang_pattern == '1':
+			if ang_pattern == '1' or ang_pattern == '2':
 				input_str = intput_path + prefix + tsr + '_' + op + '_hicoo_Mode' + str(nmodes) + '_m' + str(m) + '_r16_gpu.txt'
 			else:
 				input_str = intput_path + tsr + '_' + op + '_hicoo_gpu-m' + str(m) + '-r' + str(R) + '-b' + str(sb) + '-gpu.txt'
@@ -735,29 +656,25 @@ def get_mttkrp_data(op, intput_path, theo_gflops, plot_tensors, tensors, nnzs, R
 	assert(len(gpu_times_coo) == len(nnzs))
 	assert(len(gpu_times_coo) == len(gpu_times_hicoo))
 
-	print("gpu_times_coo:")
-	print(gpu_times_coo)
-	print("gpu_times_hicoo:")
-	print(gpu_times_hicoo)
-
-	# Calculate GFLOPS
+	# Calculate GFLOPS and GBytes
+	B = pow(2, sb)
 	num_flops = [ 3 * i * R for i in nnzs ]
-	gpu_gflops_coo = [ float(num_flops[i]) / gpu_times_coo[i] / 1e9 for i in range(len(num_flops)) ]
-	gpu_gflops_hicoo = [ float(num_flops[i]) / gpu_times_hicoo[i] / 1e9 for i in range(len(num_flops)) ]
+	num_bytes_coo = [ (16 * (R + 1) * nnzs[i]) for i in range(len(nnzs)) ]
+	num_bytes_hicoo = [ (16 * nbs[i] * B * R + 7 * nnzs[i] + 20 * nbs[i]) for i in range(len(nnzs)) ]
 	print("num_flops:")
 	print(num_flops)
-	print("gpu_gflops_coo:")
-	print(gpu_gflops_coo)
-	print("gpu_gflops_hicoo:")
-	print(gpu_gflops_hicoo)
-	print("\n")
+	print("num_bytes_coo:")
+	print(num_bytes_coo)
+	print("num_bytes_hicoo:")
+	print(num_bytes_hicoo)
+	print("")
 
-	theo_gflops_array = [theo_gflops] * len(num_flops)
+	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo = common.comp_gflops(theo_gflops, theo_mem_bw, theo_cache_bw, num_flops, num_bytes_coo, num_bytes_hicoo, gpu_times_coo, gpu_times_hicoo, use_cache_bw_coo_tew, use_cache_bw_hicoo_tew)
 
 	# coo_gap_gflops = [ omp_gflops_coo[i] - seq_gflops_coo[i] for i in range(len(num_flops)) ]
 	# hicoo_gap_gflops = [ omp_gflops_hicoo[i] - seq_gflops_hicoo[i] for i in range(len(num_flops)) ]
 
-	return gpu_gflops_coo, gpu_gflops_hicoo, theo_gflops_array	
+	return gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_coo, predicted_gflops_hicoo
 
 
 if __name__ == '__main__':
