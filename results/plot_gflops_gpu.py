@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
 import sys 
+import matplotlib.pyplot as plt
 import numpy as np
 import common
+import plots
 
 s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
-
-# Global settings for figures
-mywidth = 0.35      # the width of the bars
 
 def main(argv):
 
@@ -59,7 +58,7 @@ def main(argv):
 	print("tensors:")
 	print(tensors)
 
-	# fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3))
+	fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3))
 
 	nnzs = common.get_nnzs(tensors, '../new-timing-results/new-timing-results-wingtip-bigmem2/')
 	nfibs = common.get_nfibs(tensors, '../new-timing-results/new-timing-results-wingtip-bigmem2/')
@@ -82,38 +81,38 @@ def main(argv):
 	####### TEW #########
 	op = 'dadd_eq'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predict_gflops_coo))
+	rects1, rects2, rects3 = plots.plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	
 
 	# ####### TS #########
 	op = 'smul'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ts_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax2, plot_tensors, "TS", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax2, plot_tensors, "TS", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 
 	# ####### TTV #########
 	op = 'ttv'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttv_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	
 	####### TTM #########
 	op = 'ttm'
 	R = 16
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttm_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
-	# rects1, rects2, rects3 =plot_gragh_modes(ax4, plot_tensors, "", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	# rects1, rects2, rects3 =plot_gragh_modes(ax4, plot_tensors, "", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 
 	# ####### MTTKRP #########
 	op = 'mttkrp'
 	R = 16
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_mttkrp_data(op, intput_path, plot_tensors, tensors, nnzs, nbs, nnzbs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 
 	# # fig.legend([], ['oral', 'physa'], bbox_to_anchor=(2, 0),loc = 'lower right')
 	# # fig.legend(*fig.axes[0,0].get_legend_handles_labels())
 
-	# fig.legend([rects1, rects2, rects3], ["gpu-coo", "gpu-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
+	fig.legend([rects1, rects2, rects3], ["gpu-coo", "gpu-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
 
-	# # plt.show()
+	plt.show()
 	# plt.savefig('figure.pdf', format='pdf', bbox_inches='tight')
 
 
@@ -470,7 +469,7 @@ def get_ttm_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, R, ang_pat
 
 	# Calculate GFLOPS and GBytes
 	num_flops = [ 2 * i * R for i in nnzs ]
-	num_bytes_coo = [ (4 * R * nnzs[i] + 4 * R * nfibs[i] + 8 * nnzs[i] + 8 * nfibs[i]) for i in range(len(nnzs)) ]
+	num_bytes_coo = [ (4 * R * (nnzs[i] + nfibs[i]) + 8 * (nnzs[i] + nfibs[i])) for i in range(len(nnzs)) ]
 	num_bytes_hicoo = num_bytes_coo
 	print("num_flops:")
 	print(num_flops)

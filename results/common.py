@@ -93,8 +93,8 @@ def get_nnzbs(tensors, intput_path):
 
 def get_nfibs(tensors, intput_path):
 	nfibs = []
-	nfibs_modes = []
 	for tsr in tensors:
+		nfibs_modes = []
 		if tsr in ["chicago-crime-comm-4d", "uber-4d"]:
 			sb = 4
 		else:
