@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+### Not usable. Only changed TEW! ###
+
 import sys 
 import numpy as np
 import common
@@ -11,7 +13,7 @@ mywidth = 0.35      # the width of the bars
 
 def main(argv):
 
-	if len(argv) < 5:
+	if len(argv) < 4:
 		print("Usage: %s intput_path plot_tensors(real/graph) ang_pattern(0/1-dgx1/2-dgx2) machine_name(dgx1,dgx2)" % argv[0])
 		exit(-1)
 
@@ -140,12 +142,12 @@ def get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, pref
 		for line in fi:
 			line_array = line.rstrip().split(" ")
 			# print line_array
-			if(len(line_array) < 4):
+			if(len(line_array) < 3):
 				continue;
-			elif(line_array[2] == 'DotAdd]:'):
+			elif(line_array[0] == '[Total'):
 				count += 1
 				if(count > 1):
-					sum_time += float(line_array[3])
+					sum_time += float(line_array[2])
 					# print(sum_time)
 		fi.close()
 		time_num = sum_time / (count - 1)
@@ -168,12 +170,12 @@ def get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, pref
 		for line in fi:
 			line_array = line.rstrip().split(" ")
 			# print line_array
-			if(len(line_array) < 4):
+			if(len(line_array) < 3):
 				continue;
-			elif(line_array[2] == 'DotAdd]:'):
+			elif(line_array[0] == '[Total'):
 				count += 1
 				if(count > 1):
-					sum_time += float(line_array[3])
+					sum_time += float(line_array[2])
 					# print(sum_time)
 		fi.close()
 		time_num = sum_time / (count - 1)
