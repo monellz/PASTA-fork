@@ -34,11 +34,12 @@ do
 		myprogram="${numa_str} ./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-t${nt}.txt"
 		echo ${myprogram}
 		eval ${myprogram}
+		
 	else
 		# CUDA code
 		myprogram="./build/benchmarks/${prog_name} -X ${tsr_path}/${tsr_name}.bin -a ${a_value} -d ${dev_id} -b ${sb} > ${out_path}/${tsr_name}_${prog_name}-b${sb}-gpu.txt"
 		echo ${myprogram}
-		# eval ${myprogram}
+		eval ${myprogram}
 	fi
 
 	echo 

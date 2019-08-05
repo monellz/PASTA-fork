@@ -23,14 +23,14 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
 {
   sptIndex nmodes = hitsr->nmodes;
   fprintf(fp, "HiCOO Sparse Tensor information ---------\n");
-  fprintf(fp, "DIMS=%"PASTA_PRI_INDEX, hitsr->ndims[0]);
+  fprintf(fp, "DIMS = %"PASTA_PRI_INDEX, hitsr->ndims[0]);
   for(sptIndex m=1; m < nmodes; ++m) {
     fprintf(fp, "x%"PASTA_PRI_INDEX, hitsr->ndims[m]);
   }
   fprintf(fp, "\n");
-  fprintf(fp, "NNZ=%"PASTA_PRI_NNZ_INDEX"\n", hitsr->nnz);
-  fprintf(fp, "sb=%"PASTA_PRI_INDEX"\n", (sptIndex)pow(2, hitsr->sb_bits));
-  fprintf(fp, "nb=%"PASTA_PRI_NNZ_INDEX"\n", hitsr->bptr.len - 1);
+  fprintf(fp, "NNZ = %"PASTA_PRI_NNZ_INDEX"\n", hitsr->nnz);
+  fprintf(fp, "sb = %"PASTA_PRI_INDEX"\n", (sptIndex)pow(2, hitsr->sb_bits));
+  fprintf(fp, "nb = %"PASTA_PRI_NNZ_INDEX"\n", hitsr->bptr.len - 1);
 
   sptNnzIndex bytes = hitsr->nnz * ( sizeof(sptValue) + nmodes * sizeof(sptElementIndex) );
   bytes += hitsr->binds[0].len * nmodes * sizeof(sptBlockIndex);
@@ -70,8 +70,8 @@ void sptSparseTensorStatusHiCOO(sptSparseTensorHiCOO *hitsr, FILE *fp)
   free(nnzb_array);
   
   fprintf(fp, "block nnzs:\n");
-  fprintf(fp, "Nnzb: Max=%" PASTA_PRI_NNZ_INDEX ", Min=%" PASTA_PRI_NNZ_INDEX ", Avg=%" PASTA_PRI_NNZ_INDEX "\n", max_nnzb, min_nnzb, avg_nnzb);
-  fprintf(fp, "cb: Max=%.3lf, Min=%.3lf, Avg=%.3lf\n", (double)max_nnzb / sb, (double)min_nnzb / sb, (double)avg_nnzb / sb);
+  fprintf(fp, "Nnzb: Max = %" PASTA_PRI_NNZ_INDEX ", Min = %" PASTA_PRI_NNZ_INDEX ", Avg = %" PASTA_PRI_NNZ_INDEX "\n", max_nnzb, min_nnzb, avg_nnzb);
+  fprintf(fp, "cb: Max = %.3lf, Min = %.3lf, Avg = %.3lf\n", (double)max_nnzb / sb, (double)min_nnzb / sb, (double)avg_nnzb / sb);
   fprintf(fp, "median cb: %.3lf, geometric mean cb: %.3lf\n", (double)median_nnzb / sb, geo_mean_nnzb);
   fprintf(fp, "alpha_b: %lf\n", (double)(hitsr->bptr.len - 1) / hitsr->nnz);
 
