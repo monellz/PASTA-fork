@@ -6,15 +6,16 @@ def set_tsrnames():
 	#### NEW SET ####
 	# For locating data
 	s3tsrs = ['vast-2015-mc1', 'nell2', 'choa700k', '1998DARPA', 'freebase_music', 'flickr', 'freebase_sampled', 'delicious', 'nell1']
-	s3tsrs_pl = ['3D_irregular_small', '3D_irregular_medium', '3D_irregular_large', '3D_regular_small', '3D_regular_medium', '3D_regular_large']
+	s3tsrs_pl = ['3D_regular_small', '3D_regular_medium', '3D_regular_large', '3D_irregular_small', '3D_irregular_medium', '3D_irregular_large']
 	s4tsrs = ['chicago-crime-comm-4d', 'nips-4d', 'uber-4d', 'enron-4d', 'flickr-4d', 'delicious-4d']
-	s4tsrs_pl = ['4D_irregular_small', '4D_irregular_medium', '4D_irregular_large', '4D_regular_small', '4D_regular_medium', '4D_regular_large', '4D_i_small', '4D_i_medium', '4D_i_large']
+	s4tsrs_pl = ['4D_regular_small', '4D_regular_medium', '4D_regular_large', '4D_irregular_small', '4D_irregular_medium', '4D_irregular_large', '4D_i_small', '4D_i_medium', '4D_i_large']
+	# s4tsrs_pl = ['4D_i_small', '4D_i_medium', '4D_i_large', '4D_regular_small', '4D_regular_medium', '4D_regular_large']
 
 	# For plots
-	s3tsrs_names = ['vast', 'nell2', 'choa', 'darpa', 'fb_m', 'flickr', 'fb_s', 'deli', 'nell1']
-	s3tsrs_pl_names =['irrS', 'irrM', 'irrL', 'regS', 'regM', 'regL']
-	s4tsrs_names = ['crime4d', 'nips4d', 'uber4d', 'enron4d', 'flickr4d', 'deli4d']
-	s4tsrs_pl_names =['irrS4d', 'irrM4d', 'irrL4d', 'regS4d', 'regM4d', 'regL4d', 'irr2S4d', 'irr2M4d', 'irr2L4d']
+	# s3tsrs_names = ['vast', 'nell2', 'choa', 'darpa', 'fb_m', 'flickr', 'fb_s', 'deli', 'nell1']
+	# s3tsrs_pl_names =['irrS', 'irrM', 'irrL', 'regS', 'regM', 'regL']
+	# s4tsrs_names = ['crime4d', 'nips4d', 'uber4d', 'enron4d', 'flickr4d', 'deli4d']
+	# s4tsrs_pl_names =['irrS4d', 'irrM4d', 'irrL4d', 'regS4d', 'regM4d', 'regL4d']
 
 	#### OLD SET ####
 	# # For locating data
@@ -29,7 +30,7 @@ def set_tsrnames():
 	# s4tsrs_names = ['crime4d', 'nips4d', 'enron4d', 'flickr4d', 'deli4d']
 	# s4tsrs_pl_names =['irrS4d', 'irrM4d', 'irrL4d', 'regS4d', 'regM4d', 'regL4d', 'irr2S4d', 'irr2M4d', 'irr2L4d']
 
-	return s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names
+	return s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl #, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names
 
 def get_nnzs(tensors, intput_path):
 	nnzs = []

@@ -26,13 +26,13 @@ do
 		apped="${tsr_path} ${out_path} ${nmodes} ${nt} ${id} ${machine_name}"
 
 		# TS
-		${script_path}/run_pasta_smul_hicoo.sh ${apped}
+		# ${script_path}/run_pasta_smul_hicoo.sh ${apped}
 
 		# TEW-eq
-		${script_path}/run_pasta_dadd_eq_hicoo.sh ${apped}
+		# ${script_path}/run_pasta_dadd_eq_hicoo.sh ${apped}
 
 		# TTV
-		${script_path}/run_pasta_ttv_hicoo.sh ${apped}
+		# ${script_path}/run_pasta_ttv_hicoo.sh ${apped}
 
 		# TTM
 		${script_path}/run_pasta_ttm_hicoo.sh ${apped}

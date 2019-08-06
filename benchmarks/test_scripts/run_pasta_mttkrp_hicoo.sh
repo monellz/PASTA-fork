@@ -13,8 +13,8 @@ fi
 echo "${prog_name} ${tsr_path} ${out_path} ${nmodes} ${nt} ${dev_id} ${machine_name}"
 echo
 
-# for R in 8 32 64
-for R in 16
+for R in 8 32 64
+# for R in 16
 do
 	for tsr_name in "${run_tsrs[@]}"
 	do

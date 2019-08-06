@@ -6,7 +6,8 @@ import numpy as np
 import common
 import plots
 
-s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
+# s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
+s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl = common.set_tsrnames()
 
 def main(argv):
 
@@ -515,13 +516,17 @@ def get_mttkrp_data(op, intput_path, plot_tensors, tensors, nnzs, nbs, nnzbs, R,
 		if tsr in s3tsrs + s3tsrs_pl:
 			nmodes = 3
 			modes = range(nmodes)
-			num_bytes_coo.append(16 * nnzs[tsr_count] * (R + 1))
-			num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
+			# num_bytes_coo.append(16 * nnzs[tsr_count] * (R + 1))
+			# num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
+			num_bytes_coo.append(12 * nnzs[tsr_count] * R + 16 * nnzs[tsr_count])
+			num_bytes_hicoo.append(12 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
 		elif tsr in s4tsrs + s4tsrs_pl:
 			nmodes = 4
 			modes = range(nmodes)
-			num_bytes_coo.append(20 * nnzs[tsr_count] * (R + 1))
-			num_bytes_hicoo.append(20 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
+			# num_bytes_coo.append(20 * nnzs[tsr_count] * (R + 1))
+			# num_bytes_hicoo.append(20 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
+			num_bytes_coo.append(16 * nnzs[tsr_count] * R + 20 * nnzs[tsr_count])
+			num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
 		num_flops.append(nmodes * R * nnzs[tsr_count])
 		tsr_count += 1
 

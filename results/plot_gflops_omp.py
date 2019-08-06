@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 import sys 
+import matplotlib.pyplot as plt
 import numpy as np
 import common
+import plots
 
-s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
-
-# Global settings for figures
-mywidth = 0.35      # the width of the bars
+# s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl, s3tsrs_names, s3tsrs_pl_names, s4tsrs_names, s4tsrs_pl_names = common.set_tsrnames()
+s3tsrs, s3tsrs_pl, s4tsrs, s4tsrs_pl = common.set_tsrnames()
 
 def main(argv):
 
@@ -63,7 +63,7 @@ def main(argv):
 	print("tensors:")
 	print(tensors)
 
-	# fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3)) # 
+	fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(15, 3)) # 
 
 	nnzs = common.get_nnzs(tensors, '../new-timing-results/new-timing-results-wingtip-bigmem2/')
 	nfibs = common.get_nfibs(tensors, '../new-timing-results/new-timing-results-wingtip-bigmem2/')
@@ -86,7 +86,7 @@ def main(argv):
 	####### TEW #########
 	op = 'dadd_eq'
 	omp_gflops_coo, omp_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_tew_data(op, intput_path, tk, plot_tensors, tensors, nnzs, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# rects1, rects2, rects3 = plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	rects1, rects2, rects3 = plots.plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# print("omp_gflops_coo average: %f" % np.average(omp_gflops_coo))
 	# print("omp_gflops_hicoo average: %f" % np.average(omp_gflops_hicoo))
 	# print("max gflops: %f" % max(max(omp_gflops_coo), max(omp_gflops_hicoo) ) )
@@ -95,7 +95,7 @@ def main(argv):
 	####### TS #########
 	op = 'smul'
 	omp_gflops_coo, omp_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ts_data(op, intput_path, tk, plot_tensors, tensors, nnzs, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax2, plot_tensors, "TS", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax2, plot_tensors, "TS", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# print("omp_gflops_coo average: %f" % np.average(omp_gflops_coo))
 	# print("omp_gflops_hicoo average: %f" % np.average(omp_gflops_hicoo))
 	# print("max gflops: %f" % max(max(omp_gflops_coo), max(omp_gflops_hicoo) ) )
@@ -104,7 +104,7 @@ def main(argv):
 	####### TTV #########
 	op = 'ttv'
 	omp_gflops_coo, omp_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttv_data(op, intput_path, tk, plot_tensors, tensors, nnzs, nfibs, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax3, plot_tensors, "TTV", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax3, plot_tensors, "TTV", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# print("omp_gflops_coo average: %f" % np.average(omp_gflops_coo))
 	# print("omp_gflops_hicoo average: %f" % np.average(omp_gflops_hicoo))
 	# print("max gflops: %f" % max(max(omp_gflops_coo), max(omp_gflops_hicoo) ) )
@@ -114,7 +114,7 @@ def main(argv):
 	op = 'ttm'
 	R = 16
 	omp_gflops_coo, omp_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttm_data(op, intput_path, tk, plot_tensors, tensors, nnzs, nfibs, R, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax4, plot_tensors, "TTM", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax4, plot_tensors, "TTM", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# print("omp_gflops_coo average: %f" % np.average(omp_gflops_coo))
 	# print("omp_gflops_hicoo average: %f" % np.average(omp_gflops_hicoo))
 	# print("max gflops: %f" % max(max(omp_gflops_coo), max(omp_gflops_hicoo) ) )
@@ -124,81 +124,17 @@ def main(argv):
 	op = 'mttkrp'
 	R = 16
 	omp_gflops_coo, omp_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_mttkrp_data(op, intput_path, tk, plot_tensors, tensors, nnzs, nbs, nnzbs, R, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw)
-	# plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(theo_gflops_array))
+	plots.plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(omp_gflops_coo), np.asarray(omp_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# print("omp_gflops_coo average: %f" % np.average(omp_gflops_coo))
 	# print("omp_gflops_hicoo average: %f" % np.average(omp_gflops_hicoo))
 	# print("max gflops: %f" % max(max(omp_gflops_coo), max(omp_gflops_hicoo) ) )
 	# print("\n")
 
 
-	# fig.legend(loc = 'lower right', bbox_to_anchor=(2, 0), bbox_transform=ax1.transAxes)
-	# fig.legend([rects1, rects2, rects3], ["omp-coo", "omp-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
+	fig.legend([rects1, rects2, rects3], ["omp-coo", "omp-hicoo", "roofline"], loc = 'upper right') # bbox_to_anchor=(0.5, 0)
 
-	# plt.show()
+	plt.show()
 	# plt.savefig('figure.pdf', format='pdf', bbox_inches='tight')
-
-
-def plot_gragh_left(ax, plot_tensors, title, o1, o2, o3):
-	if plot_tensors == "real":
-		xnames = s3tsrs_names + s4tsrs_names
-	elif plot_tensors == "graph":
-		xnames = s3tsrs_pl_names + s4tsrs_pl_names
-
-	ind = 1.2 * np.arange(len(o1))
-	ylim_var = 1
-
-	rects1 = ax.bar(left=ind, height=o1, width=mywidth, color='limegreen', zorder=2, lw=0.5, label='omp-coo')
-	# rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='limegreen',  zorder=2, lw=0.5, label='omp-coo')
-	rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='m', zorder=2, lw=0.5, label='omp-hicoo')
-	# rects4 = ax.bar(left=ind + 3 * mywidth, height=o4, width=mywidth, color='m', zorder=2, lw=0.5, label='omp-hicoo')
-	rects3, = ax.plot(ind + mywidth, o3, color='r', lw=3, label='roofline')
-
-	ax.set_title(title, fontsize=20)
-	ax.set_ylabel('Performance (GFLOPS)', fontsize=16)
-	ax.set_xticks(ind + mywidth)
-	ax.set_xticklabels(xnames, fontsize=12, rotation=90)
-
-	ax.set_xlim(min(ind) - mywidth, max(ind) + mywidth * 3)
-	ax.set_ylim( [0, max(max(o1), max(o2), max(o3)) + ylim_var] )
-
-	# ax.legend( (rects1[0], rects2[0], rects3[0], rects4[0], rects5[0]), ('seq-coo', 'omp-coo','seq-hicoo','omp-hicoo', 'roofline'),loc='right', shadow=True)
-	# ax.legend()
-	ax.grid(axis='y')
-	# ax.autoscale_view()
-
-	# for rect in rects1:
-	#     height = rect.get_height()
-	#     plt.text(rect.get_x() + rect.get_width() / 2, height+1, str(height), ha="center", va="bottom")
-
-	# ax.text(4, -3, "3D", fontweight='bold', fontsize=16)
-
-	return rects1, rects2, rects3
-
-
-def plot_gragh(ax, plot_tensors, title, o1, o2, o3):
-	if plot_tensors == "real":
-		xnames = s3tsrs_names + s4tsrs_names
-	elif plot_tensors == "graph":
-		xnames = s3tsrs_pl_names + s4tsrs_pl_names
-
-	ind = 1.2 * np.arange(len(o1))
-	ylim_var = 1
-
-	rects1 = ax.bar(left=ind, height=o1, width=mywidth, color='limegreen', zorder=2, lw=0.5, label='omp-coo')
-	# rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='limegreen', zorder=2, lw=0.5, label='omp-coo')
-	rects2 = ax.bar(left=ind + mywidth, height=o2, width=mywidth, color='m', zorder=2, lw=0.5, label='omp-hicoo')
-	# rects4 = ax.bar(left=ind + 3 * mywidth, height=o4, width=mywidth, color='m', zorder=2, lw=0.5, label='omp-hicoo')
-	rects3, = ax.plot(ind + mywidth, o3, color='r', lw=3, label='roofline')
-
-	ax.set_title(title, fontsize=20)
-	ax.set_xticks(ind)
-	ax.set_xticklabels(xnames, fontsize=12, rotation=90)
-
-	ax.set_xlim(min(ind) - mywidth, max(ind) + mywidth * 3)
-	ax.set_ylim( [0, max(max(o1), max(o2), max(o3)) + ylim_var] )
-
-	# ax.legend()
-	ax.grid(axis='y')
 
 
 def get_tew_data(op, intput_path, tk, plot_tensors, tensors, nnzs, ang_pattern, theo_gflops, theo_mem_bw, theo_cache_bw):
@@ -599,13 +535,17 @@ def get_mttkrp_data(op, intput_path, tk, plot_tensors, tensors, nnzs, nbs, nnzbs
 		if tsr in s3tsrs + s3tsrs_pl:
 			nmodes = 3
 			modes = range(nmodes)
-			num_bytes_coo.append(16 * nnzs[tsr_count] * (R + 1))
-			num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
+			# num_bytes_coo.append(16 * nnzs[tsr_count] * (R + 1))
+			# num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
+			num_bytes_coo.append(12 * nnzs[tsr_count] * R + 16 * nnzs[tsr_count])
+			num_bytes_hicoo.append(12 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 7 * nnzs[tsr_count] + 20 * nbs[tsr_count])
 		elif tsr in s4tsrs + s4tsrs_pl:
 			nmodes = 4
 			modes = range(nmodes)
-			num_bytes_coo.append(20 * nnzs[tsr_count] * (R + 1))
-			num_bytes_hicoo.append(20 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
+			# num_bytes_coo.append(20 * nnzs[tsr_count] * (R + 1))
+			# num_bytes_hicoo.append(20 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
+			num_bytes_coo.append(16 * nnzs[tsr_count] * R + 20 * nnzs[tsr_count])
+			num_bytes_hicoo.append(16 * min(nbs[tsr_count] * nnzbs[tsr_count], nnzs[tsr_count]) * R + 8 * nnzs[tsr_count] + 24 * nbs[tsr_count])
 		num_flops.append(nmodes * R * nnzs[tsr_count])
 		tsr_count += 1
 

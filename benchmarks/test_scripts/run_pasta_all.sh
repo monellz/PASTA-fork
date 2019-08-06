@@ -17,8 +17,8 @@ echo
 script_path="./benchmarks/test_scripts"
 apped="${tsr_path} ${out_path} ${nt} ${gpu_dev_id} ${machine_name}"
 
-# COO
-${script_path}/run_pasta_all_coo.sh ${apped}
-
 # HiCOO
 ${script_path}/run_pasta_all_hicoo.sh ${apped}
+
+# COO
+${script_path}/run_pasta_all_coo.sh ${apped}
