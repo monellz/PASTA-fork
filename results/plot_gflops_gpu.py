@@ -83,17 +83,47 @@ def main(argv):
 	op = 'dadd_eq'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_tew_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	rects1, rects2, rects3 = plots.plot_gragh_left(ax1, plot_tensors, "TEW", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	gpu_efficiency_coo = np.asarray(gpu_gflops_coo) / np.asarray(predicted_gflops_mem_coo)
+	gpu_efficiency_hicoo = np.asarray(gpu_gflops_hicoo) / np.asarray(predicted_gflops_mem_coo)
+	common.print_gflops_array(gpu_efficiency_coo, "gpu_efficiency_coo")
+	common.print_gflops_array(gpu_efficiency_hicoo, "gpu_efficiency_hicoo")
+	print("gpu_efficiency_coo average: %f" % np.average(gpu_efficiency_coo))
+	print("gpu_efficiency_hicoo average: %f" % np.average(gpu_efficiency_hicoo))
+	print("gpu_gflops_coo average: %f" % np.average(gpu_gflops_coo))
+	print("gpu_gflops_hicoo average: %f" % np.average(gpu_gflops_hicoo))
+	print("max gflops: %f" % max(max(gpu_gflops_coo), max(gpu_gflops_hicoo) ) )
+	print("")
 	
 
 	# ####### TS #########
 	op = 'smul'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ts_data(op, intput_path, plot_tensors, tensors, nnzs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	plots.plot_gragh(ax2, plot_tensors, "TS", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	gpu_efficiency_coo = np.asarray(gpu_gflops_coo) / np.asarray(predicted_gflops_mem_coo)
+	gpu_efficiency_hicoo = np.asarray(gpu_gflops_hicoo) / np.asarray(predicted_gflops_mem_coo)
+	common.print_gflops_array(gpu_efficiency_coo, "gpu_efficiency_coo")
+	common.print_gflops_array(gpu_efficiency_hicoo, "gpu_efficiency_hicoo")
+	print("gpu_efficiency_coo average: %f" % np.average(gpu_efficiency_coo))
+	print("gpu_efficiency_hicoo average: %f" % np.average(gpu_efficiency_hicoo))
+	print("gpu_gflops_coo average: %f" % np.average(gpu_gflops_coo))
+	print("gpu_gflops_hicoo average: %f" % np.average(gpu_gflops_hicoo))
+	print("max gflops: %f" % max(max(gpu_gflops_coo), max(gpu_gflops_hicoo) ) )
+	print("")
 
 	# ####### TTV #########
 	op = 'ttv'
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttv_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	plots.plot_gragh(ax3, plot_tensors, "TTV", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	gpu_efficiency_coo = np.asarray(gpu_gflops_coo) / np.asarray(predicted_gflops_mem_coo)
+	gpu_efficiency_hicoo = np.asarray(gpu_gflops_hicoo) / np.asarray(predicted_gflops_mem_coo)
+	common.print_gflops_array(gpu_efficiency_coo, "gpu_efficiency_coo")
+	common.print_gflops_array(gpu_efficiency_hicoo, "gpu_efficiency_hicoo")
+	print("gpu_efficiency_coo average: %f" % np.average(gpu_efficiency_coo))
+	print("gpu_efficiency_hicoo average: %f" % np.average(gpu_efficiency_hicoo))
+	print("gpu_gflops_coo average: %f" % np.average(gpu_gflops_coo))
+	print("gpu_gflops_hicoo average: %f" % np.average(gpu_gflops_hicoo))
+	print("max gflops: %f" % max(max(gpu_gflops_coo), max(gpu_gflops_hicoo) ) )
+	print("")
 	
 	####### TTM #########
 	op = 'ttm'
@@ -101,12 +131,33 @@ def main(argv):
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_ttm_data(op, intput_path, plot_tensors, tensors, nnzs, nfibs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	plots.plot_gragh(ax4, plot_tensors, "TTM", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
 	# rects1, rects2, rects3 =plot_gragh_modes(ax4, plot_tensors, "", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	gpu_efficiency_coo = np.asarray(gpu_gflops_coo) / np.asarray(predicted_gflops_mem_coo)
+	gpu_efficiency_hicoo = np.asarray(gpu_gflops_hicoo) / np.asarray(predicted_gflops_mem_coo)
+	common.print_gflops_array(gpu_efficiency_coo, "gpu_efficiency_coo")
+	common.print_gflops_array(gpu_efficiency_hicoo, "gpu_efficiency_hicoo")
+	print("gpu_efficiency_coo average: %f" % np.average(gpu_efficiency_coo))
+	print("gpu_efficiency_hicoo average: %f" % np.average(gpu_efficiency_hicoo))
+	print("gpu_gflops_coo average: %f" % np.average(gpu_gflops_coo))
+	print("gpu_gflops_hicoo average: %f" % np.average(gpu_gflops_hicoo))
+	print("max gflops: %f" % max(max(gpu_gflops_coo), max(gpu_gflops_hicoo) ) )
+	print("")
+
 
 	# ####### MTTKRP #########
 	op = 'mttkrp'
 	R = 16
 	gpu_gflops_coo, gpu_gflops_hicoo, predicted_gflops_mem_coo, predicted_gflops_mem_hicoo, predicted_gflops_cache_coo, predicted_gflops_cache_hicoo = get_mttkrp_data(op, intput_path, plot_tensors, tensors, nnzs, nbs, nnzbs, R, ang_pattern, prefix, theo_gflops, theo_mem_bw, theo_cache_bw)
 	plots.plot_gragh(ax5, plot_tensors, "MTTKRP", np.asarray(gpu_gflops_coo), np.asarray(gpu_gflops_hicoo), np.asarray(predicted_gflops_mem_coo))
+	gpu_efficiency_coo = np.asarray(gpu_gflops_coo) / np.asarray(predicted_gflops_mem_coo)
+	gpu_efficiency_hicoo = np.asarray(gpu_gflops_hicoo) / np.asarray(predicted_gflops_mem_coo)
+	common.print_gflops_array(gpu_efficiency_coo, "gpu_efficiency_coo")
+	common.print_gflops_array(gpu_efficiency_hicoo, "gpu_efficiency_hicoo")
+	print("gpu_efficiency_coo average: %f" % np.average(gpu_efficiency_coo))
+	print("gpu_efficiency_hicoo average: %f" % np.average(gpu_efficiency_hicoo))
+	print("gpu_gflops_coo average: %f" % np.average(gpu_gflops_coo))
+	print("gpu_gflops_hicoo average: %f" % np.average(gpu_gflops_hicoo))
+	print("max gflops: %f" % max(max(gpu_gflops_coo), max(gpu_gflops_hicoo) ) )
+	print("")
 
 	# # fig.legend([], ['oral', 'physa'], bbox_to_anchor=(2, 0),loc = 'lower right')
 	# # fig.legend(*fig.axes[0,0].get_legend_handles_labels())
