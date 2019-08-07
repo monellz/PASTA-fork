@@ -16,7 +16,7 @@ echo
 
 script_path="./benchmarks/test_scripts"
 
-declare -a dev_ids=("-1")	# Need to modify for platforms
+declare -a dev_ids=("-2" "-1" ${gpu_dev_id})	# Need to modify for platforms
 declare -a modes=("3" "4")
 
 for id in "${dev_ids[@]}"
@@ -26,13 +26,13 @@ do
 		apped="${tsr_path} ${out_path} ${nmodes} ${nt} ${id} ${machine_name}"
 
 		# TS
-		# ${script_path}/run_pasta_smul_hicoo.sh ${apped}
+		${script_path}/run_pasta_smul_hicoo.sh ${apped}
 
 		# TEW-eq
-		# ${script_path}/run_pasta_dadd_eq_hicoo.sh ${apped}
+		${script_path}/run_pasta_dadd_eq_hicoo.sh ${apped}
 
 		# TTV
-		# ${script_path}/run_pasta_ttv_hicoo.sh ${apped}
+		${script_path}/run_pasta_ttv_hicoo.sh ${apped}
 
 		# TTM
 		${script_path}/run_pasta_ttm_hicoo.sh ${apped}

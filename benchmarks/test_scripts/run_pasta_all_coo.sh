@@ -16,7 +16,7 @@ echo
 
 script_path="./benchmarks/test_scripts"
 
-declare -a dev_ids=("-1")	# Need to modify for platform
+declare -a dev_ids=("-2" "-1" ${gpu_dev_id})	# Need to modify for platforms
 declare -a modes=("3" "4")
 
 for id in "${dev_ids[@]}"
