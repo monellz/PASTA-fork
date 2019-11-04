@@ -61,6 +61,7 @@ extern "C" {
  * STRUCTS
  *************************************************/
 #include "includes/structs.h"
+#include "../extension/new_structs.h"
 
 
 /*************************************************
