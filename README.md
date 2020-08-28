@@ -154,12 +154,12 @@ Please refer to `GettingStarted.md` for more general cases. Only some major func
 
 ## Citation
 ```
-@misc{sptenbench,
+@misc{pasta,
 author="Jiajia Li, Ang Li, Kevin Barker",
-title="{SpTenBench} : Sparse Tensor Benchmarks",
+title="{PASTA}: A Parallel Sparse Tensor Algorithm Benchmark Suite",
 month="Dec",
-year="2018",
-url="https://gitlab.com/tensorworld/SpTenBench"
+year="2019",
+url="https://gitlab.com/tensorworld/pasta"
 }
 ```
 
@@ -169,4 +169,4 @@ url="https://gitlab.com/tensorworld/SpTenBench"
 
 ## License
 
-SpTenBench is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+PASTA is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
