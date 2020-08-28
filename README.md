@@ -1,7 +1,7 @@
-SpTenBench
+PASTA
 ------
 
-Sparse Tensor Benchmarks (SpTenBench) provides essential sparse tensor operations from various real-world applications for multicore CPU and GPU architectures. These tensor operations are critical to the overall performance of tensor analysis algorithms (such as tensor decompositions). 
+PASTA, A Parallel Sparse Tensor Algorithm Benchmark Suite, provides essential sparse tensor operations from various real-world applications for multicore CPU and GPU architectures. These tensor operations are critical to the overall performance of tensor analysis algorithms (such as tensor decompositions). 
 
 
 ## Supported sparse tensor operations:
