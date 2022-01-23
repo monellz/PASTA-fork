@@ -155,7 +155,7 @@ Please refer to `GettingStarted.md` for more general cases. Only some major func
 ## Citation
 ```
 @misc{pasta,
-author="Jiajia Li, Ang Li, Kevin Barker",
+author="Jiajia Li and Kevin Barker",
 title="{PASTA}: A Parallel Sparse Tensor Algorithm Benchmark Suite",
 month="Dec",
 year="2019",
